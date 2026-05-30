@@ -1,0 +1,64 @@
+@model AutoRepairERD.Models.Attendance
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Attendance</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="AttendanceId" />
+            <div class="form-group">
+                <label asp-for="EmployeeId" class="control-label"></label>
+                <input asp-for="EmployeeId" class="form-control" />
+                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AttendanceDate" class="control-label"></label>
+                <input asp-for="AttendanceDate" class="form-control" />
+                <span asp-validation-for="AttendanceDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckInTime" class="control-label"></label>
+                <input asp-for="CheckInTime" class="form-control" />
+                <span asp-validation-for="CheckInTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckOutTime" class="control-label"></label>
+                <input asp-for="CheckOutTime" class="form-control" />
+                <span asp-validation-for="CheckOutTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OvertimeHours" class="control-label"></label>
+                <input asp-for="OvertimeHours" class="form-control" />
+                <span asp-validation-for="OvertimeHours" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <input asp-for="Status" class="form-control" />
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Employee" class="control-label"></label>
+                <input asp-for="Employee" class="form-control" />
+                <span asp-validation-for="Employee" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

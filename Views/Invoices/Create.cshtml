@@ -1,0 +1,102 @@
+@model AutoRepairERD.Models.Invoice
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Invoice</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="JobOrderId" class="control-label"></label>
+                <input asp-for="JobOrderId" class="form-control" />
+                <span asp-validation-for="JobOrderId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CreatedByUserId" class="control-label"></label>
+                <input asp-for="CreatedByUserId" class="form-control" />
+                <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="InvoiceNumber" class="control-label"></label>
+                <input asp-for="InvoiceNumber" class="form-control" />
+                <span asp-validation-for="InvoiceNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="InvoiceDate" class="control-label"></label>
+                <input asp-for="InvoiceDate" class="form-control" />
+                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SubTotal" class="control-label"></label>
+                <input asp-for="SubTotal" class="form-control" />
+                <span asp-validation-for="SubTotal" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TaxAmount" class="control-label"></label>
+                <input asp-for="TaxAmount" class="form-control" />
+                <span asp-validation-for="TaxAmount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DiscountAmount" class="control-label"></label>
+                <input asp-for="DiscountAmount" class="form-control" />
+                <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="GrandTotal" class="control-label"></label>
+                <input asp-for="GrandTotal" class="form-control" />
+                <span asp-validation-for="GrandTotal" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="InvoiceStatus" class="control-label"></label>
+                <input asp-for="InvoiceStatus" class="form-control" />
+                <span asp-validation-for="InvoiceStatus" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PaymentStatus" class="control-label"></label>
+                <input asp-for="PaymentStatus" class="form-control" />
+                <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CreatedByUser" class="control-label"></label>
+                <input asp-for="CreatedByUser" class="form-control" />
+                <span asp-validation-for="CreatedByUser" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="JobOrder" class="control-label"></label>
+                <input asp-for="JobOrder" class="form-control" />
+                <span asp-validation-for="JobOrder" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Payments" class="control-label"></label>
+                <input asp-for="Payments" class="form-control" />
+                <span asp-validation-for="Payments" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

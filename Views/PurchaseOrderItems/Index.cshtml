@@ -1,0 +1,71 @@
+@model IEnumerable<AutoRepairERD.Models.PurchaseOrderItem>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.PurchaseOrderId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PartId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Quantity)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UnitCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Part)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PurchaseOrder)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.PurchaseOrderId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PartId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.UnitCost)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.TotalCost)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Part)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PurchaseOrder)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.PoitemId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.PoitemId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.PoitemId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

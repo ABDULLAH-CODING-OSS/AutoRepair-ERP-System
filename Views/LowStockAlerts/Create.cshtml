@@ -1,0 +1,60 @@
+@model AutoRepairERD.Models.LowStockAlert
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>LowStockAlert</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="PartId" class="control-label"></label>
+                <input asp-for="PartId" class="form-control" />
+                <span asp-validation-for="PartId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CurrentQuantity" class="control-label"></label>
+                <input asp-for="CurrentQuantity" class="form-control" />
+                <span asp-validation-for="CurrentQuantity" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ReorderLevel" class="control-label"></label>
+                <input asp-for="ReorderLevel" class="form-control" />
+                <span asp-validation-for="ReorderLevel" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AlertDate" class="control-label"></label>
+                <input asp-for="AlertDate" class="form-control" />
+                <span asp-validation-for="AlertDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <input asp-for="Status" class="form-control" />
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Part" class="control-label"></label>
+                <input asp-for="Part" class="form-control" />
+                <span asp-validation-for="Part" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

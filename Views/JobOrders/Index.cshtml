@@ -1,0 +1,167 @@
+@model IEnumerable<AutoRepairERD.Models.JobOrder>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CustomerId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.VehicleId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AdvisorId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MechanicId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ComplaintDescription)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DiagnosisNotes)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EstimatedCompletionDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StartDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CompletionDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EstimatedCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FinalCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Advisor)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Customer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Invoices)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobPartItems)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobServiceItems)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Mechanic)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Vehicle)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.CustomerId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.VehicleId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.AdvisorId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MechanicId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUserId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ComplaintDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DiagnosisNotes)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.EstimatedCompletionDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.StartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CompletionDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.EstimatedCost)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.FinalCost)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Advisor)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUser)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Customer)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Invoices)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobPartItems)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobServiceItems)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Mechanic)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Vehicle)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.JobOrderId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.JobOrderId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.JobOrderId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

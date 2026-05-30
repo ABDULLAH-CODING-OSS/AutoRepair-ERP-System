@@ -1,0 +1,34 @@
+# Build folders
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# NuGet
+packages/
+
+# Publish
+publish/
+
+# Test
+TestResults/
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Debug
+*.pdb
+
+# Environment files
+.env
+
+# Development settings
+appsettings.Development.json

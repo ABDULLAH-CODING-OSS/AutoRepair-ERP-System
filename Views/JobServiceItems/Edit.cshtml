@@ -1,0 +1,79 @@
+@model AutoRepairERD.Models.JobServiceItem
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>JobServiceItem</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="JobServiceItemId" />
+            <div class="form-group">
+                <label asp-for="JobOrderId" class="control-label"></label>
+                <input asp-for="JobOrderId" class="form-control" />
+                <span asp-validation-for="JobOrderId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ServiceId" class="control-label"></label>
+                <input asp-for="ServiceId" class="form-control" />
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MechanicId" class="control-label"></label>
+                <input asp-for="MechanicId" class="form-control" />
+                <span asp-validation-for="MechanicId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HoursWorked" class="control-label"></label>
+                <input asp-for="HoursWorked" class="form-control" />
+                <span asp-validation-for="HoursWorked" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HourlyRate" class="control-label"></label>
+                <input asp-for="HourlyRate" class="form-control" />
+                <span asp-validation-for="HourlyRate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ServicePrice" class="control-label"></label>
+                <input asp-for="ServicePrice" class="form-control" />
+                <span asp-validation-for="ServicePrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <input asp-for="Notes" class="form-control" />
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="JobOrder" class="control-label"></label>
+                <input asp-for="JobOrder" class="form-control" />
+                <span asp-validation-for="JobOrder" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Mechanic" class="control-label"></label>
+                <input asp-for="Mechanic" class="form-control" />
+                <span asp-validation-for="Mechanic" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Service" class="control-label"></label>
+                <input asp-for="Service" class="form-control" />
+                <span asp-validation-for="Service" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

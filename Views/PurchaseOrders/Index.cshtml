@@ -1,0 +1,83 @@
+@model IEnumerable<AutoRepairERD.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SupplierId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OrderDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ExpectedDeliveryDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TotalAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PurchaseOrderItems)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Supplier)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.SupplierId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUserId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.OrderDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ExpectedDeliveryDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.TotalAmount)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUser)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PurchaseOrderItems)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Supplier)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.PurchaseOrderId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.PurchaseOrderId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.PurchaseOrderId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

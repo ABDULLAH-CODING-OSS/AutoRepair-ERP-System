@@ -1,0 +1,89 @@
+@model IEnumerable<AutoRepairERD.Models.JobServiceItem>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.JobOrderId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ServiceId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MechanicId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HoursWorked)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HourlyRate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ServicePrice)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Notes)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobOrder)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Mechanic)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Service)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.JobOrderId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ServiceId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MechanicId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.HoursWorked)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.HourlyRate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ServicePrice)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Notes)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobOrder)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Mechanic)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Service)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.JobServiceItemId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.JobServiceItemId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.JobServiceItemId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

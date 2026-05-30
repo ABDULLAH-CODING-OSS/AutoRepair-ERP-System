@@ -1,0 +1,107 @@
+@model IEnumerable<AutoRepairERD.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.JobOrderId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.InvoiceNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.InvoiceDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SubTotal)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaxAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DiscountAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.GrandTotal)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.InvoiceStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PaymentStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedByUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobOrder)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Payments)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.JobOrderId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUserId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.InvoiceNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.InvoiceDate)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.SubTotal)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.TaxAmount)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DiscountAmount)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.GrandTotal)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.InvoiceStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PaymentStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedByUser)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobOrder)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Payments)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.InvoiceId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.InvoiceId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.InvoiceId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

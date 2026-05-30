@@ -1,0 +1,137 @@
+@model IEnumerable<AutoRepairERD.Models.Part>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CategoryId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SupplierId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Sku)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PartName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CostPrice)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SalePrice)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CurrentStock)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReorderLevel)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Unit)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RackLocation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsActive)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Category)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobPartItems)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LowStockAlerts)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PurchaseOrderItems)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StockTransactions)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Supplier)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.CategoryId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.SupplierId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Sku)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PartName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CostPrice)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.SalePrice)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CurrentStock)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.ReorderLevel)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Unit)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.RackLocation)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsActive)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Category)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobPartItems)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.LowStockAlerts)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PurchaseOrderItems)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.StockTransactions)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Supplier)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.PartId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.PartId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.PartId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

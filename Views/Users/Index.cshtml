@@ -1,0 +1,125 @@
+@model IEnumerable<AutoRepairERD.Models.User>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Username)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PasswordHash)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FullName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Phone)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsActive)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AuditLogs)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Customers)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Invoices)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobOrders)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Notifications)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PurchaseOrders)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UserRoles)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Vehicles)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Username)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PasswordHash)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.FullName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Phone)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.IsActive)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.CreatedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.AuditLogs)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Customers)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Employees)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Invoices)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.JobOrders)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Notifications)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.PurchaseOrders)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.UserRoles)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Vehicles)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.UserId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.UserId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.UserId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
