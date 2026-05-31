@@ -1,8 +1,11 @@
 
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using AutoRepairERD.Filters;
 using AutoRepairERD.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
+[SessionAuthorize]
 public class VehiclesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -19,15 +22,15 @@ public class VehiclesController : Controller
     }
 
     // GET: VEHICLES/Details/5
-    public async Task<IActionResult> Details(int? vehicleid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (vehicleid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var vehicle = await _context.Vehicles
-            .FirstOrDefaultAsync(m => m.VehicleId == vehicleid);
+            .FirstOrDefaultAsync(m => m.VehicleId == id);
         if (vehicle == null)
         {
             return NotFound();
@@ -37,8 +40,20 @@ public class VehiclesController : Controller
     }
 
     // GET: VEHICLES/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        ViewBag.Customers = _context.Customers
+            .Select(c => new SelectListItem
+            {
+                Value = c.CustomerId.ToString(),
+                Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
+            })
+            .ToList();
+
         return View();
     }
 
@@ -47,10 +62,16 @@ public class VehiclesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("VehicleId,CustomerId,CreatedByUserId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes,CreatedByUser,Customer,JobOrders")] Vehicle vehicle)
+    public async Task<IActionResult> Create([Bind("CustomerId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes")] Vehicle vehicle)
     {
+        ModelState.Remove("Customer");
+        ModelState.Remove("JobOrders");
+        ModelState.Remove("CreatedByUser");
+
         if (ModelState.IsValid)
         {
+            vehicle.CreatedByUserId =
+    HttpContext.Session.GetInt32("UserID");
             _context.Add(vehicle);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -59,14 +80,14 @@ public class VehiclesController : Controller
     }
 
     // GET: VEHICLES/Edit/5
-    public async Task<IActionResult> Edit(int? vehicleid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (vehicleid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var vehicle = await _context.Vehicles.FindAsync(vehicleid);
+        var vehicle = await _context.Vehicles.FindAsync(id);
         if (vehicle == null)
         {
             return NotFound();
@@ -79,9 +100,9 @@ public class VehiclesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? vehicleid, [Bind("VehicleId,CustomerId,CreatedByUserId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes,CreatedByUser,Customer,JobOrders")] Vehicle vehicle)
+    public async Task<IActionResult> Edit(int? id, [Bind("VehicleId,CustomerId,CreatedByUserId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes,CreatedByUser,Customer,JobOrders")] Vehicle vehicle)
     {
-        if (vehicleid != vehicle.VehicleId)
+        if (id != vehicle.VehicleId)
         {
             return NotFound();
         }
@@ -110,15 +131,15 @@ public class VehiclesController : Controller
     }
 
     // GET: VEHICLES/Delete/5
-    public async Task<IActionResult> Delete(int? vehicleid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (vehicleid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var vehicle = await _context.Vehicles
-            .FirstOrDefaultAsync(m => m.VehicleId == vehicleid);
+            .FirstOrDefaultAsync(m => m.VehicleId == id);
         if (vehicle == null)
         {
             return NotFound();
@@ -130,9 +151,9 @@ public class VehiclesController : Controller
     // POST: VEHICLES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? vehicleid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var vehicle = await _context.Vehicles.FindAsync(vehicleid);
+        var vehicle = await _context.Vehicles.FindAsync(id);
         if (vehicle != null)
         {
             _context.Vehicles.Remove(vehicle);
@@ -142,8 +163,8 @@ public class VehiclesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool VehicleExists(int? vehicleid)
+    private bool VehicleExists(int? id)
     {
-        return _context.Vehicles.Any(e => e.VehicleId == vehicleid);
+        return _context.Vehicles.Any(e => e.VehicleId == id);
     }
 }

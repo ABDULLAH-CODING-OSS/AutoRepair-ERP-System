@@ -15,9 +15,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.CustomerId)
             </th>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.CreatedByUserId)
-            </th>
+            </th> *@
             <th>
                 @Html.DisplayNameFor(model => model.LicensePlate)
             </th>
@@ -45,7 +45,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.Notes)
             </th>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.CreatedByUser)
             </th>
             <th>
@@ -53,7 +53,7 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.JobOrders)
-            </th>
+            </th> *@
             <th></th>
         </tr>
     </thead>
@@ -63,9 +63,9 @@
             <td>
                 @Html.DisplayFor(model => item.CustomerId)
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(model => item.CreatedByUserId)
-            </td>
+            </td> *@
             <td>
                 @Html.DisplayFor(model => item.LicensePlate)
             </td>
@@ -93,7 +93,7 @@
             <td>
                 @Html.DisplayFor(model => item.Notes)
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(model => item.CreatedByUser)
             </td>
             <td>
@@ -101,7 +101,7 @@
             </td>
             <td>
                 @Html.DisplayFor(model => item.JobOrders)
-            </td>
+            </td> *@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.VehicleId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.VehicleId">Details</a> |

@@ -6,8 +6,15 @@ namespace AutoRepairERD.Controllers
 {
     public class HomeController : Controller
     {
+        //public IActionResult Index()
+        //{
+        //    return View();
+        //}
         public IActionResult Index()
         {
+            ViewBag.Username = HttpContext.Session.GetString("Username");
+            ViewBag.RoleName = HttpContext.Session.GetString("RoleName");
+
             return View();
         }
 

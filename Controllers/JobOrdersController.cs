@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;   
+[SessionAuthorize]
 
 public class JobOrdersController : Controller
 {
@@ -19,15 +22,15 @@ public class JobOrdersController : Controller
     }
 
     // GET: JOBORDERS/Details/5
-    public async Task<IActionResult> Details(int? joborderid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (joborderid == null)
+        if (id== null)
         {
             return NotFound();
         }
 
         var joborder = await _context.JobOrders
-            .FirstOrDefaultAsync(m => m.JobOrderId == joborderid);
+            .FirstOrDefaultAsync(m => m.JobOrderId == id);
         if (joborder == null)
         {
             return NotFound();
@@ -37,36 +40,140 @@ public class JobOrdersController : Controller
     }
 
     // GET: JOBORDERS/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        ViewBag.Customers = _context.Customers
+            .Select(c => new SelectListItem
+            {
+                Value = c.CustomerId.ToString(),
+                Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
+            })
+            .ToList();
+
+        ViewBag.Vehicles = _context.Vehicles
+            .Select(v => new SelectListItem
+            {
+                Value = v.VehicleId.ToString(),
+                Text = v.Make + " " + v.Model + " - " + v.LicensePlate
+            })
+            .ToList();
+
+        ViewBag.Advisors = _context.Employees
+            .Where(e => e.Designation == "Service Advisor")
+            .Select(e => new SelectListItem
+            {
+                Value = e.EmployeeId.ToString(),
+                Text = e.FirstName + " " + e.LastName
+            })
+            .ToList();
+
+        ViewBag.Mechanics = _context.Employees
+            .Where(e => e.Designation == "Mechanic")
+            .Select(e => new SelectListItem
+            {
+                Value = e.EmployeeId.ToString(),
+                Text = e.FirstName + " " + e.LastName
+            })
+            .ToList();
+
         return View();
     }
-
     // POST: JOBORDERS/Create
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("JobOrderId,CustomerId,VehicleId,AdvisorId,MechanicId,CreatedByUserId,JobNumber,ComplaintDescription,DiagnosisNotes,EstimatedCompletionDate,StartDate,CompletionDate,Status,EstimatedCost,FinalCost,CreatedAt,Advisor,CreatedByUser,Customer,Invoices,JobPartItems,JobServiceItems,Mechanic,Vehicle")] JobOrder joborder)
+    public async Task<IActionResult> Create(
+     [Bind("CustomerId,VehicleId,AdvisorId,MechanicId,ComplaintDescription,DiagnosisNotes,EstimatedCompletionDate,Status,EstimatedCost")]
+    JobOrder joborder)
     {
+        ModelState.Remove("Customer");
+        ModelState.Remove("Vehicle");
+        ModelState.Remove("Advisor");
+        ModelState.Remove("Mechanic");
+        ModelState.Remove("CreatedByUser");
+        ModelState.Remove("Invoices");
+        ModelState.Remove("JobPartItems");
+        ModelState.Remove("JobServiceItems");
+        ModelState.Remove("JobNumber");
+        if (!ModelState.IsValid)
+        {
+            foreach (var item in ModelState)
+            {
+                foreach (var error in item.Value.Errors)
+                {
+                    ViewBag.ErrorMessage +=
+                        $"{item.Key}: {error.ErrorMessage}<br/>";
+                }
+            }
+        }
         if (ModelState.IsValid)
         {
+            joborder.CreatedByUserId =
+                HttpContext.Session.GetInt32("UserID");
+
+            joborder.CreatedAt = DateTime.Now;
+
+            joborder.JobNumber =
+                "JOB" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
             _context.Add(joborder);
+
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
+
+        ViewBag.Customers = _context.Customers
+            .Select(c => new SelectListItem
+            {
+                Value = c.CustomerId.ToString(),
+                Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
+            })
+            .ToList();
+
+        ViewBag.Vehicles = _context.Vehicles
+            .Select(v => new SelectListItem
+            {
+                Value = v.VehicleId.ToString(),
+                Text = v.Make + " " + v.Model + " - " + v.LicensePlate
+            })
+            .ToList();
+
+        ViewBag.Advisors = _context.Employees
+            .Where(e => e.Designation == "Service Advisor")
+            .Select(e => new SelectListItem
+            {
+                Value = e.EmployeeId.ToString(),
+                Text = e.FirstName + " " + e.LastName
+            })
+            .ToList();
+
+        ViewBag.Mechanics = _context.Employees
+            .Where(e => e.Designation == "Mechanic")
+            .Select(e => new SelectListItem
+            {
+                Value = e.EmployeeId.ToString(),
+                Text = e.FirstName + " " + e.LastName
+            })
+            .ToList();
+
         return View(joborder);
     }
 
     // GET: JOBORDERS/Edit/5
-    public async Task<IActionResult> Edit(int? joborderid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (joborderid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var joborder = await _context.JobOrders.FindAsync(joborderid);
+        var joborder = await _context.JobOrders.FindAsync(id);
         if (joborder == null)
         {
             return NotFound();
@@ -79,9 +186,9 @@ public class JobOrdersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? joborderid, [Bind("JobOrderId,CustomerId,VehicleId,AdvisorId,MechanicId,CreatedByUserId,JobNumber,ComplaintDescription,DiagnosisNotes,EstimatedCompletionDate,StartDate,CompletionDate,Status,EstimatedCost,FinalCost,CreatedAt,Advisor,CreatedByUser,Customer,Invoices,JobPartItems,JobServiceItems,Mechanic,Vehicle")] JobOrder joborder)
+    public async Task<IActionResult> Edit(int? id, [Bind("JobOrderId,CustomerId,VehicleId,AdvisorId,MechanicId,CreatedByUserId,JobNumber,ComplaintDescription,DiagnosisNotes,EstimatedCompletionDate,StartDate,CompletionDate,Status,EstimatedCost,FinalCost,CreatedAt,Advisor,CreatedByUser,Customer,Invoices,JobPartItems,JobServiceItems,Mechanic,Vehicle")] JobOrder joborder)
     {
-        if (joborderid != joborder.JobOrderId)
+        if (id != joborder.JobOrderId)
         {
             return NotFound();
         }
@@ -110,15 +217,15 @@ public class JobOrdersController : Controller
     }
 
     // GET: JOBORDERS/Delete/5
-    public async Task<IActionResult> Delete(int? joborderid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (joborderid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var joborder = await _context.JobOrders
-            .FirstOrDefaultAsync(m => m.JobOrderId == joborderid);
+            .FirstOrDefaultAsync(m => m.JobOrderId == id);
         if (joborder == null)
         {
             return NotFound();
@@ -130,9 +237,9 @@ public class JobOrdersController : Controller
     // POST: JOBORDERS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? joborderid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var joborder = await _context.JobOrders.FindAsync(joborderid);
+        var joborder = await _context.JobOrders.FindAsync(id);
         if (joborder != null)
         {
             _context.JobOrders.Remove(joborder);
@@ -142,8 +249,8 @@ public class JobOrdersController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool JobOrderExists(int? joborderid)
+    private bool JobOrderExists(int? id)
     {
-        return _context.JobOrders.Any(e => e.JobOrderId == joborderid);
+        return _context.JobOrders.Any(e => e.JobOrderId == id);
     }
 }
