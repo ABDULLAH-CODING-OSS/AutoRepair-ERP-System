@@ -48,7 +48,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.IsActive)
             </th>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.Category)
             </th>
             <th>
@@ -65,7 +65,7 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Supplier)
-            </th>
+            </th> *@
             <th></th>
         </tr>
     </thead>
@@ -108,7 +108,7 @@
             <td>
                 @Html.DisplayFor(model => item.IsActive)
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(model => item.Category)
             </td>
             <td>
@@ -125,7 +125,7 @@
             </td>
             <td>
                 @Html.DisplayFor(model => item.Supplier)
-            </td>
+            </td> *@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.PartId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.PartId">Details</a> |

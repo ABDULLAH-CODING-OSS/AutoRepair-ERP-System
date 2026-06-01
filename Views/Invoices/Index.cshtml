@@ -13,11 +13,12 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.JobOrderId)
+                @* @Html.DisplayNameFor(model => model.JobOrderId) *@
+                Job Number
             </th>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.CreatedByUserId)
-            </th>
+            </th> *@
             <th>
                 @Html.DisplayNameFor(model => model.InvoiceNumber)
             </th>
@@ -42,15 +43,15 @@
             <th>
                 @Html.DisplayNameFor(model => model.PaymentStatus)
             </th>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.CreatedByUser)
-            </th>
-            <th>
+            </th> *@
+            @* <th>
                 @Html.DisplayNameFor(model => model.JobOrder)
-            </th>
-            <th>
+            </th> *@
+            @* <th>
                 @Html.DisplayNameFor(model => model.Payments)
-            </th>
+            </th> *@
             <th></th>
         </tr>
     </thead>
@@ -58,11 +59,12 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(model => item.JobOrderId)
+                @* @Html.DisplayFor(model => item.JobOrderId) *@
+                    @item.JobOrder?.JobNumber
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(model => item.CreatedByUserId)
-            </td>
+            </td> *@
             <td>
                 @Html.DisplayFor(model => item.InvoiceNumber)
             </td>
@@ -87,7 +89,7 @@
             <td>
                 @Html.DisplayFor(model => item.PaymentStatus)
             </td>
-            <td>
+            @* <td>
                 @Html.DisplayFor(model => item.CreatedByUser)
             </td>
             <td>
@@ -95,7 +97,7 @@
             </td>
             <td>
                 @Html.DisplayFor(model => item.Payments)
-            </td>
+            </td> *@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.InvoiceId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.InvoiceId">Details</a> |

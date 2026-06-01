@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
-
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
+[SessionAuthorize]
 public class JobServiceItemsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -19,15 +21,15 @@ public class JobServiceItemsController : Controller
     }
 
     // GET: JOBSERVICEITEMS/Details/5
-    public async Task<IActionResult> Details(int? jobserviceitemid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (jobserviceitemid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var jobserviceitem = await _context.JobServiceItems
-            .FirstOrDefaultAsync(m => m.JobServiceItemId == jobserviceitemid);
+            .FirstOrDefaultAsync(m => m.JobServiceItemId == id);
         if (jobserviceitem == null)
         {
             return NotFound();
@@ -37,8 +39,27 @@ public class JobServiceItemsController : Controller
     }
 
     // GET: JOBSERVICEITEMS/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        ViewBag.JobOrders = new SelectList(
+            _context.JobOrders,
+            "JobOrderId",
+            "JobNumber");
+
+        ViewBag.Services = new SelectList(
+            _context.Services,
+            "ServiceId",
+            "ServiceName");
+
+        ViewBag.Mechanics = new SelectList(
+            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            "EmployeeId",
+            "FirstName");
+
         return View();
     }
 
@@ -47,30 +68,70 @@ public class JobServiceItemsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes,JobOrder,Mechanic,Service")] JobServiceItem jobserviceitem)
+    //public async Task<IActionResult> Create([Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes,JobOrder,Mechanic,Service")] JobServiceItem jobserviceitem)
+    public async Task<IActionResult> Create([Bind("JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes")] JobServiceItem jobserviceitem)
     {
+        ModelState.Remove("JobOrder");
+        ModelState.Remove("Mechanic");
+        ModelState.Remove("Service");
         if (ModelState.IsValid)
         {
             _context.Add(jobserviceitem);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.JobOrders = new SelectList(
+    _context.JobOrders,
+    "JobOrderId",
+    "JobNumber",
+    jobserviceitem.JobOrderId);
+
+        ViewBag.Services = new SelectList(
+            _context.Services,
+            "ServiceId",
+            "ServiceName",
+            jobserviceitem.ServiceId);
+
+        ViewBag.Mechanics = new SelectList(
+            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            "EmployeeId",
+            "FirstName",
+            jobserviceitem.MechanicId);
+
         return View(jobserviceitem);
     }
 
     // GET: JOBSERVICEITEMS/Edit/5
-    public async Task<IActionResult> Edit(int? jobserviceitemid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (jobserviceitemid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var jobserviceitem = await _context.JobServiceItems.FindAsync(jobserviceitemid);
+        var jobserviceitem = await _context.JobServiceItems.FindAsync(id);
         if (jobserviceitem == null)
         {
             return NotFound();
         }
+        ViewBag.JobOrders = new SelectList(
+    _context.JobOrders,
+    "JobOrderId",
+    "JobNumber",
+    jobserviceitem.JobOrderId);
+
+        ViewBag.Services = new SelectList(
+            _context.Services,
+            "ServiceId",
+            "ServiceName",
+            jobserviceitem.ServiceId);
+
+        ViewBag.Mechanics = new SelectList(
+            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            "EmployeeId",
+            "FirstName",
+            jobserviceitem.MechanicId);
+
         return View(jobserviceitem);
     }
 
@@ -79,12 +140,16 @@ public class JobServiceItemsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? jobserviceitemid, [Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes,JobOrder,Mechanic,Service")] JobServiceItem jobserviceitem)
-    {
-        if (jobserviceitemid != jobserviceitem.JobServiceItemId)
+    public async Task<IActionResult> Edit(int? id, [Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes")] JobServiceItem jobserviceitem)
+ {
+
+        if (id != jobserviceitem.JobServiceItemId)
         {
             return NotFound();
         }
+        ModelState.Remove("JobOrder");
+        ModelState.Remove("Mechanic");
+        ModelState.Remove("Service");
 
         if (ModelState.IsValid)
         {
@@ -106,19 +171,36 @@ public class JobServiceItemsController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.JobOrders = new SelectList(
+    _context.JobOrders,
+    "JobOrderId",
+    "JobNumber",
+    jobserviceitem.JobOrderId);
+
+        ViewBag.Services = new SelectList(
+            _context.Services,
+            "ServiceId",
+            "ServiceName",
+            jobserviceitem.ServiceId);
+
+        ViewBag.Mechanics = new SelectList(
+            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            "EmployeeId",
+            "FirstName",
+            jobserviceitem.MechanicId);
         return View(jobserviceitem);
     }
 
     // GET: JOBSERVICEITEMS/Delete/5
-    public async Task<IActionResult> Delete(int? jobserviceitemid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (jobserviceitemid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var jobserviceitem = await _context.JobServiceItems
-            .FirstOrDefaultAsync(m => m.JobServiceItemId == jobserviceitemid);
+            .FirstOrDefaultAsync(m => m.JobServiceItemId == id);
         if (jobserviceitem == null)
         {
             return NotFound();
@@ -130,9 +212,9 @@ public class JobServiceItemsController : Controller
     // POST: JOBSERVICEITEMS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? jobserviceitemid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var jobserviceitem = await _context.JobServiceItems.FindAsync(jobserviceitemid);
+        var jobserviceitem = await _context.JobServiceItems.FindAsync(id);
         if (jobserviceitem != null)
         {
             _context.JobServiceItems.Remove(jobserviceitem);
@@ -142,8 +224,8 @@ public class JobServiceItemsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool JobServiceItemExists(int? jobserviceitemid)
+    private bool JobServiceItemExists(int? id)
     {
-        return _context.JobServiceItems.Any(e => e.JobServiceItemId == jobserviceitemid);
+        return _context.JobServiceItems.Any(e => e.JobServiceItemId == id);
     }
 }

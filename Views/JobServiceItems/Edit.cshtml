@@ -15,17 +15,29 @@
             <input type="hidden" asp-for="JobServiceItemId" />
             <div class="form-group">
                 <label asp-for="JobOrderId" class="control-label"></label>
-                <input asp-for="JobOrderId" class="form-control" />
+                @* <input asp-for="JobOrderId" class="form-control" /> *@
+                <select asp-for="JobOrderId"
+                        asp-items="ViewBag.JobOrders"
+                        class="form-control">
+                </select>
                 <span asp-validation-for="JobOrderId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="ServiceId" class="control-label"></label>
-                <input asp-for="ServiceId" class="form-control" />
+                @* <input asp-for="ServiceId" class="form-control" /> *@
+                <select asp-for="ServiceId"
+                        asp-items="ViewBag.Services"
+                        class="form-control">
+                </select>
                 <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="MechanicId" class="control-label"></label>
-                <input asp-for="MechanicId" class="form-control" />
+                @* <input asp-for="MechanicId" class="form-control" /> *@
+                <select asp-for="MechanicId"
+                        asp-items="ViewBag.Mechanics"
+                        class="form-control">
+                </select>
                 <span asp-validation-for="MechanicId" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -48,7 +60,7 @@
                 <input asp-for="Notes" class="form-control" />
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="JobOrder" class="control-label"></label>
                 <input asp-for="JobOrder" class="form-control" />
                 <span asp-validation-for="JobOrder" class="text-danger"></span>
@@ -62,7 +74,7 @@
                 <label asp-for="Service" class="control-label"></label>
                 <input asp-for="Service" class="form-control" />
                 <span asp-validation-for="Service" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

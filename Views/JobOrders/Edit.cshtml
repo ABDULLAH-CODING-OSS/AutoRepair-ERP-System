@@ -14,35 +14,43 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="JobOrderId" />
             <div class="form-group">
-                <label asp-for="CustomerId" class="control-label"></label>
-                <input asp-for="CustomerId" class="form-control" />
+                @* <label asp-for="CustomerId" class="control-label"></label>
+                <input asp-for="CustomerId" class="form-control" /> *@
+                <label class="control-label">Customer</label>
+                <select asp-for="CustomerId"
+                        class="form-control"
+                        asp-items="ViewBag.Customers">
+                </select>
                 <span asp-validation-for="CustomerId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="VehicleId" class="control-label"></label>
+                @* <label asp-for="VehicleId" class="control-label"></label> *@
+                <label class="control-label">Vehicle</label>
                 <input asp-for="VehicleId" class="form-control" />
                 <span asp-validation-for="VehicleId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="AdvisorId" class="control-label"></label>
+                @* <label asp-for="AdvisorId" class="control-label"></label> *@
+                <label class="control-label">Service Advisor</label>
                 <input asp-for="AdvisorId" class="form-control" />
                 <span asp-validation-for="AdvisorId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="MechanicId" class="control-label"></label>
+                @* <label asp-for="MechanicId" class="control-label"></label> *@
+                <label class="control-label">Mechanic</label>
                 <input asp-for="MechanicId" class="form-control" />
                 <span asp-validation-for="MechanicId" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>
                 <input asp-for="CreatedByUserId" class="form-control" />
                 <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="JobNumber" class="control-label"></label>
                 <input asp-for="JobNumber" class="form-control" />
                 <span asp-validation-for="JobNumber" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <label asp-for="ComplaintDescription" class="control-label"></label>
                 <input asp-for="ComplaintDescription" class="form-control" />
@@ -70,7 +78,13 @@
             </div>
             <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
+                @* <input asp-for="Status" class="form-control" /> *@
+                <select asp-for="Status" class="form-control">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -83,27 +97,27 @@
                 <input asp-for="FinalCost" class="form-control" />
                 <span asp-validation-for="FinalCost" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="CreatedAt" class="control-label"></label>
                 <input asp-for="CreatedAt" class="form-control" />
                 <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="Advisor" class="control-label"></label>
                 <input asp-for="Advisor" class="form-control" />
                 <span asp-validation-for="Advisor" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>
                 <input asp-for="CreatedByUser" class="form-control" />
                 <span asp-validation-for="CreatedByUser" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="Customer" class="control-label"></label>
                 <input asp-for="Customer" class="form-control" />
                 <span asp-validation-for="Customer" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+             </div> *@
+            @* <div class="form-group">
                 <label asp-for="Invoices" class="control-label"></label>
                 <input asp-for="Invoices" class="form-control" />
                 <span asp-validation-for="Invoices" class="text-danger"></span>
@@ -127,7 +141,7 @@
                 <label asp-for="Vehicle" class="control-label"></label>
                 <input asp-for="Vehicle" class="form-control" />
                 <span asp-validation-for="Vehicle" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
+[SessionAuthorize]
 
 public class PurchaseOrdersController : Controller
 {
@@ -19,15 +22,15 @@ public class PurchaseOrdersController : Controller
     }
 
     // GET: PURCHASEORDERS/Details/5
-    public async Task<IActionResult> Details(int? purchaseorderid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (purchaseorderid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var purchaseorder = await _context.PurchaseOrders
-            .FirstOrDefaultAsync(m => m.PurchaseOrderId == purchaseorderid);
+            .FirstOrDefaultAsync(m => m.PurchaseOrderId == id);
         if (purchaseorder == null)
         {
             return NotFound();
@@ -37,8 +40,20 @@ public class PurchaseOrdersController : Controller
     }
 
     // GET: PURCHASEORDERS/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        ViewBag.Suppliers = _context.Suppliers
+            .Select(s => new SelectListItem
+            {
+                Value = s.SupplierId.ToString(),
+                Text = s.CompanyName
+            })
+            .ToList();
+
         return View();
     }
 
@@ -49,28 +64,68 @@ public class PurchaseOrdersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("PurchaseOrderId,SupplierId,CreatedByUserId,OrderDate,ExpectedDeliveryDate,Status,TotalAmount,CreatedByUser,PurchaseOrderItems,Supplier")] PurchaseOrder purchaseorder)
     {
+        ModelState.Remove("CreatedByUser");
+        ModelState.Remove("PurchaseOrderItems");
+        ModelState.Remove("Supplier");
+        purchaseorder.CreatedByUserId =
+    HttpContext.Session.GetInt32("UserID");
+
+        purchaseorder.OrderDate =
+            DateOnly.FromDateTime(DateTime.Now);
+
+        purchaseorder.Status = "Ordered";
         if (ModelState.IsValid)
         {
             _context.Add(purchaseorder);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.Suppliers = _context.Suppliers
+    .Select(s => new SelectListItem
+    {
+        Value = s.SupplierId.ToString(),
+        Text = s.CompanyName
+    })
+    .ToList();
         return View(purchaseorder);
     }
 
     // GET: PURCHASEORDERS/Edit/5
-    public async Task<IActionResult> Edit(int? purchaseorderid)
+    //public async Task<IActionResult> Edit(int? id)
+    //{
+    //    if (id == null)
+    //    {
+    //        return NotFound();
+    //    }
+
+    //    var purchaseorder = await _context.PurchaseOrders.FindAsync(id  );
+    //    if (purchaseorder == null)
+    //    {
+    //        return NotFound();
+    //    }
+    //    return View(purchaseorder);
+    //}
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (purchaseorderid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var purchaseorder = await _context.PurchaseOrders.FindAsync(purchaseorderid);
+        var purchaseorder = await _context.PurchaseOrders.FindAsync(id);
+
         if (purchaseorder == null)
         {
             return NotFound();
         }
+
+        ViewBag.Suppliers = new SelectList(
+            _context.Suppliers,
+            "SupplierId",
+            "CompanyName",
+            purchaseorder.SupplierId
+        );
+
         return View(purchaseorder);
     }
 
@@ -79,18 +134,70 @@ public class PurchaseOrdersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? purchaseorderid, [Bind("PurchaseOrderId,SupplierId,CreatedByUserId,OrderDate,ExpectedDeliveryDate,Status,TotalAmount,CreatedByUser,PurchaseOrderItems,Supplier")] PurchaseOrder purchaseorder)
+    public async Task<IActionResult> Edit(int? id, [Bind("PurchaseOrderId,SupplierId,CreatedByUserId,OrderDate,ExpectedDeliveryDate,Status,TotalAmount,CreatedByUser,PurchaseOrderItems,Supplier")] PurchaseOrder purchaseorder)
     {
-        if (purchaseorderid != purchaseorder.PurchaseOrderId)
+        ModelState.Remove("CreatedByUser");
+        ModelState.Remove("PurchaseOrderItems");
+        ModelState.Remove("Supplier");
+        if (id != purchaseorder.PurchaseOrderId)
         {
             return NotFound();
         }
 
         if (ModelState.IsValid)
         {
+            //try
+            //{
+            //    _context.Update(purchaseorder);
+            //    await _context.SaveChangesAsync();
+            //}
             try
             {
-                _context.Update(purchaseorder);
+                var existingPO = await _context.PurchaseOrders
+                    .Include(p => p.PurchaseOrderItems)
+                    .FirstOrDefaultAsync(p => p.PurchaseOrderId == purchaseorder.PurchaseOrderId);
+
+                if (existingPO == null)
+                {
+                    return NotFound();
+                }
+
+                bool stockAlreadyReceived =
+                    existingPO.Status == "Received";
+
+                existingPO.SupplierId = purchaseorder.SupplierId;
+                existingPO.ExpectedDeliveryDate = purchaseorder.ExpectedDeliveryDate;
+                existingPO.Status = purchaseorder.Status;
+                existingPO.TotalAmount = purchaseorder.TotalAmount;
+
+                if (!stockAlreadyReceived &&
+                    purchaseorder.Status == "Received")
+                {
+                    //foreach (var item in existingPO.PurchaseOrderItems)
+                    //{
+                    //    var part = await _context.Parts
+                    //        .FindAsync(item.PartId);
+
+                    //    if (part != null)
+                    //    {
+                    //        part.CurrentStock += item.Quantity;
+                    //    }
+                    //}
+                    var poItems = await _context.PurchaseOrderItems
+    .Where(x => x.PurchaseOrderId == purchaseorder.PurchaseOrderId)
+    .ToListAsync();
+
+                    foreach (var item in poItems)
+                    {
+                        var part = await _context.Parts.FindAsync(item.PartId);
+
+                        if (part != null)
+                        {
+                            part.CurrentStock += item.Quantity ?? 0;
+                        }
+                    }
+                }
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -106,19 +213,33 @@ public class PurchaseOrdersController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+        //    ViewBag.Suppliers = _context.Suppliers
+        //.Select(s => new SelectListItem
+        //{
+        //    Value = s.SupplierId.ToString(),
+        //    Text = s.CompanyName
+        //})
+        //.ToList();
+        ViewBag.Suppliers = new SelectList(
+        _context.Suppliers,
+        "SupplierId",
+        "CompanyName",
+        purchaseorder.SupplierId
+    );
         return View(purchaseorder);
+        //return View(purchaseorder);
     }
 
     // GET: PURCHASEORDERS/Delete/5
-    public async Task<IActionResult> Delete(int? purchaseorderid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (purchaseorderid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var purchaseorder = await _context.PurchaseOrders
-            .FirstOrDefaultAsync(m => m.PurchaseOrderId == purchaseorderid);
+            .FirstOrDefaultAsync(m => m.PurchaseOrderId == id);
         if (purchaseorder == null)
         {
             return NotFound();
@@ -130,9 +251,9 @@ public class PurchaseOrdersController : Controller
     // POST: PURCHASEORDERS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? purchaseorderid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var purchaseorder = await _context.PurchaseOrders.FindAsync(purchaseorderid);
+        var purchaseorder = await _context.PurchaseOrders.FindAsync(id);
         if (purchaseorder != null)
         {
             _context.PurchaseOrders.Remove(purchaseorder);
@@ -142,8 +263,8 @@ public class PurchaseOrdersController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool PurchaseOrderExists(int? purchaseorderid)
+    private bool PurchaseOrderExists(int? id)
     {
-        return _context.PurchaseOrders.Any(e => e.PurchaseOrderId == purchaseorderid);
+        return _context.PurchaseOrders.Any(e => e.PurchaseOrderId == id);
     }
 }

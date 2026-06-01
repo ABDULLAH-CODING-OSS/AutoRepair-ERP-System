@@ -14,34 +14,46 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <label asp-for="SupplierId" class="control-label"></label>
+                @* <label asp-for="SupplierId" class="control-label"></label>
                 <input asp-for="SupplierId" class="form-control" />
+                <span asp-validation-for="SupplierId" class="text-danger"></span> *@
+                <label class="control-label">Supplier</label>
+                <select asp-for="SupplierId"
+                        class="form-control"
+                        asp-items="ViewBag.Suppliers">
+                    <option value="">-- Select Supplier --</option>
+                </select>
                 <span asp-validation-for="SupplierId" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>
                 <input asp-for="CreatedByUserId" class="form-control" />
                 <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
-            </div>
+            </div> *@
 
-            <div class="form-group">
+          @*   <div class="form-group">
                 <label asp-for="OrderDate" class="control-label"></label>
                 <input asp-for="OrderDate" class="form-control" />
                 <span asp-validation-for="OrderDate" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <div class="form-group">
                 <label asp-for="ExpectedDeliveryDate" class="control-label"></label>
-                <input asp-for="ExpectedDeliveryDate" class="form-control" />
+                @*@<input asp-for="ExpectedDeliveryDate" class="form-control" />*@
+               
+                <input asp-for="ExpectedDeliveryDate"
+                       type="date"
+                       class="form-control" />
                 <span asp-validation-for="ExpectedDeliveryDate" class="text-danger"></span>
+
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
                 <input asp-for="Status" class="form-control" />
                 <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <div class="form-group">
                 <label asp-for="TotalAmount" class="control-label"></label>
@@ -49,7 +61,7 @@
                 <span asp-validation-for="TotalAmount" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>
                 <input asp-for="CreatedByUser" class="form-control" />
                 <span asp-validation-for="CreatedByUser" class="text-danger"></span>
@@ -65,7 +77,7 @@
                 <label asp-for="Supplier" class="control-label"></label>
                 <input asp-for="Supplier" class="form-control" />
                 <span asp-validation-for="Supplier" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

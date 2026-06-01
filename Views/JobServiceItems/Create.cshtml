@@ -14,48 +14,67 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <label asp-for="JobOrderId" class="control-label"></label>
-                <input asp-for="JobOrderId" class="form-control" />
+                @* <label asp-for="JobOrderId" class="control-label"></label>
+                <input asp-for="JobOrderId" class="form-control" /> *@
+                <label class="control-label">Job Order</label>
+                <select asp-for="JobOrderId"
+                        class="form-control"
+                        asp-items="ViewBag.JobOrders">
+                </select>
                 <span asp-validation-for="JobOrderId" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ServiceId" class="control-label"></label>
-                <input asp-for="ServiceId" class="form-control" />
+                @* <label asp-for="ServiceId" class="control-label"></label>
+                <input asp-for="ServiceId" class="form-control" /> *@
+                <label class="control-label">Service</label>
+                <select asp-for="ServiceId"
+                        class="form-control"
+                        asp-items="ViewBag.Services">
+                </select>
                 <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="MechanicId" class="control-label"></label>
-                <input asp-for="MechanicId" class="form-control" />
+                @* <label asp-for="MechanicId" class="control-label"></label>
+                <input asp-for="MechanicId" class="form-control" /> *@
+                <label class="control-label">Mechanic</label>
+                <select asp-for="MechanicId"
+                        class="form-control"
+                        asp-items="ViewBag.Mechanics">
+                </select>
                 <span asp-validation-for="MechanicId" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="HoursWorked" class="control-label"></label>
+                @* <label asp-for="HoursWorked" class="control-label"></label> *@
+                <label class="control-label">Hourly Rate</label>
                 <input asp-for="HoursWorked" class="form-control" />
                 <span asp-validation-for="HoursWorked" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="HourlyRate" class="control-label"></label>
+                @* <label asp-for="HourlyRate" class="control-label"></label> *@
+                <label class="control-label">Hours Worked</label>
                 <input asp-for="HourlyRate" class="form-control" />
                 <span asp-validation-for="HourlyRate" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ServicePrice" class="control-label"></label>
+                @* <label asp-for="ServicePrice" class="control-label"></label> *@
+                <label class="control-label">Service Price</label>
                 <input asp-for="ServicePrice" class="form-control" />
                 <span asp-validation-for="ServicePrice" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
+                @* <label asp-for="Notes" class="control-label"></label> *@
+                <label class="control-label">Notes</label>
                 <input asp-for="Notes" class="form-control" />
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="JobOrder" class="control-label"></label>
                 <input asp-for="JobOrder" class="form-control" />
                 <span asp-validation-for="JobOrder" class="text-danger"></span>
@@ -71,7 +90,7 @@
                 <label asp-for="Service" class="control-label"></label>
                 <input asp-for="Service" class="form-control" />
                 <span asp-validation-for="Service" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

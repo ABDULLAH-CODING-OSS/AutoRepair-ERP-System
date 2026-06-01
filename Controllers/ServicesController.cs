@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
+[SessionAuthorize]
 
 public class ServicesController : Controller
 {
@@ -19,15 +22,15 @@ public class ServicesController : Controller
     }
 
     // GET: SERVICES/Details/5
-    public async Task<IActionResult> Details(int? serviceid)
+    public async Task<IActionResult> Details(int?  id)
     {
-        if (serviceid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var service = await _context.Services
-            .FirstOrDefaultAsync(m => m.ServiceId == serviceid);
+            .FirstOrDefaultAsync(m => m.ServiceId == id);
         if (service == null)
         {
             return NotFound();
@@ -59,14 +62,14 @@ public class ServicesController : Controller
     }
 
     // GET: SERVICES/Edit/5
-    public async Task<IActionResult> Edit(int? serviceid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (serviceid == null)
+        if (id  == null)
         {
             return NotFound();
         }
 
-        var service = await _context.Services.FindAsync(serviceid);
+        var service = await _context.Services.FindAsync(id);
         if (service == null)
         {
             return NotFound();
@@ -79,9 +82,9 @@ public class ServicesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? serviceid, [Bind("ServiceId,ServiceName,Description,StandardHours,FixedPrice,IsActive,JobServiceItems")] Service service)
+    public async Task<IActionResult> Edit(int? id, [Bind("ServiceId,ServiceName,Description,StandardHours,FixedPrice,IsActive,JobServiceItems")] Service service)
     {
-        if (serviceid != service.ServiceId)
+        if (id != service.ServiceId)
         {
             return NotFound();
         }
@@ -110,15 +113,15 @@ public class ServicesController : Controller
     }
 
     // GET: SERVICES/Delete/5
-    public async Task<IActionResult> Delete(int? serviceid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (serviceid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var service = await _context.Services
-            .FirstOrDefaultAsync(m => m.ServiceId == serviceid);
+            .FirstOrDefaultAsync(m => m.ServiceId == id);
         if (service == null)
         {
             return NotFound();
@@ -130,9 +133,9 @@ public class ServicesController : Controller
     // POST: SERVICES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? serviceid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var service = await _context.Services.FindAsync(serviceid);
+        var service = await _context.Services.FindAsync(id);
         if (service != null)
         {
             _context.Services.Remove(service);
@@ -142,8 +145,8 @@ public class ServicesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool ServiceExists(int? serviceid)
+    private bool ServiceExists(int? id)
     {
-        return _context.Services.Any(e => e.ServiceId == serviceid);
+        return _context.Services.Any(e => e.ServiceId == id );
     }
 }

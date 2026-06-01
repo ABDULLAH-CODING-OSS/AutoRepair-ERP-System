@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
+[SessionAuthorize]
 public class PartsController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -19,15 +22,15 @@ public class PartsController : Controller
     }
 
     // GET: PARTS/Details/5
-    public async Task<IActionResult> Details(int? partid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (partid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var part = await _context.Parts
-            .FirstOrDefaultAsync(m => m.PartId == partid);
+            .FirstOrDefaultAsync(m => m.PartId == id);
         if (part == null)
         {
             return NotFound();
@@ -37,8 +40,28 @@ public class PartsController : Controller
     }
 
     // GET: PARTS/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        ViewBag.Categories = _context.Categories
+            .Select(c => new SelectListItem
+            {
+                Value = c.CategoryId.ToString(),
+                Text = c.CategoryName
+            })
+            .ToList();
+
+        ViewBag.Suppliers = _context.Suppliers
+            .Select(s => new SelectListItem
+            {
+                Value = s.SupplierId.ToString(),
+                Text = s.CompanyName
+            })
+            .ToList();
+
         return View();
     }
 
@@ -47,8 +70,14 @@ public class PartsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("PartId,CategoryId,SupplierId,Sku,PartName,Description,CostPrice,SalePrice,CurrentStock,ReorderLevel,Unit,RackLocation,IsActive,Category,JobPartItems,LowStockAlerts,PurchaseOrderItems,StockTransactions,Supplier")] Part part)
+    public async Task<IActionResult> Create([Bind("CategoryId,SupplierId,Sku,PartName,Description,CostPrice,SalePrice,CurrentStock,ReorderLevel,Unit,RackLocation,IsActive")] Part part)
     {
+        ModelState.Remove("Category");
+        ModelState.Remove("Supplier");
+        ModelState.Remove("JobPartItems");
+        ModelState.Remove("LowStockAlerts");
+        ModelState.Remove("PurchaseOrderItems");
+        ModelState.Remove("StockTransactions");
         if (ModelState.IsValid)
         {
             _context.Add(part);
@@ -59,14 +88,14 @@ public class PartsController : Controller
     }
 
     // GET: PARTS/Edit/5
-    public async Task<IActionResult> Edit(int? partid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (partid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var part = await _context.Parts.FindAsync(partid);
+        var part = await _context.Parts.FindAsync(id);
         if (part == null)
         {
             return NotFound();
@@ -79,9 +108,9 @@ public class PartsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? partid, [Bind("PartId,CategoryId,SupplierId,Sku,PartName,Description,CostPrice,SalePrice,CurrentStock,ReorderLevel,Unit,RackLocation,IsActive,Category,JobPartItems,LowStockAlerts,PurchaseOrderItems,StockTransactions,Supplier")] Part part)
+    public async Task<IActionResult> Edit(int? id, [Bind("PartId,CategoryId,SupplierId,Sku,PartName,Description,CostPrice,SalePrice,CurrentStock,ReorderLevel,Unit,RackLocation,IsActive,Category,JobPartItems,LowStockAlerts,PurchaseOrderItems,StockTransactions,Supplier")] Part part)
     {
-        if (partid != part.PartId)
+        if (id != part.PartId)
         {
             return NotFound();
         }
@@ -110,15 +139,15 @@ public class PartsController : Controller
     }
 
     // GET: PARTS/Delete/5
-    public async Task<IActionResult> Delete(int? partid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (partid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var part = await _context.Parts
-            .FirstOrDefaultAsync(m => m.PartId == partid);
+            .FirstOrDefaultAsync(m => m.PartId == id);
         if (part == null)
         {
             return NotFound();
@@ -130,9 +159,9 @@ public class PartsController : Controller
     // POST: PARTS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? partid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var part = await _context.Parts.FindAsync(partid);
+        var part = await _context.Parts.FindAsync(id);
         if (part != null)
         {
             _context.Parts.Remove(part);
@@ -142,8 +171,8 @@ public class PartsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool PartExists(int? partid)
+    private bool PartExists(int? id)
     {
-        return _context.Parts.Any(e => e.PartId == partid);
+        return _context.Parts.Any(e => e.PartId == id);
     }
 }

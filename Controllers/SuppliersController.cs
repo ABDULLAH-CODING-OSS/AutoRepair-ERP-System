@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
+[SessionAuthorize]
 public class SuppliersController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -19,15 +22,15 @@ public class SuppliersController : Controller
     }
 
     // GET: SUPPLIERS/Details/5
-    public async Task<IActionResult> Details(int? supplierid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (supplierid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var supplier = await _context.Suppliers
-            .FirstOrDefaultAsync(m => m.SupplierId == supplierid);
+            .FirstOrDefaultAsync(m => m.SupplierId == id);
         if (supplier == null)
         {
             return NotFound();
@@ -59,14 +62,14 @@ public class SuppliersController : Controller
     }
 
     // GET: SUPPLIERS/Edit/5
-    public async Task<IActionResult> Edit(int? supplierid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (supplierid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var supplier = await _context.Suppliers.FindAsync(supplierid);
+        var supplier = await _context.Suppliers.FindAsync(id);
         if (supplier == null)
         {
             return NotFound();
@@ -79,9 +82,9 @@ public class SuppliersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? supplierid, [Bind("SupplierId,CompanyName,ContactPerson,Phone,Email,Address,Parts,PurchaseOrders")] Supplier supplier)
+    public async Task<IActionResult> Edit(int? id, [Bind("SupplierId,CompanyName,ContactPerson,Phone,Email,Address,Parts,PurchaseOrders")] Supplier supplier)
     {
-        if (supplierid != supplier.SupplierId)
+        if (id != supplier.SupplierId)
         {
             return NotFound();
         }
@@ -110,15 +113,15 @@ public class SuppliersController : Controller
     }
 
     // GET: SUPPLIERS/Delete/5
-    public async Task<IActionResult> Delete(int? supplierid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (supplierid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var supplier = await _context.Suppliers
-            .FirstOrDefaultAsync(m => m.SupplierId == supplierid);
+            .FirstOrDefaultAsync(m => m.SupplierId == id);
         if (supplier == null)
         {
             return NotFound();
@@ -130,9 +133,9 @@ public class SuppliersController : Controller
     // POST: SUPPLIERS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? supplierid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var supplier = await _context.Suppliers.FindAsync(supplierid);
+        var supplier = await _context.Suppliers.FindAsync(id);
         if (supplier != null)
         {
             _context.Suppliers.Remove(supplier);
@@ -142,8 +145,8 @@ public class SuppliersController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool SupplierExists(int? supplierid)
+    private bool SupplierExists(int? id)
     {
-        return _context.Suppliers.Any(e => e.SupplierId == supplierid);
+        return _context.Suppliers.Any(e => e.SupplierId == id);
     }
 }
