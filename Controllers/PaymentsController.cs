@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
+[SessionAuthorize]
+
 
 public class PaymentsController : Controller
 {
@@ -13,21 +17,27 @@ public class PaymentsController : Controller
     }
 
     // GET: PAYMENTS
-    public async Task<IActionResult> Index()    
+    //public async Task<IActionResult> Index()    
+    //{
+    //    return View(await _context.Payments.ToListAsync());
+    //}
+    public async Task<IActionResult> Index()
     {
-        return View(await _context.Payments.ToListAsync());
+        return View(await _context.Payments
+            .Include(p => p.Invoice)
+            .ToListAsync());
     }
 
     // GET: PAYMENTS/Details/5
-    public async Task<IActionResult> Details(int? paymentid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (paymentid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var payment = await _context.Payments
-            .FirstOrDefaultAsync(m => m.PaymentId == paymentid);
+            .FirstOrDefaultAsync(m => m.PaymentId == id);
         if (payment == null)
         {
             return NotFound();
@@ -37,8 +47,23 @@ public class PaymentsController : Controller
     }
 
     // GET: PAYMENTS/Create
+    //public IActionResult Create()
+    //{
+    //    return View();
+    //}
     public IActionResult Create()
     {
+        //ViewBag.Invoices = new SelectList(
+        //    _context.Invoices,
+        //    "InvoiceId",
+        //    "InvoiceNumber");
+
+        //return View();
+        ViewBag.Invoices = new SelectList(
+    _context.Invoices
+        .Where(i => i.PaymentStatus != "Paid"),
+    "InvoiceId",
+    "InvoiceNumber");
         return View();
     }
 
@@ -47,11 +72,75 @@ public class PaymentsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("PaymentId,InvoiceId,PaymentDate,AmountPaid,PaymentMethod,TransactionReference,Notes,Invoice")] Payment payment)
+    public async Task<IActionResult> Create([Bind("InvoiceId,AmountPaid,PaymentMethod,TransactionReference,Notes")] Payment payment)
     {
+        ModelState.Remove("Invoice");
+        ModelState.Remove("PaymentDate");
+        if (payment.AmountPaid <= 0)
+        {
+            ModelState.AddModelError("", "Payment amount must be greater than zero.");
+        }
         if (ModelState.IsValid)
         {
+            payment.PaymentDate = DateTime.Now;
+            var invoice = await _context.Invoices
+    .Include(i => i.Payments)
+    .FirstOrDefaultAsync(i => i.InvoiceId == payment.InvoiceId);
+            if (invoice == null)
+            {
+                return NotFound();
+            }
+            if (invoice.PaymentStatus == "Paid")
+            {
+                ModelState.AddModelError("", "This invoice is already fully paid.");
+
+                ViewBag.Invoices = new SelectList(
+                    _context.Invoices
+                        .Where(i => i.PaymentStatus != "Paid"),
+                    "InvoiceId",
+                    "InvoiceNumber",
+                    payment.InvoiceId);
+
+                return View(payment);
+            }
+
+            if (invoice == null)
+            {
+                return NotFound();
+            }
+
+            var totalPaid = invoice.Payments.Sum(p => p.AmountPaid);
+
+            if (totalPaid + payment.AmountPaid > invoice.GrandTotal)
+            {
+                ModelState.AddModelError("", "Payment exceeds invoice balance.");
+
+                ViewBag.Invoices = new SelectList(
+                    _context.Invoices,
+                    "InvoiceId",
+                    "InvoiceNumber",
+                    payment.InvoiceId);
+
+                return View(payment);
+            }
             _context.Add(payment);
+            await _context.SaveChangesAsync();
+            totalPaid += payment.AmountPaid;
+
+            if (totalPaid <= 0)
+            {
+                invoice.PaymentStatus = "Unpaid";
+            }
+            else if (totalPaid < invoice.GrandTotal)
+            {
+                invoice.PaymentStatus = "Partially Paid";
+            }
+            else
+            {
+                invoice.PaymentStatus = "Paid";
+            }
+
+            _context.Update(invoice);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -59,18 +148,24 @@ public class PaymentsController : Controller
     }
 
     // GET: PAYMENTS/Edit/5
-    public async Task<IActionResult> Edit(int? paymentid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (paymentid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var payment = await _context.Payments.FindAsync(paymentid);
+        var payment = await _context.Payments.FindAsync(id);
         if (payment == null)
         {
             return NotFound();
         }
+        ViewBag.Invoices = new SelectList(
+    _context.Invoices,
+    "InvoiceId",
+    "InvoiceNumber",
+    payment.InvoiceId);
+
         return View(payment);
     }
 
@@ -79,12 +174,25 @@ public class PaymentsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? paymentid, [Bind("PaymentId,InvoiceId,PaymentDate,AmountPaid,PaymentMethod,TransactionReference,Notes,Invoice")] Payment payment)
+    public async Task<IActionResult> Edit(int? id, [Bind("PaymentId,InvoiceId,AmountPaid,PaymentMethod,TransactionReference,Notes")] Payment payment)
     {
-        if (paymentid != payment.PaymentId)
+        if (id != payment.PaymentId)
         {
             return NotFound();
         }
+        var existingPayment = await _context.Payments
+    .AsNoTracking()
+    .FirstOrDefaultAsync(p => p.PaymentId == id);
+
+        if (existingPayment == null)
+        {
+            return NotFound();
+        }
+
+        payment.PaymentDate = existingPayment.PaymentDate;
+
+        ModelState.Remove("Invoice");
+        ModelState.Remove("PaymentDate");
 
         if (ModelState.IsValid)
         {
@@ -106,19 +214,25 @@ public class PaymentsController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.Invoices = new SelectList(
+    _context.Invoices,
+    "InvoiceId",
+    "InvoiceNumber",
+    payment.InvoiceId);
+
         return View(payment);
     }
 
     // GET: PAYMENTS/Delete/5
-    public async Task<IActionResult> Delete(int? paymentid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (paymentid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var payment = await _context.Payments
-            .FirstOrDefaultAsync(m => m.PaymentId == paymentid);
+            .FirstOrDefaultAsync(m => m.PaymentId == id);
         if (payment == null)
         {
             return NotFound();
@@ -127,23 +241,67 @@ public class PaymentsController : Controller
         return View(payment);
     }
 
-    // POST: PAYMENTS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? paymentid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var payment = await _context.Payments.FindAsync(paymentid);
-        if (payment != null)
+        var payment = await _context.Payments.FindAsync(id);
+
+        if (payment == null)
         {
-            _context.Payments.Remove(payment);
+            return NotFound();
         }
 
+        int invoiceId = payment.InvoiceId;
+
+        _context.Payments.Remove(payment);
         await _context.SaveChangesAsync();
+
+        var invoice = await _context.Invoices
+            .Include(i => i.Payments)
+            .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId);
+
+        if (invoice != null)
+        {
+            decimal totalPaid = invoice.Payments.Sum(p => p.AmountPaid);
+
+            if (totalPaid <= 0)
+            {
+                invoice.PaymentStatus = "Unpaid";
+            }
+            else if (totalPaid < invoice.GrandTotal)
+            {
+                invoice.PaymentStatus = "Partially Paid";
+            }
+            else
+            {
+                invoice.PaymentStatus = "Paid";
+            }
+
+            _context.Update(invoice);
+            await _context.SaveChangesAsync();
+        }
+
         return RedirectToAction(nameof(Index));
     }
+    // POST: PAYMENTS/Delete/5
+    //[HttpPost, ActionName("Delete")]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> DeleteConfirmed(int? id)
+    //{
+    //    var payment = await _context.Payments.FindAsync(id);
+    //    if (payment != null)
+    //    {
+    //        _context.Payments.Remove(payment);
+    //    }
 
-    private bool PaymentExists(int? paymentid)
+    //    await _context.SaveChangesAsync();
+    //    return RedirectToAction(nameof(Index));
+    //}
+
+    private bool PaymentExists(int? id)
     {
-        return _context.Payments.Any(e => e.PaymentId == paymentid);
+        return _context.Payments.Any(e => e.PaymentId == id);
     }
+
 }

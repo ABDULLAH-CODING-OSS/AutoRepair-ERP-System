@@ -13,17 +13,24 @@
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="InvoiceId" class="control-label"></label>
                 <input asp-for="InvoiceId" class="form-control" />
                 <span asp-validation-for="InvoiceId" class="text-danger"></span>
-            </div>
-
+            </div> *@
             <div class="form-group">
+                <label class="control-label">Invoice</label>
+                <select asp-for="InvoiceId"
+                        class="form-control"
+                        asp-items="ViewBag.Invoices">
+                </select>
+                <span asp-validation-for="InvoiceId" class="text-danger"></span>
+            </div>
+            @* <div class="form-group">
                 <label asp-for="PaymentDate" class="control-label"></label>
                 <input asp-for="PaymentDate" class="form-control" />
                 <span asp-validation-for="PaymentDate" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <div class="form-group">
                 <label asp-for="AmountPaid" class="control-label"></label>
@@ -31,9 +38,18 @@
                 <span asp-validation-for="AmountPaid" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="PaymentMethod" class="control-label"></label>
                 <input asp-for="PaymentMethod" class="form-control" />
+                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+            </div> *@
+            <div class="form-group">
+                <label class="control-label">Payment Method</label>
+                <select asp-for="PaymentMethod" class="form-control">
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                </select>
                 <span asp-validation-for="PaymentMethod" class="text-danger"></span>
             </div>
 
@@ -49,11 +65,11 @@
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="Invoice" class="control-label"></label>
                 <input asp-for="Invoice" class="form-control" />
                 <span asp-validation-for="Invoice" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

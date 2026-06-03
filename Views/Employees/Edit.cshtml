@@ -14,9 +14,10 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="EmployeeId" />
             <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
+                @* <label asp-for="UserId" class="control-label"></label>
                 <input asp-for="UserId" class="form-control" />
-                <span asp-validation-for="UserId" class="text-danger"></span>
+                <span asp-validation-for="UserId" class="text-danger"></span> *@
+                <input type="hidden" asp-for="UserId" />
             </div>
             <div class="form-group">
                 <label asp-for="EmployeeCode" class="control-label"></label>
@@ -55,7 +56,10 @@
             </div>
             <div class="form-group">
                 <label asp-for="Designation" class="control-label"></label>
-                <input asp-for="Designation" class="form-control" />
+                @* <input asp-for="Designation" class="form-control" /> *@
+                <input asp-for="HireDate"
+                       type="date"
+                       class="form-control" />
                 <span asp-validation-for="Designation" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -73,27 +77,27 @@
                 <input asp-for="IsActive" class="form-check-input" />
                 <span asp-validation-for="IsActive" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="Attendances" class="control-label"></label>
                 <input asp-for="Attendances" class="form-control" />
                 <span asp-validation-for="Attendances" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="JobOrderAdvisors" class="control-label"></label>
                 <input asp-for="JobOrderAdvisors" class="form-control" />
                 <span asp-validation-for="JobOrderAdvisors" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="JobOrderMechanics" class="control-label"></label>
                 <input asp-for="JobOrderMechanics" class="form-control" />
                 <span asp-validation-for="JobOrderMechanics" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="JobServiceItems" class="control-label"></label>
                 <input asp-for="JobServiceItems" class="form-control" />
                 <span asp-validation-for="JobServiceItems" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+            </div> *@
+            @* <div class="form-group">
                 <label asp-for="Payrolls" class="control-label"></label>
                 <input asp-for="Payrolls" class="form-control" />
                 <span asp-validation-for="Payrolls" class="text-danger"></span>
@@ -102,7 +106,7 @@
                 <label asp-for="User" class="control-label"></label>
                 <input asp-for="User" class="form-control" />
                 <span asp-validation-for="User" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
