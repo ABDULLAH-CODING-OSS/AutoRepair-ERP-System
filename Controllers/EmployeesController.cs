@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using AutoRepairERD.Filters;
+
+[SessionAuthorize]
 
 public class EmployeesController : Controller
 {
@@ -15,9 +18,15 @@ public class EmployeesController : Controller
     }
 
     // GET: EMPLOYEES
-    public async Task<IActionResult> Index()    
+    //public async Task<IActionResult> Index()    
+    //{
+    //    return View(await _context.Employees.ToListAsync());
+    //}
+    public async Task<IActionResult> Index()
     {
-        return View(await _context.Employees.ToListAsync());
+        return View(await _context.Employees
+            .Where(e => e.IsActive == true)
+            .ToListAsync());
     }
 
     // GET: EMPLOYEES/Details/5
@@ -68,6 +77,18 @@ public class EmployeesController : Controller
     //    }
     //    return View(employee);
     //}
+
+    //catch
+    //{
+    //    await transaction.RollbackAsync();
+
+    //    ViewBag.Roles = new SelectList(
+    //        _context.Roles,
+    //        "RoleId",
+    //        "RoleName");
+
+    //    return View(model);
+    //}
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EmployeeRegistrationViewModel model)
@@ -82,43 +103,43 @@ public class EmployeesController : Controller
             return View(model);
         }
 
+        // Friendly validations
+
+        if (_context.Users.Any(u => u.Username == model.Username))
+        {
+            ModelState.AddModelError("Username", "Username already exists.");
+
+            ViewBag.Roles = new SelectList(
+                _context.Roles,
+                "RoleId",
+                "RoleName");
+
+            return View(model);
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Email) &&
+            _context.Users.Any(u => u.Email == model.Email))
+        {
+            ModelState.AddModelError("Email", "Email already exists.");
+
+            ViewBag.Roles = new SelectList(
+                _context.Roles,
+                "RoleId",
+                "RoleName");
+
+            return View(model);
+        }
+
         using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
-            // Create User
-            if (_context.Users.Any(u => u.Username == model.Username))
-            {
-                ModelState.AddModelError("Username", "Username already exists.");
-
-                ViewBag.Roles = new SelectList(
-                    _context.Roles,
-                    "RoleId",
-                    "RoleName");
-
-                return View(model);
-            }
-
-            if (_context.Users.Any(u => u.Email == model.Email))
-            {
-                ModelState.AddModelError("Email", "Email already exists.");
-
-                ViewBag.Roles = new SelectList(
-                    _context.Roles,
-                    "RoleId",
-                    "RoleName");
-
-                return View(model);
-            }
             var user = new User
             {
                 Username = model.Username,
-
-                PasswordHash = model.Password, // later we can hash passwords
-
+                PasswordHash = model.Password, // Later hash passwords
                 Email = model.Email,
                 FullName = $"{model.FirstName} {model.LastName}",
-
                 Phone = model.Phone,
                 IsActive = true,
                 CreatedAt = DateTime.Now
@@ -126,8 +147,6 @@ public class EmployeesController : Controller
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            // Create UserRole
 
             var userRole = new UserRole
             {
@@ -138,12 +157,12 @@ public class EmployeesController : Controller
             _context.UserRoles.Add(userRole);
             await _context.SaveChangesAsync();
 
-            // Create Employee
+            var nextEmployeeNumber = _context.Employees.Count() + 1;
 
             var employee = new Employee
             {
                 UserId = user.UserId,
-                EmployeeCode = model.EmployeeCode,
+                EmployeeCode = $"EMP{nextEmployeeNumber:D3}",
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Cnic = model.Cnic,
@@ -163,22 +182,11 @@ public class EmployeesController : Controller
 
             return RedirectToAction(nameof(Index));
         }
-        //catch
-        //{
-        //    await transaction.RollbackAsync();
-
-        //    ViewBag.Roles = new SelectList(
-        //        _context.Roles,
-        //        "RoleId",
-        //        "RoleName");
-
-        //    return View(model);
-        //}
         catch (Exception ex)
         {
-            ModelState.AddModelError("", ex.Message);
-
             await transaction.RollbackAsync();
+
+            ModelState.AddModelError("", ex.InnerException?.Message ?? ex.Message);
 
             ViewBag.Roles = new SelectList(
                 _context.Roles,
@@ -302,22 +310,41 @@ public class EmployeesController : Controller
     }
 
     // POST: EMPLOYEES/Delete/5
+    //[HttpPost, ActionName("Delete")]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> DeleteConfirmed(int? id)
+    //{
+    //    var employee = await _context.Employees.FindAsync(id);
+    //    if (employee != null)
+    //    {
+    //        _context.Employees.Remove(employee);
+    //    }
+
+    //    await _context.SaveChangesAsync();
+    //    return RedirectToAction(nameof(Index));
+    //}
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
         var employee = await _context.Employees.FindAsync(id);
-        if (employee != null)
+
+        if (employee == null)
         {
-            _context.Employees.Remove(employee);
+            return NotFound();
         }
 
+        employee.IsActive = false;
+
+        _context.Update(employee);
+
         await _context.SaveChangesAsync();
+
         return RedirectToAction(nameof(Index));
     }
-
     private bool EmployeeExists(int? id)
     {
         return _context.Employees.Any(e => e.EmployeeId == id);
     }
+
 }

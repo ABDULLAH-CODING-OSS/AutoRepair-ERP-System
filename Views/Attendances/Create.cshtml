@@ -4,40 +4,61 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Attendance</h4>
+<h2>Record Attendance</h2>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="EmployeeId" class="control-label"></label>
                 <input asp-for="EmployeeId" class="form-control" />
                 <span asp-validation-for="EmployeeId" class="text-danger"></span>
+            </div> *@
+            <div class="form-group">
+                <label asp-for="EmployeeId" class="control-label"></label>
+
+                <select asp-for="EmployeeId"
+                        asp-items="ViewBag.Employees"
+                        class="form-control">
+
+                    <option value="">-- Select Employee --</option>
+
+                </select>
+
+                <span asp-validation-for="EmployeeId"
+                      class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="AttendanceDate" class="control-label"></label>
-                <input asp-for="AttendanceDate" class="form-control" />
+                @* <input asp-for="AttendanceDate" class="form-control" /> *@
+                <input asp-for="AttendanceDate"
+                       type="date"
+                       class="form-control" />
                 <span asp-validation-for="AttendanceDate" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="CheckInTime" class="control-label"></label>
-                <input asp-for="CheckInTime" class="form-control" />
+                @* <input asp-for="CheckInTime" class="form-control" /> *@
+                <input asp-for="CheckInTime"
+                       type="time"
+                       class="form-control" />
                 <span asp-validation-for="CheckInTime" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="CheckOutTime" class="control-label"></label>
-                <input asp-for="CheckOutTime" class="form-control" />
+                @* <input asp-for="CheckOutTime" class="form-control" /> *@
+                <input asp-for="CheckOutTime"
+                       type="time"
+                       class="form-control" />
                 <span asp-validation-for="CheckOutTime" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="OvertimeHours" class="control-label"></label>
                 <input asp-for="OvertimeHours" class="form-control" />
                 <span asp-validation-for="OvertimeHours" class="text-danger"></span>
@@ -53,7 +74,7 @@
                 <label asp-for="Employee" class="control-label"></label>
                 <input asp-for="Employee" class="form-control" />
                 <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
+            </div> *@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

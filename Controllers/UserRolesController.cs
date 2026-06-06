@@ -1,7 +1,9 @@
 
+using AutoRepairERD.Filters;
+using AutoRepairERD.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AutoRepairERD.Models;
+[RoleAuthorize("Admin")]
 
 public class UserRolesController : Controller
 {
@@ -19,15 +21,15 @@ public class UserRolesController : Controller
     }
 
     // GET: USERROLES/Details/5
-    public async Task<IActionResult> Details(int? userroleid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (userroleid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var userrole = await _context.UserRoles
-            .FirstOrDefaultAsync(m => m.UserRoleId == userroleid);
+            .FirstOrDefaultAsync(m => m.UserRoleId == id);
         if (userrole == null)
         {
             return NotFound();
@@ -59,14 +61,14 @@ public class UserRolesController : Controller
     }
 
     // GET: USERROLES/Edit/5
-    public async Task<IActionResult> Edit(int? userroleid)
+    public async Task<IActionResult> Edit(int? id)
     {
-        if (userroleid == null)
+        if (id  == null)
         {
             return NotFound();
         }
 
-        var userrole = await _context.UserRoles.FindAsync(userroleid);
+        var userrole = await _context.UserRoles.FindAsync(id);
         if (userrole == null)
         {
             return NotFound();
@@ -79,9 +81,9 @@ public class UserRolesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? userroleid, [Bind("UserRoleId,UserId,RoleId,Role,User")] UserRole userrole)
+    public async Task<IActionResult> Edit(int? id, [Bind("UserRoleId,UserId,RoleId,Role,User")] UserRole userrole)
     {
-        if (userroleid != userrole.UserRoleId)
+        if (id != userrole.UserRoleId)
         {
             return NotFound();
         }
@@ -110,15 +112,15 @@ public class UserRolesController : Controller
     }
 
     // GET: USERROLES/Delete/5
-    public async Task<IActionResult> Delete(int? userroleid)
+    public async Task<IActionResult> Delete(int? id)
     {
-        if (userroleid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var userrole = await _context.UserRoles
-            .FirstOrDefaultAsync(m => m.UserRoleId == userroleid);
+            .FirstOrDefaultAsync(m => m.UserRoleId == id);
         if (userrole == null)
         {
             return NotFound();
@@ -130,9 +132,9 @@ public class UserRolesController : Controller
     // POST: USERROLES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? userroleid)
+    public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var userrole = await _context.UserRoles.FindAsync(userroleid);
+        var userrole = await _context.UserRoles.FindAsync(id);
         if (userrole != null)
         {
             _context.UserRoles.Remove(userrole);
@@ -142,8 +144,8 @@ public class UserRolesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool UserRoleExists(int? userroleid)
+    private bool UserRoleExists(int? id)
     {
-        return _context.UserRoles.Any(e => e.UserRoleId == userroleid);
+        return _context.UserRoles.Any(e => e.UserRoleId == id);
     }
 }
