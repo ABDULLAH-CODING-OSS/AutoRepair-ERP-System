@@ -9,114 +9,85 @@
 
 <h4>Vehicle</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            @* <div class="form-group">
-                <label asp-for="CustomerId" class="control-label"></label>
-                <input asp-for="CustomerId" class="form-control" />
-                <span asp-validation-for="CustomerId" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <label class="control-label">Customer</label>
-
-                <select asp-for="CustomerId"
-                        class="form-control"
-                        asp-items="ViewBag.Customers">
-
-                    <option value="">-- Select Customer --</option>
-
-                </select>
-
-                <span asp-validation-for="CustomerId" class="text-danger"></span>
-            </div>
-
-            @* <div class="form-group">
-                <label asp-for="CreatedByUserId" class="control-label"></label>
-                <input asp-for="CreatedByUserId" class="form-control" />
-                <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
-            </div> *@
-
-            <div class="form-group">
-                <label asp-for="LicensePlate" class="control-label"></label>
-                <input asp-for="LicensePlate" class="form-control" />
-                <span asp-validation-for="LicensePlate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Vin" class="control-label"></label>
-                <input asp-for="Vin" class="form-control" />
-                <span asp-validation-for="Vin" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Make" class="control-label"></label>
-                <input asp-for="Make" class="form-control" />
-                <span asp-validation-for="Make" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Model" class="control-label"></label>
-                <input asp-for="Model" class="form-control" />
-                <span asp-validation-for="Model" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="ManufacturingYear" class="control-label"></label>
-                <input asp-for="ManufacturingYear" class="form-control" />
-                <span asp-validation-for="ManufacturingYear" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Color" class="control-label"></label>
-                <input asp-for="Color" class="form-control" />
-                <span asp-validation-for="Color" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Mileage" class="control-label"></label>
-                <input asp-for="Mileage" class="form-control" />
-                <span asp-validation-for="Mileage" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="EngineNumber" class="control-label"></label>
-                <input asp-for="EngineNumber" class="form-control" />
-                <span asp-validation-for="EngineNumber" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
-                <input asp-for="Notes" class="form-control" />
-                <span asp-validation-for="Notes" class="text-danger"></span>
-            </div>
-
-            @* <div class="form-group">
-                <label asp-for="CreatedByUser" class="control-label"></label>
-                <input asp-for="CreatedByUser" class="form-control" />
-                <span asp-validation-for="CreatedByUser" class="text-danger"></span>
-            </div> *@
-
-            @* <div class="form-group">
-                <label asp-for="Customer" class="control-label"></label>
-                <input asp-for="Customer" class="form-control" />
-                <span asp-validation-for="Customer" class="text-danger"></span>
-            </div> *@
-
-            @* <div class="form-group">
-                <label asp-for="JobOrders" class="control-label"></label>
-                <input asp-for="JobOrders" class="form-control" />
-                <span asp-validation-for="JobOrders" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Create Vehicle</h2>
     </div>
-</div>
+    <div class="card-body">
+      <form asp-action="Create" method="post">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+        <div class="mb-3">
+          <label class="form-label">Customer</label>
+          <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.Customers">
+            <option value="">-- Select Customer --</option>
+          </select>
+          <div class="text-danger"><span asp-validation-for="CustomerId"></span></div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="LicensePlate" class="form-label"></label>
+          <input asp-for="LicensePlate" class="form-control" />
+          <div class="text-danger"><span asp-validation-for="LicensePlate"></span></div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="Vin" class="form-label"></label>
+          <input asp-for="Vin" class="form-control" />
+          <div class="text-danger"><span asp-validation-for="Vin"></span></div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label asp-for="Make" class="form-label"></label>
+            <input asp-for="Make" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="Make"></span></div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label asp-for="Model" class="form-label"></label>
+            <input asp-for="Model" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="Model"></span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label asp-for="ManufacturingYear" class="form-label"></label>
+            <input asp-for="ManufacturingYear" type="number" min="1886" max="2100" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="ManufacturingYear"></span></div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label asp-for="Color" class="form-label"></label>
+            <input asp-for="Color" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="Color"></span></div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label asp-for="Mileage" class="form-label"></label>
+            <input asp-for="Mileage" type="number" min="0" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="Mileage"></span></div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="EngineNumber" class="form-label"></label>
+          <input asp-for="EngineNumber" class="form-control" />
+          <div class="text-danger"><span asp-validation-for="EngineNumber"></span></div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="Notes" class="form-label"></label>
+          <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+          <div class="text-danger"><span asp-validation-for="Notes"></span></div>
+        </div>
+
+        <!-- Removed navigation/collection fields: CreatedByUser, CreatedByUserId, Customer (nav), JobOrders. These are relation properties and should be managed outside this form. -->
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

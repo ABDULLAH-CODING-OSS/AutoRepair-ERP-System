@@ -1,42 +1,37 @@
 @model AutoRepairERD.Models.Category
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Category";
 }
 
-<h1>Create</h1>
-
-<h4>Category</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="CategoryName" class="control-label"></label>
-                <input asp-for="CategoryName" class="form-control" />
-                <span asp-validation-for="CategoryName" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Parts" class="control-label"></label>
-                <input asp-for="Parts" class="form-control" />
-                <span asp-validation-for="Parts" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Create Category</h2>
     </div>
-</div>
+    <div class="card-body">
+      <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+        <div class="mb-3">
+          <label asp-for="CategoryName" class="form-label"></label>
+          <input asp-for="CategoryName" class="form-control" />
+          <div class="text-danger"><span asp-validation-for="CategoryName"></span></div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="Description" class="form-label"></label>
+          <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+          <div class="text-danger"><span asp-validation-for="Description"></span></div>
+        </div>
+
+        <!-- Navigation/collection fields removed from the form: Parts is a navigation property (ICollection<Part>) and should not be edited here. -->
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

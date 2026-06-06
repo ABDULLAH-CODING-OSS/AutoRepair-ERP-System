@@ -1,65 +1,45 @@
 @model IEnumerable<AutoRepairERD.Models.Service>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Services";
 }
 
-<h1>Index</h1>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Services</h1>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+  </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.ServiceName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StandardHours)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FixedPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            @* <th>
-                @Html.DisplayNameFor(model => model.JobServiceItems)
-            </th> *@
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.ServiceName)
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table mb-0 table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>@Html.DisplayNameFor(m => m.ServiceName)</th>
+            <th>@Html.DisplayNameFor(m => m.Description)</th>
+            <th>@Html.DisplayNameFor(m => m.StandardHours)</th>
+            <th>@Html.DisplayNameFor(m => m.FixedPrice)</th>
+            <th>@Html.DisplayNameFor(m => m.IsActive)</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model) {
+          <tr>
+            <td>@Html.DisplayFor(_ => item.ServiceName)</td>
+            <td>@Html.DisplayFor(_ => item.Description)</td>
+            <td>@Html.DisplayFor(_ => item.StandardHours)</td>
+            <td>@Html.DisplayFor(_ => item.FixedPrice)</td>
+            <td>@Html.DisplayFor(_ => item.IsActive)</td>
+            <td class="text-end">
+              <a asp-action="Edit" asp-route-id="@item.ServiceId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+              <a asp-action="Details" asp-route-id="@item.ServiceId" class="btn btn-sm btn-outline-secondary me-1">Details</a>
+              <a asp-action="Delete" asp-route-id="@item.ServiceId" class="btn btn-sm btn-outline-danger">Delete</a>
             </td>
-            <td>
-                @Html.DisplayFor(model => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.StandardHours)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.FixedPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.IsActive)
-            </td>
-            @* <td>
-                @Html.DisplayFor(model => item.JobServiceItems)
-            </td> *@
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ServiceId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ServiceId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ServiceId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,115 +1,53 @@
 @model AutoRepairERD.Models.Vehicle
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Vehicle Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Vehicle Details</h2>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Owner</dt>
+        <dd class="col-sm-9">@((Model?.Customer != null) ? (Model.Customer.FirstName + " " + (Model.Customer.LastName ?? "")).Trim() : (Model?.CustomerId.ToString() ?? ""))</dd>
 
-<div>
-    <h4>Vehicle</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CustomerId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CustomerId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LicensePlate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LicensePlate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Vin)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vin)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Make)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Make)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Model)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Model)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ManufacturingYear)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ManufacturingYear)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Color)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Color)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Mileage)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Mileage)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EngineNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EngineNumber)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Notes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Notes)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUser)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Customer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Customer)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrders)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrders)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.VehicleId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.LicensePlate)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.LicensePlate)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Vin)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Vin)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Make)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Make)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Model)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Model)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ManufacturingYear)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.ManufacturingYear)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Color)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Color)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Mileage)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Mileage)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.EngineNumber)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.EngineNumber)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Notes)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Notes)</dd>
+      </dl>
+
+      <!-- Navigation/collection displays removed: Customer, CreatedByUser, JobOrders are relationship properties and are not shown here. -->
+
+      <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model?.VehicleId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+      </div>
+    </div>
+  </div>
 </div>

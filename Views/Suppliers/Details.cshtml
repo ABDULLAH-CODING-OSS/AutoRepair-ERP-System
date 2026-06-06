@@ -1,66 +1,38 @@
 @model AutoRepairERD.Models.Supplier
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Supplier Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Supplier Details</h2>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CompanyName)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.CompanyName)</dd>
 
-<div>
-    <h4>Supplier</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CompanyName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CompanyName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ContactPerson)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ContactPerson)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Phone)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Phone)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Address)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Address)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Parts)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Parts)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrders)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrders)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.SupplierId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ContactPerson)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.ContactPerson)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Phone)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Phone)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Email)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Email)</dd>
+
+        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Address)</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Address)</dd>
+      </dl>
+
+      <!-- Navigation/collection displays removed: Parts and PurchaseOrders are navigation properties and are not shown here. -->
+
+      <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model?.SupplierId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+      </div>
+    </div>
+  </div>
 </div>

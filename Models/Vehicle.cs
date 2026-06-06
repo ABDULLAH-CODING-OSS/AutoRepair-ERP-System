@@ -22,19 +22,22 @@ public partial class Vehicle
 
     [StringLength(50)]
     [Unicode(false)]
+    [Required]
     public string LicensePlate { get; set; } = null!;
 
     [Column("VIN")]
-    [StringLength(100)]
+    [StringLength(17)]
     [Unicode(false)]
     public string? Vin { get; set; }
 
     [StringLength(100)]
     [Unicode(false)]
+    [Required]
     public string Make { get; set; } = null!;
 
     [StringLength(100)]
     [Unicode(false)]
+    [Required]
     public string Model { get; set; } = null!;
 
     public int? ManufacturingYear { get; set; }
@@ -43,6 +46,7 @@ public partial class Vehicle
     [Unicode(false)]
     public string? Color { get; set; }
 
+    [Range(0, int.MaxValue)]
     public int? Mileage { get; set; }
 
     [StringLength(100)]

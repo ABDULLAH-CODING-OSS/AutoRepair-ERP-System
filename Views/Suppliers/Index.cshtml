@@ -1,71 +1,45 @@
 @model IEnumerable<AutoRepairERD.Models.Supplier>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Suppliers";
 }
 
-<h1>Index</h1>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Suppliers</h1>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+  </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CompanyName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ContactPerson)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Parts)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PurchaseOrders)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.CompanyName)
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table mb-0 table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>@Html.DisplayNameFor(m => m.CompanyName)</th>
+            <th>@Html.DisplayNameFor(m => m.ContactPerson)</th>
+            <th>@Html.DisplayNameFor(m => m.Phone)</th>
+            <th>@Html.DisplayNameFor(m => m.Email)</th>
+            <th>@Html.DisplayNameFor(m => m.Address)</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model) {
+          <tr>
+            <td>@Html.DisplayFor(_ => item.CompanyName)</td>
+            <td>@Html.DisplayFor(_ => item.ContactPerson)</td>
+            <td>@Html.DisplayFor(_ => item.Phone)</td>
+            <td>@Html.DisplayFor(_ => item.Email)</td>
+            <td>@Html.DisplayFor(_ => item.Address)</td>
+            <td class="text-end">
+              <a asp-action="Edit" asp-route-id="@item.SupplierId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+              <a asp-action="Details" asp-route-id="@item.SupplierId" class="btn btn-sm btn-outline-secondary me-1">Details</a>
+              <a asp-action="Delete" asp-route-id="@item.SupplierId" class="btn btn-sm btn-outline-danger">Delete</a>
             </td>
-            <td>
-                @Html.DisplayFor(model => item.ContactPerson)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Address)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Parts)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PurchaseOrders)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.SupplierId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.SupplierId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.SupplierId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+          </tr>
+        }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

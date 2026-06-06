@@ -18,7 +18,9 @@ public class VehiclesController : Controller
     // GET: VEHICLES
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Vehicles.ToListAsync());
+        return View(await _context.Vehicles
+            .Include(v => v.Customer)
+            .ToListAsync());
     }
 
     // GET: VEHICLES/Details/5
@@ -30,6 +32,7 @@ public class VehiclesController : Controller
         }
 
         var vehicle = await _context.Vehicles
+            .Include(v => v.Customer)
             .FirstOrDefaultAsync(m => m.VehicleId == id);
         if (vehicle == null)
         {
@@ -68,18 +71,107 @@ public class VehiclesController : Controller
         ModelState.Remove("JobOrders");
         ModelState.Remove("CreatedByUser");
 
+        // Business validations
+        // Manufacturing year must not be in the future
+        if (vehicle.ManufacturingYear.HasValue && vehicle.ManufacturingYear.Value > DateTime.UtcNow.Year)
+        {
+            ModelState.AddModelError("ManufacturingYear", "Manufacturing year cannot be greater than the current year.");
+        }
+
+        // VIN: optional but if provided must be 17 characters
+        if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
+        {
+            ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
+        }
+
+        // LicensePlate and VIN uniqueness checks
+        if (!string.IsNullOrWhiteSpace(vehicle.LicensePlate))
+        {
+            bool exists = _context.Vehicles.Any(v => v.LicensePlate == vehicle.LicensePlate);
+            if (exists)
+            {
+                ModelState.AddModelError("LicensePlate", "This vehicle registration number is already registered.");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(vehicle.Vin))
+        {
+            bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin);
+            if (vinExists)
+            {
+                ModelState.AddModelError("Vin", "This VIN is already registered.");
+            }
+        }
+
         if (ModelState.IsValid)
         {
-            vehicle.CreatedByUserId =
-    HttpContext.Session.GetInt32("UserID");
+            vehicle.CreatedByUserId = HttpContext.Session.GetInt32("UserID");
             _context.Add(vehicle);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException dbEx)
+            {
+                var msg = dbEx.InnerException?.Message ?? dbEx.Message;
+                if (msg != null && msg.Contains("LicensePlate", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError("LicensePlate", "This vehicle registration number is already registered.");
+                }
+                else if (msg != null && msg.Contains("VIN", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError("Vin", "This VIN is already registered.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Unable to save changes. Try again later.");
+                }
+            }
         }
+
+        // If we got here, validation failed
+        // Re-populate customers dropdown if needed for the view
+        ViewBag.Customers = _context.Customers
+            .Select(c => new SelectListItem
+            {
+                Value = c.CustomerId.ToString(),
+                Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
+            })
+            .ToList();
+
+        // Include Customer navigation if available so View can show owner info properly
+        vehicle.Customer = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
+
+        // Aggregate ModelState errors into a model-level message for clearer feedback
+        if (!ModelState.IsValid)
+        {
+            var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
+                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
+                .Where(x => x.Errors.Any())
+                .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
+            var msg = string.Join(" | ", list);
+            if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
+        }
+
         return View(vehicle);
     }
 
     // GET: VEHICLES/Edit/5
+    //public async Task<IActionResult> Edit(int? id)
+    //{
+    //    if (id == null)
+    //    {
+    //        return NotFound();
+    //    }
+
+    //    var vehicle = await _context.Vehicles.FindAsync(id);
+    //    if (vehicle == null)
+    //    {
+    //        return NotFound();
+    //    }
+    //    return View(vehicle);
+    //}
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -87,24 +179,74 @@ public class VehiclesController : Controller
             return NotFound();
         }
 
-        var vehicle = await _context.Vehicles.FindAsync(id);
+        var vehicle = await _context.Vehicles
+            .Include(v => v.Customer)
+            .FirstOrDefaultAsync(v => v.VehicleId == id);
+
         if (vehicle == null)
         {
             return NotFound();
         }
+
         return View(vehicle);
     }
-
-    // POST: VEHICLES/Edit/5
+    //POST: VEHICLES/Edit/5
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("VehicleId,CustomerId,CreatedByUserId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes,CreatedByUser,Customer,JobOrders")] Vehicle vehicle)
+    public async Task<IActionResult> Edit(int? id, [Bind("VehicleId,CustomerId,CreatedByUserId,LicensePlate,Vin,Make,Model,ManufacturingYear,Color,Mileage,EngineNumber,Notes")] Vehicle vehicle)
     {
         if (id != vehicle.VehicleId)
         {
             return NotFound();
+        }
+
+        ModelState.Remove("Customer");
+        ModelState.Remove("JobOrders");
+        ModelState.Remove("CreatedByUser");
+
+        // Ensure owner cannot be changed: preserve original CustomerId from DB
+        var existing = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.VehicleId == vehicle.VehicleId);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+        vehicle.CustomerId = existing.CustomerId;
+
+        // Business validations for Edit
+        if (vehicle.ManufacturingYear.HasValue && vehicle.ManufacturingYear.Value > DateTime.UtcNow.Year)
+        {
+            ModelState.AddModelError("ManufacturingYear", "Manufacturing year cannot be greater than the current year.");
+        }
+
+        if (vehicle.Mileage.HasValue && vehicle.Mileage.Value < 0)
+        {
+            ModelState.AddModelError("Mileage", "Mileage cannot be negative.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
+        {
+            ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
+        }
+
+        // Uniqueness checks (exclude current record)
+        if (!string.IsNullOrWhiteSpace(vehicle.LicensePlate))
+        {
+            bool exists = _context.Vehicles.Any(v => v.LicensePlate == vehicle.LicensePlate && v.VehicleId != vehicle.VehicleId);
+            if (exists)
+            {
+                ModelState.AddModelError("LicensePlate", "This vehicle registration number is already registered.");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(vehicle.Vin))
+        {
+            bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin && v.VehicleId != vehicle.VehicleId);
+            if (vinExists)
+            {
+                ModelState.AddModelError("Vin", "This VIN is already registered.");
+            }
         }
 
         if (ModelState.IsValid)
@@ -113,6 +255,7 @@ public class VehiclesController : Controller
             {
                 _context.Update(vehicle);
                 await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -125,10 +268,44 @@ public class VehiclesController : Controller
                     throw;
                 }
             }
-            return RedirectToAction(nameof(Index));
+            catch (DbUpdateException dbEx)
+            {
+                var msg = dbEx.InnerException?.Message ?? dbEx.Message;
+                if (msg != null && msg.Contains("LicensePlate", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError("LicensePlate", "This vehicle registration number is already registered.");
+                }
+                else if (msg != null && msg.Contains("VIN", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError("Vin", "This VIN is already registered.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Unable to save changes. Try again later.");
+                }
+            }
         }
+        vehicle.Customer = await _context.Customers
+            .FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
+
+        // Aggregate ModelState errors for summary display including exception messages
+        if (!ModelState.IsValid)
+        {
+            var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
+                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
+                .Where(x => x.Errors.Any())
+                .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
+            var msg = string.Join(" | ", list);
+            if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
+
+            // Also put errors and posted values into TempData for immediate visibility in UI
+            TempData["VehicleEditErrors"] = msg;
+            TempData["VehiclePostedValues"] = $"VehicleId={vehicle.VehicleId}; LicensePlate={vehicle.LicensePlate}; Vin={vehicle.Vin}; Make={vehicle.Make}; Model={vehicle.Model}; ManufacturingYear={vehicle.ManufacturingYear}; Mileage={vehicle.Mileage}";
+        }
+
         return View(vehicle);
     }
+
 
     // GET: VEHICLES/Delete/5
     public async Task<IActionResult> Delete(int? id)

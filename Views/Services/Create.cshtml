@@ -1,60 +1,57 @@
 @model AutoRepairERD.Models.Service
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Service";
 }
 
-<h1>Create</h1>
-
-<h4>Service</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="ServiceName" class="control-label"></label>
-                <input asp-for="ServiceName" class="form-control" />
-                <span asp-validation-for="ServiceName" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="StandardHours" class="control-label"></label>
-                <input asp-for="StandardHours" class="form-control" />
-                <span asp-validation-for="StandardHours" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="FixedPrice" class="control-label"></label>
-                <input asp-for="FixedPrice" class="form-control" />
-                <span asp-validation-for="FixedPrice" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="IsActive" class="control-label"></label>
-                <input asp-for="IsActive" class="form-check-input" />
-                <span asp-validation-for="IsActive" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="JobServiceItems" class="control-label"></label>
-                <input asp-for="JobServiceItems" class="form-control" />
-                <span asp-validation-for="JobServiceItems" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Create Service</h2>
     </div>
-</div>
+    <div class="card-body">
+      <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+        <div class="mb-3">
+          <label asp-for="ServiceName" class="form-label"></label>
+          <input asp-for="ServiceName" class="form-control" />
+          <div class="text-danger"><span asp-validation-for="ServiceName"></span></div>
+        </div>
+
+        <div class="mb-3">
+          <label asp-for="Description" class="form-label"></label>
+          <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+          <div class="text-danger"><span asp-validation-for="Description"></span></div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label asp-for="StandardHours" class="form-label"></label>
+            <input asp-for="StandardHours" class="form-control" step="0.01" />
+            <div class="text-danger"><span asp-validation-for="StandardHours"></span></div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label asp-for="FixedPrice" class="form-label"></label>
+            <input asp-for="FixedPrice" class="form-control" step="0.01" />
+            <div class="text-danger"><span asp-validation-for="FixedPrice"></span></div>
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input asp-for="IsActive" class="form-check-input" />
+          <label asp-for="IsActive" class="form-check-label"></label>
+          <div class="text-danger"><span asp-validation-for="IsActive"></span></div>
+        </div>
+
+        <!-- Navigation/collection fields removed from the form: JobServiceItems is a navigation property (ICollection)
+             and should not be edited directly via this form. The property remains on the model and in the database. -->
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
