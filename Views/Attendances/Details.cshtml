@@ -1,66 +1,37 @@
 @model AutoRepairERD.Models.Attendance
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Attendance Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header"><h2>Attendance Details</h2></div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Employee</dt>
+        <dd class="col-sm-9">@(Model.Employee != null ? Model.Employee.EmployeeCode + " - " + Model.Employee.FirstName + " " + Model.Employee.LastName : Model.EmployeeId.ToString())</dd>
 
-<div>
-    <h4>Attendance</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EmployeeId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EmployeeId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AttendanceDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AttendanceDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CheckInTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CheckInTime)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CheckOutTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CheckOutTime)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OvertimeHours)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OvertimeHours)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Employee)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AttendanceId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dt class="col-sm-3">Attendance Date</dt>
+        <dd class="col-sm-9">@(Model.AttendanceDate?.ToString("yyyy-MM-dd") ?? "-")</dd>
+
+        <dt class="col-sm-3">Check In</dt>
+        <dd class="col-sm-9">@(Model.CheckInTime?.ToString("HH:mm") ?? "-")</dd>
+
+        <dt class="col-sm-3">Check Out</dt>
+        <dd class="col-sm-9">@(Model.CheckOutTime?.ToString("HH:mm") ?? "-")</dd>
+
+        <dt class="col-sm-3">Overtime Hours</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.OvertimeHours)</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Status)</dd>
+      </dl>
+
+      <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model?.AttendanceId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+      </div>
+    </div>
+  </div>
 </div>

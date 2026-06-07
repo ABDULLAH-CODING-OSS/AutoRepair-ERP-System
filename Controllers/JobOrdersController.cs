@@ -18,7 +18,14 @@ public class JobOrdersController : Controller
     // GET: JOBORDERS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.JobOrders.ToListAsync());
+        var jobs = await _context.JobOrders
+            .Include(j => j.Customer)
+            .Include(j => j.Vehicle)
+            .Include(j => j.Advisor)
+            .Include(j => j.Mechanic)
+            .ToListAsync();
+
+        return View(jobs);
     }
 
     // GET: JOBORDERS/Details/5
@@ -30,6 +37,10 @@ public class JobOrdersController : Controller
         }
 
         var joborder = await _context.JobOrders
+            .Include(j => j.Customer)
+            .Include(j => j.Vehicle)
+            .Include(j => j.Advisor)
+            .Include(j => j.Mechanic)
             .FirstOrDefaultAsync(m => m.JobOrderId == id);
         if (joborder == null)
         {
@@ -435,6 +446,10 @@ public class JobOrdersController : Controller
         }
 
         var joborder = await _context.JobOrders
+            .Include(j => j.Customer)
+            .Include(j => j.Vehicle)
+            .Include(j => j.Advisor)
+            .Include(j => j.Mechanic)
             .FirstOrDefaultAsync(m => m.JobOrderId == id);
         if (joborder == null)
         {

@@ -1,87 +1,65 @@
 @model AutoRepairERD.Models.Attendance
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Record Attendance";
 }
 
-<h2>Record Attendance</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header"><h2>Record Attendance</h2></div>
+    <div class="card-body">
+      @{ var employees = (SelectList)(ViewData["EmployeeId"] ?? new SelectList(Enumerable.Empty<SelectListItem>())); 
+         var statuses = (SelectList)(ViewData["StatusList"] ?? new SelectList(Enumerable.Empty<SelectListItem>())); }
+      <form asp-action="Create" method="post">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-            @* <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
-                <input asp-for="EmployeeId" class="form-control" />
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label asp-for="EmployeeId" class="form-label"></label><span class="text-danger">*</span>
+            <select asp-for="EmployeeId" class="form-select" asp-items="@employees">
+              <option value="">-- Select Employee --</option>
+            </select>
+            <input asp-for="EmployeeId" type="hidden" />
+            <div class="text-danger"><span asp-validation-for="EmployeeId"></span></div>
+          </div>
 
-                <select asp-for="EmployeeId"
-                        asp-items="ViewBag.Employees"
-                        class="form-control">
+          <div class="col-md-6">
+            <label asp-for="AttendanceDate" class="form-label"></label>
+            <input asp-for="AttendanceDate" type="date" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="AttendanceDate"></span></div>
+          </div>
+        </div>
 
-                    <option value="">-- Select Employee --</option>
+        <div class="row g-3 mt-3">
+          <div class="col-md-6">
+            <label asp-for="CheckInTime" class="form-label"></label>
+            <input asp-for="CheckInTime" type="time" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="CheckInTime"></span></div>
+          </div>
+          <div class="col-md-6">
+            <label asp-for="CheckOutTime" class="form-label"></label>
+            <input asp-for="CheckOutTime" type="time" class="form-control" />
+            <div class="text-danger"><span asp-validation-for="CheckOutTime"></span></div>
+          </div>
+        </div>
 
-                </select>
+        <div class="row g-3 mt-3">
+          <div class="col-md-6">
+            <label asp-for="Status" class="form-label"></label>
+            <select asp-for="Status" class="form-select" asp-items="@statuses">
+              <option value="">-- Select Status (optional) --</option>
+            </select>
+            <div class="text-danger"><span asp-validation-for="Status"></span></div>
+          </div>
+        </div>
 
-                <span asp-validation-for="EmployeeId"
-                      class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="AttendanceDate" class="control-label"></label>
-                @* <input asp-for="AttendanceDate" class="form-control" /> *@
-                <input asp-for="AttendanceDate"
-                       type="date"
-                       class="form-control" />
-                <span asp-validation-for="AttendanceDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="CheckInTime" class="control-label"></label>
-                @* <input asp-for="CheckInTime" class="form-control" /> *@
-                <input asp-for="CheckInTime"
-                       type="time"
-                       class="form-control" />
-                <span asp-validation-for="CheckInTime" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="CheckOutTime" class="control-label"></label>
-                @* <input asp-for="CheckOutTime" class="form-control" /> *@
-                <input asp-for="CheckOutTime"
-                       type="time"
-                       class="form-control" />
-                <span asp-validation-for="CheckOutTime" class="text-danger"></span>
-            </div>
-
-            @* <div class="form-group">
-                <label asp-for="OvertimeHours" class="control-label"></label>
-                <input asp-for="OvertimeHours" class="form-control" />
-                <span asp-validation-for="OvertimeHours" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        <div class="mt-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Create</button>
+          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }

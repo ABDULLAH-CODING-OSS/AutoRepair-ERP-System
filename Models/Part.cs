@@ -22,23 +22,34 @@ public partial class Part
     [Column("SKU")]
     [StringLength(100)]
     [Unicode(false)]
+    [Display(Name = "Part Code")]
     public string? Sku { get; set; }
 
     [StringLength(100)]
     [Unicode(false)]
+    [Required]
+    [Display(Name = "Part Name")]
     public string PartName { get; set; } = null!;
 
     [Unicode(false)]
     public string? Description { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
+    [Range(0, 9999999.99)]
+    [Display(Name = "Cost Price")]
     public decimal CostPrice { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
+    [Range(0, 9999999.99)]
+    [Display(Name = "Sale Price")]
     public decimal SalePrice { get; set; }
 
+    [Range(0, int.MaxValue)]
+    [Display(Name = "Current Stock")]
     public int? CurrentStock { get; set; }
 
+    [Range(0, int.MaxValue)]
+    [Display(Name = "Reorder Level")]
     public int? ReorderLevel { get; set; }
 
     [StringLength(50)]
@@ -47,6 +58,7 @@ public partial class Part
 
     [StringLength(100)]
     [Unicode(false)]
+    [Display(Name = "Rack Location")]
     public string? RackLocation { get; set; }
 
     public bool? IsActive { get; set; }

@@ -1,94 +1,40 @@
 @model AutoRepairERD.Models.Customer
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Customer Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Customer Details</h2>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Full Name</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.FirstName) @Html.DisplayFor(m => m.LastName)</dd>
 
-<div>
-    <h4>Customer</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FirstName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FirstName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LastName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LastName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Phone)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Phone)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Address)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Address)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.City)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.City)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUser)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrders)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrders)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Vehicles)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vehicles)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.CustomerId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dt class="col-sm-3">Phone</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Phone)</dd>
+
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Email)</dd>
+
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Address) @if(!string.IsNullOrWhiteSpace(Model?.City)){<span>, @Html.DisplayFor(m => m.City)</span>}</dd>
+
+        <dt class="col-sm-3">Created At</dt>
+        <dd class="col-sm-9">@if(Model?.CreatedAt != null){@Model.CreatedAt.Value.ToString("yyyy-MM-dd")} else {<span>-</span>}</dd>
+
+        <dt class="col-sm-3">Created By</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.CreatedByUser)</dd>
+      </dl>
+
+      <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model?.CustomerId" class="btn btn-primary">Edit</a>
+        <a asp-action="Delete" asp-route-id="@Model?.CustomerId" class="btn btn-danger ms-2">Delete</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+      </div>
+    </div>
+  </div>
 </div>

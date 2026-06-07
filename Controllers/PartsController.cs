@@ -16,9 +16,12 @@ public class PartsController : Controller
     }
 
     // GET: PARTS
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index()
     {
-        return View(await _context.Parts.ToListAsync());
+        return View(await _context.Parts
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
+            .ToListAsync());
     }
 
     // GET: PARTS/Details/5
@@ -30,6 +33,8 @@ public class PartsController : Controller
         }
 
         var part = await _context.Parts
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
             .FirstOrDefaultAsync(m => m.PartId == id);
         if (part == null)
         {
@@ -46,22 +51,8 @@ public class PartsController : Controller
     //}
     public IActionResult Create()
     {
-        ViewBag.Categories = _context.Categories
-            .Select(c => new SelectListItem
-            {
-                Value = c.CategoryId.ToString(),
-                Text = c.CategoryName
-            })
-            .ToList();
-
-        ViewBag.Suppliers = _context.Suppliers
-            .Select(s => new SelectListItem
-            {
-                Value = s.SupplierId.ToString(),
-                Text = s.CompanyName
-            })
-            .ToList();
-
+        ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
+        ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName");
         return View();
     }
 
@@ -81,9 +72,26 @@ public class PartsController : Controller
         if (ModelState.IsValid)
         {
             _context.Add(part);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Friendly error for unique constraint or duplicate key failures
+                var msg = "Unable to save changes. A part with the same identifier or SKU may already exist.";
+                if (dbEx.InnerException?.Message != null && dbEx.InnerException.Message.IndexOf("duplicate", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    msg = "A part with the same identifier or SKU already exists.";
+                }
+                ModelState.AddModelError(string.Empty, msg);
+            }
         }
+
+        // repopulate selects when returning view on validation errors or DB errors
+        ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", part.CategoryId);
+        ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", part.SupplierId);
         return View(part);
     }
 
@@ -100,6 +108,17 @@ public class PartsController : Controller
         {
             return NotFound();
         }
+        ViewData["CategoryId"] =
+    new SelectList(_context.Categories,
+                   "CategoryId",
+                   "CategoryName",
+                   part.CategoryId);
+
+        ViewData["SupplierId"] =
+            new SelectList(_context.Suppliers,
+                           "SupplierId",
+                           "CompanyName",
+                           part.SupplierId);
         return View(part);
     }
 
@@ -135,6 +154,17 @@ public class PartsController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+        ViewData["CategoryId"] =
+    new SelectList(_context.Categories,
+                   "CategoryId",
+                   "CategoryName",
+                   part.CategoryId);
+
+        ViewData["SupplierId"] =
+            new SelectList(_context.Suppliers,
+                           "SupplierId",
+                           "CompanyName",
+                           part.SupplierId);
         return View(part);
     }
 
@@ -147,6 +177,8 @@ public class PartsController : Controller
         }
 
         var part = await _context.Parts
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
             .FirstOrDefaultAsync(m => m.PartId == id);
         if (part == null)
         {

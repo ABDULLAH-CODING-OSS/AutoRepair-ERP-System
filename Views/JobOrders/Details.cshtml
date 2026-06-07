@@ -1,178 +1,60 @@
 @model AutoRepairERD.Models.JobOrder
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Job Order Details";
+    var job = Model;
+    var jobNumber = job?.JobNumber ?? "-";
+    var customer = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "-";
+    var vehicle = job?.Vehicle != null ? job.Vehicle.Make + " " + job.Vehicle.Model + " (" + job.Vehicle.LicensePlate + ")" : "-";
+    var createdAt = (job != null && job.CreatedAt.HasValue) ? job.CreatedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-";
+    var advisor = job?.Advisor != null ? job.Advisor.FirstName + " " + job.Advisor.LastName : "-";
+    var mechanic = job?.Mechanic != null ? job.Mechanic.FirstName + " " + job.Mechanic.LastName : "-";
+    var status = job?.Status ?? "-";
+    var statusClass = status == "Completed" ? "bg-success" : status == "In Progress" ? "bg-primary" : status == "Cancelled" ? "bg-danger" : "bg-secondary";
+    var startDate = (job != null && job.StartDate.HasValue) ? job.StartDate.Value.ToString("yyyy-MM-dd") : "-";
+    var estComplete = (job != null && job.EstimatedCompletionDate.HasValue) ? job.EstimatedCompletionDate.Value.ToString("yyyy-MM-dd") : "-";
+    var completionDate = (job != null && job.CompletionDate.HasValue) ? job.CompletionDate.Value.ToString("yyyy-MM-dd") : "-";
+    var estCost = (job != null && job.EstimatedCost.HasValue) ? job.EstimatedCost.Value.ToString("C") : "-";
+    var finalCost = (job != null && job.FinalCost.HasValue) ? job.FinalCost.Value.ToString("C") : "-";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Job Order: @jobNumber</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Customer & Vehicle</h6>
+                <p class="mb-1"><strong>Customer:</strong> @customer</p>
+                <p class="mb-1"><strong>Vehicle:</strong> @vehicle</p>
+                <p class="mb-1"><strong>Created At:</strong> @createdAt</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Assignment & Status</h6>
+                <p class="mb-1"><strong>Advisor:</strong> @advisor</p>
+                <p class="mb-1"><strong>Mechanic:</strong> @mechanic</p>
+                <p class="mb-1"><strong>Status:</strong> <span class="badge @statusClass">@status</span></p>
+            </div>
+        </div>
 
-<div>
-    <h4>JobOrder</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CustomerId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CustomerId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VehicleId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VehicleId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AdvisorId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AdvisorId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MechanicId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MechanicId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobNumber)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ComplaintDescription)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ComplaintDescription)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DiagnosisNotes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DiagnosisNotes)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EstimatedCompletionDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EstimatedCompletionDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CompletionDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CompletionDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EstimatedCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EstimatedCost)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FinalCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FinalCost)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Advisor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Advisor)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUser)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Customer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Customer)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Invoices)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Invoices)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobPartItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobPartItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobServiceItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobServiceItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Mechanic)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Mechanic)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Vehicle)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vehicle)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.JobOrderId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <hr />
+
+        <h6>Schedule & Costs</h6>
+        <p class="mb-1"><strong>Start Date:</strong> @startDate</p>
+        <p class="mb-1"><strong>Estimated Completion:</strong> @estComplete</p>
+        <p class="mb-1"><strong>Completion Date:</strong> @completionDate</p>
+        <p class="mb-1"><strong>Estimated Cost:</strong> @estCost</p>
+        <p class="mb-1"><strong>Final Cost:</strong> @finalCost</p>
+
+        <hr />
+
+        <h6>Notes</h6>
+        <p><strong>Complaint:</strong> @job?.ComplaintDescription</p>
+        <p><strong>Diagnosis:</strong> @job?.DiagnosisNotes</p>
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@job?.JobOrderId">Edit</a>
+        <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
+    </div>
 </div>

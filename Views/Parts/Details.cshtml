@@ -1,143 +1,55 @@
 @model AutoRepairERD.Models.Part
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Part Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+  <div class="card">
+    <div class="card-header"><h2>Part Details</h2></div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">@(Model.Category?.CategoryName ?? Model.CategoryId.ToString())</dd>
 
-<div>
-    <h4>Part</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CategoryId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CategoryId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SupplierId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SupplierId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Sku)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Sku)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CostPrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CostPrice)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SalePrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SalePrice)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CurrentStock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CurrentStock)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReorderLevel)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReorderLevel)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Unit)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Unit)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.RackLocation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.RackLocation)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobPartItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobPartItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LowStockAlerts)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LowStockAlerts)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrderItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrderItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StockTransactions)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StockTransactions)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Supplier)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Supplier)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PartId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dt class="col-sm-3">Supplier</dt>
+                <dd class="col-sm-9">@(Model.Supplier?.CompanyName ?? Model.SupplierId.ToString())</dd>
+
+        <dt class="col-sm-3">SKU</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Sku)</dd>
+
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.PartName)</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Description)</dd>
+
+        <dt class="col-sm-3">Cost Price</dt>
+        <dd class="col-sm-9">@String.Format("{0:C}", Model.CostPrice)</dd>
+
+        <dt class="col-sm-3">Sale Price</dt>
+        <dd class="col-sm-9">@String.Format("{0:C}", Model.SalePrice)</dd>
+
+        <dt class="col-sm-3">Current Stock</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.CurrentStock)</dd>
+
+        <dt class="col-sm-3">Reorder Level</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.ReorderLevel)</dd>
+
+        <dt class="col-sm-3">Unit</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.Unit)</dd>
+
+        <dt class="col-sm-3">Rack Location</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.RackLocation)</dd>
+
+        <dt class="col-sm-3">Active</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(m => m.IsActive)</dd>
+      </dl>
+
+      <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model?.PartId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+      </div>
+    </div>
+  </div>
 </div>

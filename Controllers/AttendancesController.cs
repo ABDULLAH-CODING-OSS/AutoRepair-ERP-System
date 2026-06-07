@@ -18,7 +18,9 @@ public class AttendancesController : Controller
     // GET: ATTENDANCES
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Attendances.ToListAsync());
+        return View(await _context.Attendances
+            .Include(a => a.Employee)
+            .ToListAsync());
     }
 
     // GET: ATTENDANCES/Details/5
@@ -56,14 +58,14 @@ public class AttendancesController : Controller
     //}
     public IActionResult Create()
     {
-        ViewBag.Employees = _context.Employees
-            .Where(e => e.IsActive == true)
-            .Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-            {
-                Value = e.EmployeeId.ToString(),
-                Text = e.EmployeeCode + " - " + e.FirstName + " " + e.LastName
-            })
-            .ToList();
+        ViewData["EmployeeId"] = new SelectList(
+            _context.Employees.Where(e => e.IsActive == true)
+            .Select(e => new { e.EmployeeId, Text = e.EmployeeCode + " - " + e.FirstName + " " + e.LastName }),
+            "EmployeeId",
+            "Text");
+
+        // Populate status dropdown on Create (optional for user)
+        ViewData["StatusList"] = new SelectList(new[] { "Present", "Absent", "On Leave", "Sick", "Late" });
 
         return View();
     }
@@ -86,7 +88,7 @@ public class AttendancesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-    [Bind("AttendanceId,EmployeeId,AttendanceDate,CheckInTime,CheckOutTime")]
+    [Bind("AttendanceId,EmployeeId,AttendanceDate,CheckInTime,CheckOutTime,Status")]
     Attendance attendance)
     {
         ModelState.Remove("Employee");
@@ -122,7 +124,11 @@ public class AttendancesController : Controller
                     ? workingHours - 8
                     : 0;
 
-            attendance.Status = "Present";
+            // If user selected a status, use it; otherwise default to Present
+            if (string.IsNullOrWhiteSpace(attendance.Status))
+            {
+                attendance.Status = "Present";
+            }
 
             _context.Add(attendance);
 
@@ -131,10 +137,14 @@ public class AttendancesController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        ViewBag.Employees = new SelectList(
-            _context.Employees.Where(e => e.IsActive == true),
+        ViewData["EmployeeId"] = new SelectList(
+            _context.Employees.Where(e => e.IsActive == true)
+            .Select(e => new { e.EmployeeId, Text = e.EmployeeCode + " - " + e.FirstName + " " + e.LastName }),
             "EmployeeId",
-            "EmployeeCode");
+            "Text");
+
+        // Repopulate status list when returning view on error
+        ViewData["StatusList"] = new SelectList(new[] { "Present", "Absent", "On Leave", "Sick", "Late" });
 
         return View(attendance);
     }
@@ -147,11 +157,25 @@ public class AttendancesController : Controller
             return NotFound();
         }
 
-        var attendance = await _context.Attendances.FindAsync(id);
+        var attendance = await _context.Attendances
+            .Include(a => a.Employee)
+            .FirstOrDefaultAsync(a => a.AttendanceId == id);
         if (attendance == null)
         {
             return NotFound();
         }
+        ViewData["EmployeeId"] = new SelectList(
+            _context.Employees.Where(e => e.IsActive == true)
+            .Select(e => new { e.EmployeeId, Text = e.EmployeeCode + " - " + e.FirstName + " " + e.LastName }),
+            "EmployeeId",
+            "Text",
+            attendance.EmployeeId);
+
+        // Populate status dropdown for edit
+        ViewData["StatusList"] = new SelectList(
+            new[] { "Present", "Absent", "On Leave", "Sick", "Late" },
+            attendance.Status);
+
         return View(attendance);
     }
 
@@ -160,17 +184,28 @@ public class AttendancesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("AttendanceId,EmployeeId,AttendanceDate,CheckInTime,CheckOutTime,OvertimeHours,Status,Employee")] Attendance attendance)
+    public async Task<IActionResult> Edit(int? id, [Bind("AttendanceId,EmployeeId,AttendanceDate,CheckInTime,CheckOutTime,OvertimeHours,Status")] Attendance attendance)
     {
         if (id != attendance.AttendanceId)
         {
             return NotFound();
         }
 
+        // Remove navigation property from modelstate to avoid validation errors
+        // when Employee (navigation) is not posted from the form.
+        ModelState.Remove("Employee");
+
         if (ModelState.IsValid)
         {
             try
             {
+                // Recalculate overtime based on CheckIn/CheckOut similar to Create
+                if (attendance.CheckInTime.HasValue && attendance.CheckOutTime.HasValue)
+                {
+                    var workingHours = (decimal)(attendance.CheckOutTime.Value.ToTimeSpan() - attendance.CheckInTime.Value.ToTimeSpan()).TotalHours;
+                    attendance.OvertimeHours = workingHours > 8 ? workingHours - 8 : 0;
+                }
+
                 _context.Update(attendance);
                 await _context.SaveChangesAsync();
             }
@@ -187,6 +222,28 @@ public class AttendancesController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+        ViewData["EmployeeId"] = new SelectList(
+            _context.Employees.Where(e => e.IsActive == true)
+            .Select(e => new { e.EmployeeId, Text = e.EmployeeCode + " - " + e.FirstName + " " + e.LastName }),
+            "EmployeeId",
+            "Text",
+            attendance.EmployeeId);
+
+        // Ensure the Employee navigation property is populated so the readonly display works after validation errors
+        attendance.Employee = await _context.Employees.FindAsync(attendance.EmployeeId);
+
+        // Repopulate status list
+        ViewData["StatusList"] = new SelectList(
+            new[] { "Present", "Absent", "On Leave", "Sick", "Late" },
+            attendance.Status);
+
+        // Recalculate overtime for display when returning the view
+        if (attendance.CheckInTime.HasValue && attendance.CheckOutTime.HasValue)
+        {
+            var workingHours = (decimal)(attendance.CheckOutTime.Value.ToTimeSpan() - attendance.CheckInTime.Value.ToTimeSpan()).TotalHours;
+            attendance.OvertimeHours = workingHours > 8 ? workingHours - 8 : 0;
+        }
+
         return View(attendance);
     }
 
@@ -199,6 +256,7 @@ public class AttendancesController : Controller
         }
 
         var attendance = await _context.Attendances
+            .Include(a => a.Employee)
             .FirstOrDefaultAsync(m => m.AttendanceId == id);
         if (attendance == null)
         {

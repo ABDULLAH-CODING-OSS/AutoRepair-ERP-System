@@ -1,101 +1,43 @@
 @model IEnumerable<AutoRepairERD.Models.Customer>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Customers";
 }
 
-<h1>Index</h1>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Customers</h1>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+  </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            @* <th>
-                @Html.DisplayNameFor(model => model.CreatedByUserId)
-            </th> *@
-            @* <th>
-                @Html.DisplayNameFor(model => model.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastName)
-            </th> *@
-            <th>
-                Customer Name
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            @* <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th> *@
-            <th>
-                @Html.DisplayNameFor(model => model.City)
-            </th>
-            @* <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByUser)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.JobOrders)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Vehicles)
-            </th> *@
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table mb-0 table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>Full Name</th>
+            <th>@Html.DisplayNameFor(model => model.Phone)</th>
+            <th>@Html.DisplayNameFor(model => model.Email)</th>
+            <th>@Html.DisplayNameFor(model => model.City)</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
 @foreach (var item in Model) {
-        <tr>
-            @* <td>
-                @Html.DisplayFor(model => item.CreatedByUserId)
-            </td> *@
-            @* <td>
-                @Html.DisplayFor(model => item.FirstName)
+          <tr>
+            <td>@item.FirstName @item.LastName</td>
+            <td>@Html.DisplayFor(_ => item.Phone)</td>
+            <td>@Html.DisplayFor(_ => item.Email)</td>
+            <td>@Html.DisplayFor(_ => item.City)</td>
+            <td class="text-end">
+              <a asp-action="Edit" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+              <a asp-action="Details" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-secondary me-1">Details</a>
+              <a asp-action="Delete" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-danger">Delete</a>
             </td>
-            <td>
-                @Html.DisplayFor(model => item.LastName)
-            </td> *@
-                <td>
-                    @item.FirstName @item.LastName
-                </td>
-            <td>
-                @Html.DisplayFor(model => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Email)
-            </td>
-            @* <td>
-                @Html.DisplayFor(model => item.Address)
-            </td> *@
-            <td>
-                @Html.DisplayFor(model => item.City)
-            </td>
-            @* <td>
-                @Html.DisplayFor(model => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedByUser)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.JobOrders)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Vehicles)
-            </td> *@
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CustomerId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CustomerId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CustomerId">Delete</a>
-            </td>
-        </tr>
+          </tr>
 }
-    </tbody>
-</table>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
