@@ -83,22 +83,12 @@
                     <span asp-validation-for="EstimatedCompletionDate" class="text-danger"></span>
                 </div>
 
-                <div class="col-md-4">
-                    <label asp-for="CompletionDate" class="form-label">Completion Date</label>
-                    <input asp-for="CompletionDate" type="date" class="form-control" />
-                    <span asp-validation-for="CompletionDate" class="text-danger"></span>
-                </div>
+                @* CompletionDate removed from Create form - set automatically when job completed *@
 
                 <div class="col-md-6">
                     <label asp-for="EstimatedCost" class="form-label">Estimated Cost</label>
                     <input asp-for="EstimatedCost" type="number" step="0.01" class="form-control" placeholder="0.00" />
                     <span asp-validation-for="EstimatedCost" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label asp-for="FinalCost" class="form-label">Final Cost</label>
-                    <input asp-for="FinalCost" type="number" step="0.01" class="form-control" placeholder="0.00" />
-                    <span asp-validation-for="FinalCost" class="text-danger"></span>
                 </div>
             </div>
 

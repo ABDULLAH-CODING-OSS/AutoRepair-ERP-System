@@ -17,7 +17,12 @@ public class JobPartItemsController : Controller
     // GET: JOBPARTITEMS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.JobPartItems.ToListAsync());
+        var items = await _context.JobPartItems
+            .Include(j => j.JobOrder)
+            .Include(j => j.Part)
+            .ToListAsync();
+
+        return View(items);
     }
 
     // GET: JOBPARTITEMS/Details/5
@@ -29,6 +34,8 @@ public class JobPartItemsController : Controller
         }
 
         var jobpartitem = await _context.JobPartItems
+            .Include(j => j.JobOrder)
+            .Include(j => j.Part)
             .FirstOrDefaultAsync(m => m.JobPartItemId == id);
         if (jobpartitem == null)
         {
@@ -46,6 +53,7 @@ public class JobPartItemsController : Controller
     public IActionResult Create()
     {
         ViewBag.JobOrders = _context.JobOrders
+            .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
             .Select(j => new SelectListItem
             {
                 Value = j.JobOrderId.ToString(),
@@ -132,6 +140,7 @@ public class JobPartItemsController : Controller
             }
         }
         ViewBag.JobOrders = _context.JobOrders
+    .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
     .Select(j => new SelectListItem
     {
         Value = j.JobOrderId.ToString(),
@@ -157,11 +166,24 @@ public class JobPartItemsController : Controller
             return NotFound();
         }
 
-        var jobpartitem = await _context.JobPartItems.FindAsync(id);
+        var jobpartitem = await _context.JobPartItems
+            .Include(j => j.Part)
+            .Include(j => j.JobOrder)
+            .FirstOrDefaultAsync(j => j.JobPartItemId == id);
         if (jobpartitem == null)
         {
             return NotFound();
         }
+        // Provide select lists in case view needs them (kept minimal)
+        ViewBag.JobOrders = _context.JobOrders
+            .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
+            .Select(j => new SelectListItem { Value = j.JobOrderId.ToString(), Text = j.JobNumber })
+            .ToList();
+
+        ViewBag.Parts = _context.Parts
+            .Select(p => new SelectListItem { Value = p.PartId.ToString(), Text = p.PartName + " (Stock: " + p.CurrentStock + ")" })
+            .ToList();
+
         return View(jobpartitem);
     }
 
@@ -176,11 +198,22 @@ public class JobPartItemsController : Controller
         {
             return NotFound();
         }
+        // Remove navigation props from validation
+        ModelState.Remove("JobOrder");
+        ModelState.Remove("Part");
 
         if (ModelState.IsValid)
         {
             try
             {
+                // Ensure unit price and total price reflect current part sale price
+                var part = await _context.Parts.FindAsync(jobpartitem.PartId);
+                if (part != null)
+                {
+                    jobpartitem.UnitPrice = part.SalePrice;
+                    jobpartitem.TotalPrice = part.SalePrice * jobpartitem.Quantity;
+                }
+
                 _context.Update(jobpartitem);
                 await _context.SaveChangesAsync();
             }
@@ -197,6 +230,17 @@ public class JobPartItemsController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
+
+        // repopulate selects for the view
+        ViewBag.JobOrders = _context.JobOrders
+            .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
+            .Select(j => new SelectListItem { Value = j.JobOrderId.ToString(), Text = j.JobNumber })
+            .ToList();
+
+        ViewBag.Parts = _context.Parts
+            .Select(p => new SelectListItem { Value = p.PartId.ToString(), Text = p.PartName + " (Stock: " + p.CurrentStock + ")" })
+            .ToList();
+
         return View(jobpartitem);
     }
 

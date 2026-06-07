@@ -12,14 +12,14 @@
             <input type="hidden" asp-for="JobOrderId" />
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label asp-for="CustomerId" class="form-label">Customer <span class="text-danger">*</span></label>
-                    <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.Customers"></select>
-                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    <label class="form-label">Customer</label>
+                    <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.Customers" disabled="disabled"></select>
+                    <input type="hidden" asp-for="CustomerId" />
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="VehicleId" class="form-label">Vehicle <span class="text-danger">*</span></label>
-                    <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles"></select>
-                    <span asp-validation-for="VehicleId" class="text-danger"></span>
+                    <label class="form-label">Vehicle</label>
+                    <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles" disabled="disabled"></select>
+                    <input type="hidden" asp-for="VehicleId" />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AdvisorId" class="form-label">Service Advisor</label>
@@ -66,9 +66,15 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label asp-for="CompletionDate" class="form-label">Completion Date</label>
-                    <input asp-for="CompletionDate" type="date" class="form-control" />
-                    <span asp-validation-for="CompletionDate" class="text-danger"></span>
+                    <label class="form-label">Completion Date</label>
+                    @if (Model?.Status == "Completed")
+                    {
+                        <input class="form-control" value="@(Model.CompletionDate.HasValue ? Model.CompletionDate.Value.ToString("yyyy-MM-dd") : "")" readonly />
+                    }
+                    else
+                    {
+                        <input class="form-control" value="Pending Completion" readonly />
+                    }
                 </div>
 
                 <div class="col-md-6">
@@ -89,9 +95,15 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="FinalCost" class="form-label">Final Cost</label>
-                    <input asp-for="FinalCost" type="number" step="0.01" class="form-control" />
-                    <span asp-validation-for="FinalCost" class="text-danger"></span>
+                    <label class="form-label">Final Cost</label>
+                    @if (Model?.Invoices != null && Model.Invoices.Any())
+                    {
+                        <input class="form-control" value="@(Model.FinalCost.HasValue ? Model.FinalCost.Value.ToString("F2") : "")" readonly />
+                    }
+                    else
+                    {
+                        <input class="form-control" value="Not Generated" readonly />
+                    }
                 </div>
 
                 <div class="col-12 mt-2">

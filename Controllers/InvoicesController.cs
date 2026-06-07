@@ -32,11 +32,24 @@ public class InvoicesController : Controller
         }
 
         var invoice = await _context.Invoices
+            .Include(i => i.JobOrder)
             .FirstOrDefaultAsync(m => m.InvoiceId == id);
         if (invoice == null)
         {
             return NotFound();
         }
+
+        // compute breakdowns
+        var partsTotal = _context.JobPartItems
+            .Where(j => j.JobOrderId == invoice.JobOrderId)
+            .Sum(j => j.TotalPrice ?? 0);
+
+        var servicesTotal = _context.JobServiceItems
+            .Where(j => j.JobOrderId == invoice.JobOrderId)
+            .Sum(j => j.ServicePrice ?? 0);
+
+        ViewBag.PartsTotal = partsTotal;
+        ViewBag.ServicesTotal = servicesTotal;
 
         return View(invoice);
     }
@@ -113,6 +126,14 @@ public class InvoicesController : Controller
             }
             _context.Add(invoice);
             await _context.SaveChangesAsync();
+            // update JobOrder.FinalCost to reflect invoice grand total
+            var job = await _context.JobOrders.FindAsync(invoice.JobOrderId);
+            if (job != null)
+            {
+                job.FinalCost = invoice.GrandTotal;
+                _context.Update(job);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
         ViewBag.JobOrders = new SelectList(
@@ -265,6 +286,14 @@ public class InvoicesController : Controller
                 _context.Update(invoice);
 
                 await _context.SaveChangesAsync();
+                // update JobOrder.FinalCost after invoice edit
+                var job = await _context.JobOrders.FindAsync(invoice.JobOrderId);
+                if (job != null)
+                {
+                    job.FinalCost = invoice.GrandTotal;
+                    _context.Update(job);
+                    await _context.SaveChangesAsync();
+                }
             }
             catch (DbUpdateConcurrencyException)
             {

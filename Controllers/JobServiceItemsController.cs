@@ -17,7 +17,13 @@ public class JobServiceItemsController : Controller
     // GET: JOBSERVICEITEMS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.JobServiceItems.ToListAsync());
+        var items = await _context.JobServiceItems
+            .Include(j => j.JobOrder)
+            .Include(j => j.Service)
+            .Include(j => j.Mechanic)
+            .ToListAsync();
+
+        return View(items);
     }
 
     // GET: JOBSERVICEITEMS/Details/5
@@ -29,6 +35,9 @@ public class JobServiceItemsController : Controller
         }
 
         var jobserviceitem = await _context.JobServiceItems
+            .Include(j => j.JobOrder)
+            .Include(j => j.Service)
+            .Include(j => j.Mechanic)
             .FirstOrDefaultAsync(m => m.JobServiceItemId == id);
         if (jobserviceitem == null)
         {
@@ -46,7 +55,7 @@ public class JobServiceItemsController : Controller
     public IActionResult Create()
     {
         ViewBag.JobOrders = new SelectList(
-            _context.JobOrders,
+            _context.JobOrders.Where(j => j.Status != "Completed" && j.Status != "Cancelled"),
             "JobOrderId",
             "JobNumber");
 
@@ -69,22 +78,48 @@ public class JobServiceItemsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     //public async Task<IActionResult> Create([Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes,JobOrder,Mechanic,Service")] JobServiceItem jobserviceitem)
-    public async Task<IActionResult> Create([Bind("JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes")] JobServiceItem jobserviceitem)
+    public async Task<IActionResult> Create([Bind("JobOrderId,ServiceId,MechanicId,HoursWorked,Notes")] JobServiceItem jobserviceitem)
     {
         ModelState.Remove("JobOrder");
         ModelState.Remove("Mechanic");
         ModelState.Remove("Service");
         if (ModelState.IsValid)
         {
+            // populate hourly rate from Service and calculate service price
+            var service = await _context.Services.FindAsync(jobserviceitem.ServiceId);
+            if (service != null)
+            {
+                // Use service fixed price as hourly rate when HourlyRate field not present on Service
+                jobserviceitem.HourlyRate = service.FixedPrice;
+            }
+
+            jobserviceitem.ServicePrice = (jobserviceitem.HoursWorked ?? 0) * (jobserviceitem.HourlyRate ?? 0);
+
+            // determine if this is the first service item for the job
+            var existingCount = _context.JobServiceItems.Count(j => j.JobOrderId == jobserviceitem.JobOrderId);
+
             _context.Add(jobserviceitem);
             await _context.SaveChangesAsync();
+
+            // if first service added and job is pending, set to In Progress
+            if (existingCount == 0)
+            {
+                var job = await _context.JobOrders.FindAsync(jobserviceitem.JobOrderId);
+                if (job != null && job.Status == "Pending")
+                {
+                    job.Status = "In Progress";
+                    _context.Update(job);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return RedirectToAction(nameof(Index));
         }
         ViewBag.JobOrders = new SelectList(
-    _context.JobOrders,
-    "JobOrderId",
-    "JobNumber",
-    jobserviceitem.JobOrderId);
+            _context.JobOrders.Where(j => j.Status != "Completed" && j.Status != "Cancelled"),
+            "JobOrderId",
+            "JobNumber",
+            jobserviceitem.JobOrderId);
 
         ViewBag.Services = new SelectList(
             _context.Services,
@@ -109,13 +144,17 @@ public class JobServiceItemsController : Controller
             return NotFound();
         }
 
-        var jobserviceitem = await _context.JobServiceItems.FindAsync(id);
+        var jobserviceitem = await _context.JobServiceItems
+            .Include(j => j.Mechanic)
+            .Include(j => j.JobOrder)
+            .Include(j => j.Service)
+            .FirstOrDefaultAsync(j => j.JobServiceItemId == id);
         if (jobserviceitem == null)
         {
             return NotFound();
         }
         ViewBag.JobOrders = new SelectList(
-    _context.JobOrders,
+    _context.JobOrders.Where(j => j.Status != "Completed" && j.Status != "Cancelled"),
     "JobOrderId",
     "JobNumber",
     jobserviceitem.JobOrderId);
@@ -140,7 +179,7 @@ public class JobServiceItemsController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,HourlyRate,ServicePrice,Notes")] JobServiceItem jobserviceitem)
+    public async Task<IActionResult> Edit(int? id, [Bind("JobServiceItemId,JobOrderId,ServiceId,MechanicId,HoursWorked,Notes")] JobServiceItem jobserviceitem)
  {
 
         if (id != jobserviceitem.JobServiceItemId)
@@ -155,6 +194,14 @@ public class JobServiceItemsController : Controller
         {
             try
             {
+                // ensure hourly rate and service price reflect selected Service and HoursWorked
+                var service = await _context.Services.FindAsync(jobserviceitem.ServiceId);
+                if (service != null)
+                {
+                    jobserviceitem.HourlyRate = service.FixedPrice;
+                }
+                jobserviceitem.ServicePrice = (jobserviceitem.HoursWorked ?? 0) * (jobserviceitem.HourlyRate ?? 0);
+
                 _context.Update(jobserviceitem);
                 await _context.SaveChangesAsync();
             }
@@ -200,6 +247,9 @@ public class JobServiceItemsController : Controller
         }
 
         var jobserviceitem = await _context.JobServiceItems
+            .Include(j => j.JobOrder)
+            .Include(j => j.Service)
+            .Include(j => j.Mechanic)
             .FirstOrDefaultAsync(m => m.JobServiceItemId == id);
         if (jobserviceitem == null)
         {

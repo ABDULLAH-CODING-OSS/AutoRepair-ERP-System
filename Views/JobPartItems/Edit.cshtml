@@ -1,62 +1,52 @@
 @model AutoRepairERD.Models.JobPartItem
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Part Item";
 }
 
-<h1>Edit</h1>
-
-<h4>JobPartItem</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Edit Part</h5>
+    </div>
+    <div class="card-body">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="JobPartItemId" />
-            <div class="form-group">
-                <label asp-for="JobOrderId" class="control-label"></label>
-                <input asp-for="JobOrderId" class="form-control" />
-                <span asp-validation-for="JobOrderId" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label">Job Order</label>
+                <div class="form-control-plaintext">@((Model?.JobOrder != null) ? Model.JobOrder.JobNumber : Model?.JobOrderId.ToString())</div>
+                <input type="hidden" asp-for="JobOrderId" />
             </div>
-            <div class="form-group">
-                <label asp-for="PartId" class="control-label"></label>
-                <input asp-for="PartId" class="form-control" />
+
+            <div class="mb-3">
+                <label class="form-label">Part <span class="text-danger">*</span></label>
+                <select asp-for="PartId" class="form-select" asp-items="ViewBag.Parts"></select>
                 <span asp-validation-for="PartId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Quantity" class="control-label"></label>
+
+            <div class="mb-3">
+                <label asp-for="Quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
                 <input asp-for="Quantity" class="form-control" />
                 <span asp-validation-for="Quantity" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="UnitPrice" class="control-label"></label>
-                <input asp-for="UnitPrice" class="form-control" />
-                <span asp-validation-for="UnitPrice" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label">Unit Price</label>
+                <div class="form-control-plaintext">@((Model != null && Model.UnitPrice.HasValue) ? Model.UnitPrice.Value.ToString("C") : "-")</div>
             </div>
-            <div class="form-group">
-                <label asp-for="TotalPrice" class="control-label"></label>
-                <input asp-for="TotalPrice" class="form-control" />
-                <span asp-validation-for="TotalPrice" class="text-danger"></span>
+
+            <div class="mb-3">
+                <label class="form-label">Total Price</label>
+                <div class="form-control-plaintext">@((Model != null && Model.TotalPrice.HasValue) ? Model.TotalPrice.Value.ToString("C") : "-")</div>
             </div>
-            <div class="form-group">
-                <label asp-for="JobOrder" class="control-label"></label>
-                <input asp-for="JobOrder" class="form-control" />
-                <span asp-validation-for="JobOrder" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Part" class="control-label"></label>
-                <input asp-for="Part" class="form-control" />
-                <span asp-validation-for="Part" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

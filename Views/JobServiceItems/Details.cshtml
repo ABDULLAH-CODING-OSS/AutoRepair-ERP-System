@@ -1,87 +1,32 @@
 @model AutoRepairERD.Models.JobServiceItem
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Service Item Details";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Service Item</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Job:</strong> @(Model?.JobOrder?.JobNumber ?? Model?.JobOrderId.ToString())</p>
+                <p><strong>Service:</strong> @(Model?.Service?.ServiceName ?? "-")</p>
+                <p><strong>Mechanic:</strong> @(Model?.Mechanic != null ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-")</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p><strong>Hours:</strong> @(Model?.HoursWorked?.ToString() ?? "-")</p>
+                <p><strong>Hourly Rate:</strong> @((Model != null && Model.HourlyRate.HasValue) ? Model.HourlyRate.Value.ToString("C") : "-")</p>
+                <p><strong>Service Price:</strong> @((Model != null && Model.ServicePrice.HasValue) ? Model.ServicePrice.Value.ToString("C") : "-")</p>
+            </div>
+        </div>
 
-<div>
-    <h4>JobServiceItem</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrderId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ServiceId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ServiceId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MechanicId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MechanicId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.HoursWorked)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.HoursWorked)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.HourlyRate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.HourlyRate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ServicePrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ServicePrice)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Notes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Notes)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrder)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrder)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Mechanic)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Mechanic)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Service)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Service)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.JobServiceItemId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <hr />
+        <p><strong>Notes:</strong> @Model?.Notes</p>
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model?.JobServiceItemId">Edit</a>
+        <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
+    </div>
 </div>

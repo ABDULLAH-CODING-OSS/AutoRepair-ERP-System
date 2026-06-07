@@ -199,7 +199,10 @@ public class JobOrdersController : Controller
             return NotFound();
         }
 
-        var joborder = await _context.JobOrders.FindAsync(id);
+        var joborder = await _context.JobOrders
+            .Include(j => j.Customer)
+            .Include(j => j.Vehicle)
+            .FirstOrDefaultAsync(j => j.JobOrderId == id);
 
         if (joborder == null)
         {
@@ -354,6 +357,8 @@ public class JobOrdersController : Controller
         joborder.JobNumber = existingJob.JobNumber;
         joborder.CreatedAt = existingJob.CreatedAt;
         joborder.CreatedByUserId = existingJob.CreatedByUserId;
+        // Preserve FinalCost - only updated by Invoice process
+        joborder.FinalCost = existingJob.FinalCost;
 
         ModelState.Remove("Advisor");
         ModelState.Remove("Customer");
@@ -382,6 +387,44 @@ public class JobOrdersController : Controller
         {
             try
             {
+                // If status changed to Completed and CompletionDate not set, set it automatically
+                if (existingJob.Status != "Completed" && joborder.Status == "Completed")
+                {
+                    joborder.CompletionDate = DateTime.Now;
+                }
+                // If status changed to Cancelled from a non-cancelled state, return parts to stock
+                if (existingJob.Status != "Cancelled" && joborder.Status == "Cancelled")
+                {
+                    var parts = _context.JobPartItems
+                        .Where(p => p.JobOrderId == joborder.JobOrderId)
+                        .ToList();
+
+                    foreach (var jp in parts)
+                    {
+                        var part = await _context.Parts.FindAsync(jp.PartId);
+                        var qty = jp.Quantity ?? 0;
+                        if (part != null && qty > 0)
+                        {
+                            var previous = part.CurrentStock;
+                            part.CurrentStock += qty;
+
+                            var tx = new StockTransaction
+                            {
+                                PartId = part.PartId,
+                                TransactionType = "IN",
+                                Quantity = qty,
+                                PreviousStock = previous,
+                                NewStock = part.CurrentStock,
+                                ReferenceNumber = "JOB-CANCEL-" + joborder.JobOrderId,
+                                Remarks = "Job cancelled - parts returned",
+                                TransactionDate = DateTime.Now
+                            };
+
+                            _context.StockTransactions.Add(tx);
+                            _context.Parts.Update(part);
+                        }
+                    }
+                }
                 _context.Update(joborder);
                 await _context.SaveChangesAsync();
             }
@@ -465,13 +508,59 @@ public class JobOrdersController : Controller
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
         var joborder = await _context.JobOrders.FindAsync(id);
+        if (joborder == null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        if (joborder.Status == "Completed")
+        {
+            TempData["Error"] = "Completed jobs cannot be deleted.";
+            return RedirectToAction(nameof(Delete), new { id });
+        }
         if (joborder != null)
         {
+            // restore part stocks for parts associated with this job
+            var parts = _context.JobPartItems.Where(p => p.JobOrderId == joborder.JobOrderId).ToList();
+            foreach (var jp in parts)
+            {
+                var part = await _context.Parts.FindAsync(jp.PartId);
+                var qty = jp.Quantity ?? 0;
+                if (part != null && qty > 0)
+                {
+                    var previous = part.CurrentStock;
+                    part.CurrentStock += qty;
+
+                    var tx = new StockTransaction
+                    {
+                        PartId = part.PartId,
+                        TransactionType = "IN",
+                        Quantity = qty,
+                        PreviousStock = previous,
+                        NewStock = part.CurrentStock,
+                        ReferenceNumber = "JOB-DEL-" + joborder.JobOrderId,
+                        Remarks = "Job deleted - parts returned",
+                        TransactionDate = DateTime.Now
+                    };
+
+                    _context.StockTransactions.Add(tx);
+                    _context.Parts.Update(part);
+                }
+            }
+
             _context.JobOrders.Remove(joborder);
         }
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException ex)
+        {
+            // likely due to FK constraints - show friendly message
+            TempData["Error"] = "Cannot delete this Job Order because related records exist (invoices, parts, or services).";
+            return RedirectToAction(nameof(Delete), new { id });
+        }
     }
 
     private bool JobOrderExists(int? id)

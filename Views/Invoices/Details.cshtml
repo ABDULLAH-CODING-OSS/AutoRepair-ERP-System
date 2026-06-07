@@ -4,105 +4,30 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Invoice</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrderId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceNumber)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SubTotal)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SubTotal)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TaxAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TaxAmount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DiscountAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DiscountAmount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.GrandTotal)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.GrandTotal)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceStatus)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceStatus)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PaymentStatus)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PaymentStatus)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUser)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrder)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrder)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Payments)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Payments)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.InvoiceId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="card">
+    <div class="card-header">
+        <h4>Invoice @Model?.InvoiceNumber</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Job Order:</strong> @Html.DisplayFor(m => m.JobOrderId)</p>
+                <p><strong>Invoice Date:</strong> @Html.DisplayFor(m => m.InvoiceDate)</p>
+                <p><strong>Status:</strong> @Html.DisplayFor(m => m.InvoiceStatus)</p>
+                <p><strong>Payment Status:</strong> @Html.DisplayFor(m => m.PaymentStatus)</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p><strong>Parts Total:</strong> @(ViewBag.PartsTotal != null ? ((decimal)ViewBag.PartsTotal).ToString("C") : "-")</p>
+                <p><strong>Services Total:</strong> @(ViewBag.ServicesTotal != null ? ((decimal)ViewBag.ServicesTotal).ToString("C") : "-")</p>
+                <p><strong>Subtotal:</strong> @(Model.SubTotal.HasValue ? Model.SubTotal.Value.ToString("C") : "-")</p>
+                <p><strong>Tax:</strong> @(Model.TaxAmount.HasValue ? Model.TaxAmount.Value.ToString("C") : "-")</p>
+                <p><strong>Discount:</strong> @(Model.DiscountAmount.HasValue ? Model.DiscountAmount.Value.ToString("C") : "-")</p>
+                <h5><strong>Grand Total:</strong> @Model.GrandTotal.ToString("C")</h5>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model?.InvoiceId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+    </div>
 </div>
