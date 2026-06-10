@@ -1,80 +1,68 @@
 @model AutoRepairERD.Models.PurchaseOrder
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Purchase Order Details";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <h4 class="card-title">Purchase Order Details</h4>
+            <div>
+                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@Model?.PurchaseOrderId">Edit</a>
+                <a class="btn btn-sm btn-outline-secondary ms-1" asp-action="Index">Back</a>
+            </div>
+        </div>
 
-<div>
-    <h4>PurchaseOrder</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SupplierId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SupplierId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ExpectedDeliveryDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ExpectedDeliveryDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalAmount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByUser)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrderItems)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrderItems)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Supplier)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Supplier)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PurchaseOrderId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-5">Supplier</dt>
+                    <dd class="col-sm-7">@Model.Supplier?.CompanyName</dd>
+
+                    <dt class="col-sm-5">Order Date</dt>
+                    <dd class="col-sm-7">@Model.OrderDate?.ToString("yyyy-MM-dd")</dd>
+
+                    <dt class="col-sm-5">Expected Delivery Date</dt>
+                    <dd class="col-sm-7">@Model.ExpectedDeliveryDate?.ToString("yyyy-MM-dd")</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-5">Status</dt>
+                    <dd class="col-sm-7"><span class="badge bg-info">@Model.Status</span></dd>
+
+                    <dt class="col-sm-5">Purchase Total</dt>
+                    <dd class="col-sm-7">@String.Format("{0:C}", Model.TotalAmount ?? 0m)</dd>
+                </dl>
+            </div>
+        </div>
+
+        <hr />
+
+        <h5>Items</h5>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Part</th>
+                        <th class="text-end">Quantity</th>
+                        <th class="text-end">Unit Cost</th>
+                        <th class="text-end">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.PurchaseOrderItems ?? Enumerable.Empty<AutoRepairERD.Models.PurchaseOrderItem>())
+                    {
+                        <tr>
+                            <td>@item.Part?.PartName</td>
+                            <td class="text-end">@item.Quantity</td>
+                            <td class="text-end">@String.Format("{0:C}", item.UnitCost ?? 0m)</td>
+                            <td class="text-end">@String.Format("{0:C}", item.TotalCost ?? 0m)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>

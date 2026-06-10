@@ -64,15 +64,7 @@ public class JobOrdersController : Controller
                 Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
             })
             .ToList();
-
-        ViewBag.Vehicles = _context.Vehicles
-            .Select(v => new SelectListItem
-            {
-                Value = v.VehicleId.ToString(),
-                Text = v.Make + " " + v.Model + " - " + v.LicensePlate
-            })
-            .ToList();
-
+        ViewBag.Vehicles = new List<SelectListItem>();
         ViewBag.Advisors = _context.Employees
             .Where(e => e.Designation == "Service Advisor")
             .Select(e => new SelectListItem
@@ -93,6 +85,20 @@ public class JobOrdersController : Controller
 
         return View();
     }
+    [HttpGet]
+    public JsonResult GetVehiclesByCustomer(int customerId)
+    {
+        var vehicles = _context.Vehicles
+            .Where(v => v.CustomerId == customerId)
+            .Select(v => new
+            {
+                vehicleId = v.VehicleId,
+                text = v.Make + " " + v.Model + " - " + v.LicensePlate
+            })
+            .ToList();
+
+        return Json(vehicles);
+    }
     // POST: JOBORDERS/Create
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -112,6 +118,21 @@ public class JobOrdersController : Controller
         ModelState.Remove("JobServiceItems");
         ModelState.Remove("JobNumber");
         ModelState.Remove("Status");
+        var selectedVehicle = await _context.Vehicles
+    .FirstOrDefaultAsync(v => v.VehicleId == joborder.VehicleId);
+
+        if (selectedVehicle == null)
+        {
+            ModelState.AddModelError(
+                "VehicleId",
+                "Please select a valid vehicle.");
+        }
+        else if (selectedVehicle.CustomerId != joborder.CustomerId)
+        {
+            ModelState.AddModelError(
+                "VehicleId",
+                "Selected vehicle does not belong to the selected customer.");
+        }
         if (!ModelState.IsValid)
         {
             foreach (var item in ModelState)
@@ -148,13 +169,21 @@ public class JobOrdersController : Controller
             })
             .ToList();
 
+        //ViewBag.Vehicles = _context.Vehicles
+        //    .Select(v => new SelectListItem
+        //    {
+        //        Value = v.VehicleId.ToString(),
+        //        Text = v.Make + " " + v.Model + " - " + v.LicensePlate
+        //    })
+        //    .ToList();
         ViewBag.Vehicles = _context.Vehicles
-            .Select(v => new SelectListItem
-            {
-                Value = v.VehicleId.ToString(),
-                Text = v.Make + " " + v.Model + " - " + v.LicensePlate
-            })
-            .ToList();
+    .Where(v => v.CustomerId == joborder.CustomerId)
+    .Select(v => new SelectListItem
+    {
+        Value = v.VehicleId.ToString(),
+        Text = v.Make + " " + v.Model + " - " + v.LicensePlate
+    })
+    .ToList();
 
         ViewBag.Advisors = _context.Employees
             .Where(e => e.Designation == "Service Advisor")

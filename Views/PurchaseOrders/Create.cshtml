@@ -55,11 +55,7 @@
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div> *@
 
-            <div class="form-group">
-                <label asp-for="TotalAmount" class="control-label"></label>
-                <input asp-for="TotalAmount" class="form-control" />
-                <span asp-validation-for="TotalAmount" class="text-danger"></span>
-            </div>
+            @* TotalAmount is system-calculated and not editable here *@
 
             @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>

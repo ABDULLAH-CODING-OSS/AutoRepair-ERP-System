@@ -11,10 +11,12 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
-                <p><strong>Job Order:</strong> @Html.DisplayFor(m => m.JobOrderId)</p>
-                <p><strong>Invoice Date:</strong> @Html.DisplayFor(m => m.InvoiceDate)</p>
-                <p><strong>Status:</strong> @Html.DisplayFor(m => m.InvoiceStatus)</p>
-                <p><strong>Payment Status:</strong> @Html.DisplayFor(m => m.PaymentStatus)</p>
+                <p><strong>Job Number:</strong> @(Model?.JobOrder?.JobNumber ?? "-")</p>
+                <p><strong>Customer:</strong> @(Model?.JobOrder?.Customer != null ? Model.JobOrder.Customer.FirstName + " " + Model.JobOrder.Customer.LastName : "-")</p>
+                <p><strong>Vehicle:</strong> @(Model?.JobOrder?.Vehicle != null ? Model.JobOrder.Vehicle.Make + " " + Model.JobOrder.Vehicle.Model + " - " + Model.JobOrder.Vehicle.LicensePlate : "-")</p>
+                <p><strong>Invoice Date:</strong> @((Model != null && Model.InvoiceDate.HasValue) ? Model.InvoiceDate.Value.ToString("g") : "-")</p>
+                <p><strong>Status:</strong> @(Model?.InvoiceStatus ?? "-")</p>
+                <p><strong>Payment Status:</strong> @(Model?.PaymentStatus ?? "-")</p>
             </div>
             <div class="col-md-6 text-end">
                 <p><strong>Parts Total:</strong> @(ViewBag.PartsTotal != null ? ((decimal)ViewBag.PartsTotal).ToString("C") : "-")</p>

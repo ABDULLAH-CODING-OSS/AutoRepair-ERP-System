@@ -17,10 +17,15 @@ public class InvoicesController : Controller
     // GET: INVOICES
     public async Task<IActionResult> Index()    
     {
-        //return View(await _context.Invoices.ToListAsync());
-        return View(await _context.Invoices
-    .Include(i => i.JobOrder)
-    .ToListAsync());
+        // include related job and customer/vehicle for display
+        var list = await _context.Invoices
+            .Include(i => i.JobOrder)
+                .ThenInclude(j => j.Customer)
+            .Include(i => i.JobOrder)
+                .ThenInclude(j => j.Vehicle)
+            .ToListAsync();
+
+        return View(list);
     }
 
     // GET: INVOICES/Details/5
@@ -33,6 +38,7 @@ public class InvoicesController : Controller
 
         var invoice = await _context.Invoices
             .Include(i => i.JobOrder)
+            .ThenInclude(j => j.Customer)
             .FirstOrDefaultAsync(m => m.InvoiceId == id);
         if (invoice == null)
         {

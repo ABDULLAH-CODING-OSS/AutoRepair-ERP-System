@@ -79,10 +79,10 @@ public class VehiclesController : Controller
         }
 
         // VIN: optional but if provided must be 17 characters
-        if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
-        {
-            ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
-        }
+        //if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
+        //{
+        //    ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
+        //}
 
         // LicensePlate and VIN uniqueness checks
         if (!string.IsNullOrWhiteSpace(vehicle.LicensePlate))
@@ -94,12 +94,34 @@ public class VehiclesController : Controller
             }
         }
 
+        //if (!string.IsNullOrWhiteSpace(vehicle.Vin))
+        //{
+        //    bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin);
+        //    if (vinExists)
+        //    {
+        //        ModelState.AddModelError("Vin", "This VIN is already registered.");
+        //    }
+        //}
         if (!string.IsNullOrWhiteSpace(vehicle.Vin))
         {
-            bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin);
-            if (vinExists)
+            if (vehicle.Vin.Length != 17)
             {
-                ModelState.AddModelError("Vin", "This VIN is already registered.");
+                ModelState.AddModelError(
+                    "Vin",
+                    "VIN must be exactly 17 characters.");
+            }
+            else
+            {
+                bool vinExists = _context.Vehicles.Any(
+                    v => v.Vin == vehicle.Vin &&
+                         v.VehicleId != vehicle.VehicleId);
+
+                if (vinExists)
+                {
+                    ModelState.AddModelError(
+                        "Vin",
+                        "This VIN is already registered.");
+                }
             }
         }
 
@@ -139,39 +161,54 @@ public class VehiclesController : Controller
                 Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
             })
             .ToList();
+        // If we got here, validation failed
 
-        // Include Customer navigation if available so View can show owner info properly
-        vehicle.Customer = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
+        ViewBag.Customers = _context.Customers
+            .Select(c => new SelectListItem
+            {
+                Value = c.CustomerId.ToString(),
+                Text = c.FirstName + " " + c.LastName + " (" + c.Phone + ")"
+            })
+            .ToList();
 
-        // Aggregate ModelState errors into a model-level message for clearer feedback
-        if (!ModelState.IsValid)
-        {
-            var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
-                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
-                .Where(x => x.Errors.Any())
-                .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
-            var msg = string.Join(" | ", list);
-            if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
-        }
+        vehicle.Customer = await _context.Customers
+            .FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
 
         return View(vehicle);
     }
 
-    // GET: VEHICLES/Edit/5
-    //public async Task<IActionResult> Edit(int? id)
-    //{
-    //    if (id == null)
-    //    {
-    //        return NotFound();
-    //    }
+        // Include Customer navigation if available so View can show owner info properly
+        //vehicle.Customer = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
 
-    //    var vehicle = await _context.Vehicles.FindAsync(id);
-    //    if (vehicle == null)
-    //    {
-    //        return NotFound();
-    //    }
-    //    return View(vehicle);
-    //}
+        // Aggregate ModelState errors into a model-level message for clearer feedback
+        //    if (!ModelState.IsValid)
+        //    {
+        //        var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
+        //            .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
+        //            .Where(x => x.Errors.Any())
+        //            .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
+        //        var msg = string.Join(" | ", list);
+        //        if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
+        //    }
+
+        //    return View(vehicle);
+        //}
+
+        // GET: VEHICLES/Edit/5
+        //public async Task<IActionResult> Edit(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    var vehicle = await _context.Vehicles.FindAsync(id);
+        //    if (vehicle == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return View(vehicle);
+        //}
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -224,12 +261,6 @@ public class VehiclesController : Controller
         {
             ModelState.AddModelError("Mileage", "Mileage cannot be negative.");
         }
-
-        if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
-        {
-            ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
-        }
-
         // Uniqueness checks (exclude current record)
         if (!string.IsNullOrWhiteSpace(vehicle.LicensePlate))
         {
@@ -240,12 +271,40 @@ public class VehiclesController : Controller
             }
         }
 
+        //if (!string.IsNullOrWhiteSpace(vehicle.Vin) && vehicle.Vin.Length != 17)
+        //{
+        //    ModelState.AddModelError("Vin", "VIN must be exactly 17 characters.");
+        //}
+
+
+        //if (!string.IsNullOrWhiteSpace(vehicle.Vin))
+        //{
+        //    bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin && v.VehicleId != vehicle.VehicleId);
+        //    if (vinExists)
+        //    {
+        //        ModelState.AddModelError("Vin", "This VIN is already registered.");
+        //    }
+        //}
         if (!string.IsNullOrWhiteSpace(vehicle.Vin))
         {
-            bool vinExists = _context.Vehicles.Any(v => v.Vin == vehicle.Vin && v.VehicleId != vehicle.VehicleId);
-            if (vinExists)
+            if (vehicle.Vin.Length != 17)
             {
-                ModelState.AddModelError("Vin", "This VIN is already registered.");
+                ModelState.AddModelError(
+                    "Vin",
+                    "VIN must be exactly 17 characters.");
+            }
+            else
+            {
+                bool vinExists = _context.Vehicles.Any(
+                    v => v.Vin == vehicle.Vin &&
+                         v.VehicleId != vehicle.VehicleId);
+
+                if (vinExists)
+                {
+                    ModelState.AddModelError(
+                        "Vin",
+                        "This VIN is already registered.");
+                }
             }
         }
 
@@ -286,28 +345,33 @@ public class VehiclesController : Controller
             }
         }
         vehicle.Customer = await _context.Customers
-            .FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
-
-        // Aggregate ModelState errors for summary display including exception messages
-        if (!ModelState.IsValid)
-        {
-            var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
-                .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
-                .Where(x => x.Errors.Any())
-                .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
-            var msg = string.Join(" | ", list);
-            if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
-
-            // Also put errors and posted values into TempData for immediate visibility in UI
-            TempData["VehicleEditErrors"] = msg;
-            TempData["VehiclePostedValues"] = $"VehicleId={vehicle.VehicleId}; LicensePlate={vehicle.LicensePlate}; Vin={vehicle.Vin}; Make={vehicle.Make}; Model={vehicle.Model}; ManufacturingYear={vehicle.ManufacturingYear}; Mileage={vehicle.Mileage}";
-        }
+    .FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
 
         return View(vehicle);
     }
+        //vehicle.Customer = await _context.Customers
+        //    .FirstOrDefaultAsync(c => c.CustomerId == vehicle.CustomerId);
+
+        // Aggregate ModelState errors for summary display including exception messages
+        //    if (!ModelState.IsValid)
+        //    {
+        //        var list = ModelState.Where(kvp => kvp.Value.Errors.Any())
+        //            .Select(kvp => new { Field = kvp.Key, Errors = kvp.Value.Errors.Select(e => !string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.ErrorMessage : (e.Exception?.Message ?? string.Empty)).Where(m => !string.IsNullOrWhiteSpace(m)) })
+        //            .Where(x => x.Errors.Any())
+        //            .Select(x => x.Field + ": " + string.Join("; ", x.Errors));
+        //        var msg = string.Join(" | ", list);
+        //        if (!string.IsNullOrWhiteSpace(msg)) ModelState.AddModelError(string.Empty, msg);
+
+        //        // Also put errors and posted values into TempData for immediate visibility in UI
+        //        TempData["VehicleEditErrors"] = msg;
+        //        TempData["VehiclePostedValues"] = $"VehicleId={vehicle.VehicleId}; LicensePlate={vehicle.LicensePlate}; Vin={vehicle.Vin}; Make={vehicle.Make}; Model={vehicle.Model}; ManufacturingYear={vehicle.ManufacturingYear}; Mileage={vehicle.Mileage}";
+        //    }
+
+        //    return View(vehicle);
+        //}
 
 
-    // GET: VEHICLES/Delete/5
+        // GET: VEHICLES/Delete/5
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)

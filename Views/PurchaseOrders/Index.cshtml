@@ -4,80 +4,49 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<div class="card">
+    <div class="card-body">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="card-title mb-0">Purchase Orders</h3>
+            <a class="btn btn-primary" asp-action="Create">Create Purchase Order</a>
+        </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SupplierId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByUserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ExpectedDeliveryDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalAmount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByUser)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PurchaseOrderItems)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Supplier)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.SupplierId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedByUserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.OrderDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ExpectedDeliveryDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TotalAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedByUser)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PurchaseOrderItems)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Supplier)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.PurchaseOrderId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.PurchaseOrderId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.PurchaseOrderId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Order Date</th>
+                        <th>Expected Delivery Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Purchase Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@(item.Supplier?.CompanyName ?? "-")</td>
+                            <td>@(item.OrderDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>@(item.ExpectedDeliveryDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                            <td>
+                                <span class="badge bg-secondary">@item.Status</span>
+                            </td>
+                            <td class="text-end">@String.Format("{0:C}", item.TotalAmount ?? 0m)</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.PurchaseOrderId">Edit</a>
+                                <a class="btn btn-sm btn-outline-secondary ms-1" asp-action="Details" asp-route-id="@item.PurchaseOrderId">Details</a>
+                                <a class="btn btn-sm btn-outline-danger ms-1" asp-action="Delete" asp-route-id="@item.PurchaseOrderId">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

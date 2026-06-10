@@ -1,74 +1,51 @@
 @model AutoRepairERD.Models.PurchaseOrderItem
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Purchase Order Item";
 }
 
-<h1>Delete</h1>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Delete Purchase Order Item</h4>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>AutoRepairERD.Models.PurchaseOrderItem</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrderId)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartId)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Quantity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Quantity)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UnitCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UnitCost)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalCost)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Part)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Part)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrder)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrder)
-        </dd>
-    </dl>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="PoitemId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+        @* If the parent purchase order is received, block delete and show only that message. *@
+        @if (Model.PurchaseOrder?.Status == "Received")
+        {
+            <div class="alert alert-warning">This purchase order has already been received. Items can no longer be deleted.</div>
+            <div class="mb-3">
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <h5>Purchase Order Item Summary</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Purchase Order</dt>
+                    <dd class="col-sm-9">@("PO-" + (Model.PurchaseOrder?.PurchaseOrderId.ToString() ?? "-"))</dd>
+
+                    <dt class="col-sm-3">Part</dt>
+                    <dd class="col-sm-9">@Model.Part?.PartName</dd>
+
+                    <dt class="col-sm-3">Quantity</dt>
+                    <dd class="col-sm-9">@Model.Quantity</dd>
+
+                    <dt class="col-sm-3">Unit Cost</dt>
+                    <dd class="col-sm-9">@String.Format("{0:C}", Model.UnitCost ?? 0m)</dd>
+
+                    <dt class="col-sm-3">Line Total</dt>
+                    <dd class="col-sm-9">@String.Format("{0:C}", Model.TotalCost ?? 0m)</dd>
+                </dl>
+            </div>
+
+            <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="PoitemId" />
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-danger">Delete Item</button>
+                    <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+                </div>
+            </form>
+        }
+    </div>
 </div>

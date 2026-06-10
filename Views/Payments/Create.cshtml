@@ -1,51 +1,32 @@
 @model AutoRepairERD.Models.Payment
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Add Payment";
 }
 
-<h1>Create</h1>
-
-<h4>Payment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Record Payment</h5>
+    </div>
+    <div class="card-body">
         <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            @* <div class="form-group">
-                <label asp-for="InvoiceId" class="control-label"></label>
-                <input asp-for="InvoiceId" class="form-control" />
-                <span asp-validation-for="InvoiceId" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <label class="control-label">Invoice</label>
-                <select asp-for="InvoiceId"
-                        class="form-control"
-                        asp-items="ViewBag.Invoices">
-                </select>
+            <div class="mb-3">
+                <label class="form-label">Invoice <span class="text-danger">*</span></label>
+                <select asp-for="InvoiceId" class="form-select" asp-items="ViewBag.Invoices"></select>
                 <span asp-validation-for="InvoiceId" class="text-danger"></span>
             </div>
-            @* <div class="form-group">
-                <label asp-for="PaymentDate" class="control-label"></label>
-                <input asp-for="PaymentDate" class="form-control" />
-                <span asp-validation-for="PaymentDate" class="text-danger"></span>
-            </div> *@
 
-            <div class="form-group">
-                <label asp-for="AmountPaid" class="control-label"></label>
-                <input asp-for="AmountPaid" class="form-control" />
+            <div class="mb-3">
+                <label asp-for="AmountPaid" class="form-label">Amount <span class="text-danger">*</span></label>
+                <input asp-for="AmountPaid" class="form-control" placeholder="Enter amount" />
                 <span asp-validation-for="AmountPaid" class="text-danger"></span>
             </div>
 
-            @* <div class="form-group">
-                <label asp-for="PaymentMethod" class="control-label"></label>
-                <input asp-for="PaymentMethod" class="form-control" />
-                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <label class="control-label">Payment Method</label>
-                <select asp-for="PaymentMethod" class="form-control">
+            <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <select asp-for="PaymentMethod" class="form-select">
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
                     <option value="Bank Transfer">Bank Transfer</option>
@@ -53,30 +34,26 @@
                 <span asp-validation-for="PaymentMethod" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="TransactionReference" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="TransactionReference" class="form-label">Transaction Reference</label>
                 <input asp-for="TransactionReference" class="form-control" />
                 <span asp-validation-for="TransactionReference" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-label">Notes</label>
                 <input asp-for="Notes" class="form-control" />
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
 
-            @* <div class="form-group">
-                <label asp-for="Invoice" class="control-label"></label>
-                <input asp-for="Invoice" class="form-control" />
-                <span asp-validation-for="Invoice" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div>
+                <button type="submit" class="btn btn-primary">Save Payment</button>
+                <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

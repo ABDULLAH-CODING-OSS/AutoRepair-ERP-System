@@ -1,66 +1,32 @@
 @model AutoRepairERD.Models.Payment
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Payment Details";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Payment</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InvoiceId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InvoiceId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PaymentDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PaymentDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AmountPaid)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AmountPaid)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PaymentMethod)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PaymentMethod)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TransactionReference)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TransactionReference)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Notes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Notes)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Invoice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Invoice)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PaymentId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Payment #@Model?.PaymentId</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Invoice:</strong> @(Model?.Invoice?.InvoiceNumber ?? Model?.InvoiceId.ToString())</p>
+                <p><strong>Job Number:</strong> @(Model?.Invoice?.JobOrder?.JobNumber ?? "-")</p>
+                <p><strong>Customer:</strong> @(Model?.Invoice?.JobOrder?.Customer != null ? Model.Invoice.JobOrder.Customer.FirstName + " " + Model.Invoice.JobOrder.Customer.LastName : "-")</p>
+                <p><strong>Payment Date:</strong> @((Model != null && Model.PaymentDate.HasValue) ? Model.PaymentDate.Value.ToString("g") : "-")</p>
+                <p><strong>Payment Method:</strong> @(Model?.PaymentMethod ?? "-")</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p><strong>Amount Paid:</strong> @(Model != null ? Model.AmountPaid.ToString("C") : "-")</p>
+            </div>
+        </div>
+        <hr />
+        <p><strong>Reference:</strong> @Model?.TransactionReference</p>
+        <p><strong>Notes:</strong> @Model?.Notes</p>
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model?.PaymentId">Edit</a>
+        <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
+    </div>
 </div>

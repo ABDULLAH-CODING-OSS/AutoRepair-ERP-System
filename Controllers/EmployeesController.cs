@@ -22,13 +22,40 @@ public class EmployeesController : Controller
     //{
     //    return View(await _context.Employees.ToListAsync());
     //}
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string filter = "all")
     {
-        return View(await _context.Employees
-            .Where(e => e.IsActive == true)
-            .ToListAsync());
-    }
+        var query = _context.Employees.Include(e => e.User).AsQueryable();
 
+        if (filter == "active")
+        {
+            query = query.Where(e => e.IsActive == true);
+        }
+        else if (filter == "inactive")
+        {
+            query = query.Where(e => e.IsActive == false);
+        }
+
+        ViewBag.Filter = filter ?? "all";
+
+        var employees = await query.ToListAsync();
+
+        return View(employees);
+    }
+    //public async Task<IActionResult> Index()
+    //{
+    //    return View(await _context.Employees.ToListAsync());
+    //}
+    //public IActionResult Index()
+    //{
+    //    return Content("Employee Controller Works");
+    //}
+
+    //public async Task<IActionResult> Index()
+    //{
+    //    var count = await _context.Employees.CountAsync();
+    //    return Content($"Count = {count}");
+    //}
+   
     // GET: EMPLOYEES/Details/5
     public async Task<IActionResult> Details(int? id)
     {
@@ -36,13 +63,25 @@ public class EmployeesController : Controller
         {
             return NotFound();
         }
-
         var employee = await _context.Employees
+            .Include(e => e.User)
+            .Include(e => e.Attendances)
             .FirstOrDefaultAsync(m => m.EmployeeId == id);
         if (employee == null)
         {
             return NotFound();
         }
+
+        // Attendance summary
+        var total = employee.Attendances?.Count() ?? 0;
+        var present = employee.Attendances?.Count(a => a.Status == "Present") ?? 0;
+        var absent = employee.Attendances?.Count(a => a.Status == "Absent") ?? 0;
+        var sick = employee.Attendances?.Count(a => a.Status == "Sick") ?? 0;
+
+        ViewBag.TotalAttendances = total;
+        ViewBag.PresentDays = present;
+        ViewBag.AbsentDays = absent;
+        ViewBag.SickDays = sick;
 
         return View(employee);
     }
@@ -95,6 +134,18 @@ public class EmployeesController : Controller
     {
         if (!ModelState.IsValid)
         {
+            ViewBag.Roles = new SelectList(
+                _context.Roles,
+                "RoleId",
+                "RoleName");
+
+            return View(model);
+        }
+
+        // HireDate validation: cannot be future date
+        if (model.HireDate.HasValue && model.HireDate > DateOnly.FromDateTime(DateTime.Now))
+        {
+            ModelState.AddModelError("HireDate", "Hire Date cannot be in the future.");
             ViewBag.Roles = new SelectList(
                 _context.Roles,
                 "RoleId",
@@ -266,11 +317,47 @@ public class EmployeesController : Controller
         ModelState.Remove("JobServiceItems");
         ModelState.Remove("Payrolls");
 
+        // Prevent changing UserId via model binder (if form doesn't post it). Load existing and apply allowed updates.
         if (ModelState.IsValid)
         {
+            // HireDate validation: cannot be future
+            if (employee.HireDate.HasValue && employee.HireDate > DateOnly.FromDateTime(DateTime.Now))
+            {
+                ModelState.AddModelError("HireDate", "Hire Date cannot be in the future.");
+                return View(employee);
+            }
+
+            var existing = await _context.Employees.FindAsync(employee.EmployeeId);
+            if (existing == null)
+                return NotFound();
+
+            // Update allowed fields (do not overwrite UserId)
+            // Validate EmployeeCode uniqueness if provided
+            if (!string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            {
+                var exists = _context.Employees.Any(e => e.EmployeeCode == employee.EmployeeCode && e.EmployeeId != employee.EmployeeId);
+                if (exists)
+                {
+                    ModelState.AddModelError("EmployeeCode", "Employee Code already exists.");
+                    return View(employee);
+                }
+            }
+
+            existing.EmployeeCode = employee.EmployeeCode;
+            existing.FirstName = employee.FirstName;
+            existing.LastName = employee.LastName;
+            existing.Cnic = employee.Cnic;
+            existing.Phone = employee.Phone;
+            existing.Address = employee.Address;
+            existing.HireDate = employee.HireDate;
+            existing.Designation = employee.Designation;
+            existing.BasicSalary = employee.BasicSalary;
+            existing.HourlyRate = employee.HourlyRate;
+            existing.IsActive = employee.IsActive;
+
             try
             {
-                _context.Update(employee);
+                _context.Update(existing);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -289,6 +376,25 @@ public class EmployeesController : Controller
         }
 
         return View(employee);
+    }
+
+    // POST: EMPLOYEES/Activate/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activate(int? id)
+    {
+        if (id == null)
+            return NotFound();
+
+        var employee = await _context.Employees.FindAsync(id);
+        if (employee == null)
+            return NotFound();
+
+        employee.IsActive = true;
+        _context.Update(employee);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: EMPLOYEES/Delete/5
@@ -340,6 +446,8 @@ public class EmployeesController : Controller
 
         await _context.SaveChangesAsync();
 
+        TempData["Toast"] = "Employee deactivated.";
+        TempData["ToastType"] = "warning";
         return RedirectToAction(nameof(Index));
     }
     private bool EmployeeExists(int? id)

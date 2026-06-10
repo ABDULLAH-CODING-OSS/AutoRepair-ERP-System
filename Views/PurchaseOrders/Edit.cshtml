@@ -8,6 +8,10 @@
 
 <h4>PurchaseOrder</h4>
 <hr />
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
@@ -52,11 +56,7 @@
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="TotalAmount" class="control-label"></label>
-                <input asp-for="TotalAmount" class="form-control" />
-                <span asp-validation-for="TotalAmount" class="text-danger"></span>
-            </div>
+            @* TotalAmount is system-calculated and not editable here *@
             @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>
                 <input asp-for="CreatedByUser" class="form-control" />
@@ -73,7 +73,15 @@
                 <span asp-validation-for="Supplier" class="text-danger"></span>
             </div> *@
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                @if (ViewBag.Locked != null && (bool)ViewBag.Locked)
+                {
+                    <div class="alert alert-warning">This purchase order has been received and cannot be edited.</div>
+                    <a asp-action="Index" class="btn btn-secondary">Back</a>
+                }
+                else
+                {
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                }
             </div>
         </form>
     </div>

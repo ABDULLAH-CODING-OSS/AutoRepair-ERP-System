@@ -18,7 +18,11 @@ public class PurchaseOrdersController : Controller
     // GET: PURCHASEORDERS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.PurchaseOrders.ToListAsync());
+        var list = await _context.PurchaseOrders
+            .Include(p => p.Supplier)
+            .ToListAsync();
+
+        return View(list);
     }
 
     // GET: PURCHASEORDERS/Details/5
@@ -30,6 +34,9 @@ public class PurchaseOrdersController : Controller
         }
 
         var purchaseorder = await _context.PurchaseOrders
+            .Include(p => p.Supplier)
+            .Include(p => p.PurchaseOrderItems)
+            .ThenInclude(i => i.Part)
             .FirstOrDefaultAsync(m => m.PurchaseOrderId == id);
         if (purchaseorder == null)
         {
@@ -74,6 +81,15 @@ public class PurchaseOrdersController : Controller
             DateOnly.FromDateTime(DateTime.Now);
 
         purchaseorder.Status = "Ordered";
+        // Validate ExpectedDeliveryDate
+        if (!purchaseorder.ExpectedDeliveryDate.HasValue)
+        {
+            ModelState.AddModelError("ExpectedDeliveryDate", "Expected Delivery Date is required.");
+        }
+        else if (purchaseorder.ExpectedDeliveryDate < purchaseorder.OrderDate)
+        {
+            ModelState.AddModelError("ExpectedDeliveryDate", "Expected Delivery Date cannot be before the Order Date.");
+        }
         if (ModelState.IsValid)
         {
             _context.Add(purchaseorder);
@@ -126,6 +142,13 @@ public class PurchaseOrdersController : Controller
             purchaseorder.SupplierId
         );
 
+        // If already received, show locked message on the edit page rather than redirecting
+        if (purchaseorder.Status == "Received")
+        {
+            ViewBag.Locked = true;
+            ModelState.AddModelError(string.Empty, "This purchase order has already been received and can no longer be modified.");
+        }
+
         return View(purchaseorder);
     }
 
@@ -162,16 +185,39 @@ public class PurchaseOrdersController : Controller
                     return NotFound();
                 }
 
-                bool stockAlreadyReceived =
-                    existingPO.Status == "Received";
+                // Prevent modifying a purchase order that has already been received
+                if (existingPO.Status == "Received")
+                {
+                    ModelState.AddModelError(string.Empty, "This purchase order has already been received and can no longer be modified.");
+                    ViewBag.Suppliers = new SelectList(
+                        _context.Suppliers,
+                        "SupplierId",
+                        "CompanyName",
+                        purchaseorder.SupplierId
+                    );
+                    ViewBag.Locked = true;
+                    return View(purchaseorder);
+                }
+
+                bool stockAlreadyReceived = existingPO.Status == "Received";
 
                 existingPO.SupplierId = purchaseorder.SupplierId;
+                // Validate ExpectedDeliveryDate
+                if (!purchaseorder.ExpectedDeliveryDate.HasValue)
+                {
+                    ModelState.AddModelError("ExpectedDeliveryDate", "Expected Delivery Date is required.");
+                }
+                else if (purchaseorder.ExpectedDeliveryDate < existingPO.OrderDate)
+                {
+                    ModelState.AddModelError("ExpectedDeliveryDate", "Expected Delivery Date cannot be before the Order Date.");
+                }
+
                 existingPO.ExpectedDeliveryDate = purchaseorder.ExpectedDeliveryDate;
                 existingPO.Status = purchaseorder.Status;
-                existingPO.TotalAmount = purchaseorder.TotalAmount;
+                // TotalAmount is system-calculated; do not accept manual edits
+                // existingPO.TotalAmount = purchaseorder.TotalAmount;
 
-                if (!stockAlreadyReceived &&
-                    purchaseorder.Status == "Received")
+                if (!stockAlreadyReceived && purchaseorder.Status == "Received")
                 {
                     //foreach (var item in existingPO.PurchaseOrderItems)
                     //{
@@ -239,11 +285,15 @@ public class PurchaseOrdersController : Controller
         }
 
         var purchaseorder = await _context.PurchaseOrders
+            .Include(p => p.Supplier)
+            .Include(p => p.PurchaseOrderItems)
             .FirstOrDefaultAsync(m => m.PurchaseOrderId == id);
         if (purchaseorder == null)
         {
             return NotFound();
         }
+
+        ViewBag.HasItems = purchaseorder.PurchaseOrderItems != null && purchaseorder.PurchaseOrderItems.Any();
 
         return View(purchaseorder);
     }
@@ -254,12 +304,25 @@ public class PurchaseOrdersController : Controller
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
         var purchaseorder = await _context.PurchaseOrders.FindAsync(id);
+        if (purchaseorder != null && purchaseorder.Status == "Received")
+        {
+            TempData["Error"] = "This purchase order has already been received and cannot be deleted.";
+            return RedirectToAction(nameof(Index));
+        }
         if (purchaseorder != null)
         {
             _context.PurchaseOrders.Remove(purchaseorder);
         }
-
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Likely a foreign key constraint (items exist). Provide a friendly message instead of crashing.
+            TempData["Error"] = "Cannot delete this purchase order because it contains items. Please remove all items from the order before deleting it.";
+            return RedirectToAction(nameof(Delete), new { id });
+        }
         return RedirectToAction(nameof(Index));
     }
 

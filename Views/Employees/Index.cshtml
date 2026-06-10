@@ -1,137 +1,89 @@
 @model IEnumerable<AutoRepairERD.Models.Employee>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Employees";
 }
 
-<h1>Index</h1>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="card-title mb-0">Employees</h3>
+            <div>
+                <a class="btn btn-outline-secondary me-2 @(ViewBag.Filter == "all" ? "active" : "")" asp-action="Index" asp-route-filter="all">All</a>
+                <a class="btn btn-outline-secondary me-2 @(ViewBag.Filter == "active" ? "active" : "")" asp-action="Index" asp-route-filter="active">Active</a>
+                <a class="btn btn-outline-secondary me-2 @(ViewBag.Filter == "inactive" ? "active" : "")" asp-action="Index" asp-route-filter="inactive">Inactive</a>
+                <a class="btn btn-primary" asp-action="Create">New Employee</a>
+            </div>
+        </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EmployeeCode)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cnic)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HireDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Designation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BasicSalary)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HourlyRate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Attendances)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.JobOrderAdvisors)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.JobOrderMechanics)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.JobServiceItems)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Payrolls)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.EmployeeCode)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.FirstName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.LastName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Cnic)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Address)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.HireDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Designation)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.BasicSalary)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.HourlyRate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Attendances)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.JobOrderAdvisors)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.JobOrderMechanics)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.JobServiceItems)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Payrolls)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.User)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.EmployeeId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.EmployeeId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.EmployeeId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        @if (TempData["Toast"] != null)
+        {
+            var toastType = (TempData["ToastType"] ?? "info").ToString();
+            <div class="alert alert-@toastType alert-dismissible fade show" role="alert" id="actionToast">
+                @TempData["Toast"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <script>
+                setTimeout(function(){ var t = document.getElementById('actionToast'); if(t) t.classList.remove('show'); }, 3000);
+            </script>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Employee Code</th>
+                        <th>Employee Name</th>
+                        <th>CNIC</th>
+                        <th>Phone</th>
+                        <th>Designation</th>
+                        <th class="text-end">Basic Salary</th>
+                        <th class="text-end">Hourly Rate</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.EmployeeCode</td>
+                            <td>@(item.FirstName + " " + (item.LastName ?? ""))</td>
+                            <td>@item.Cnic</td>
+                            <td>@item.Phone</td>
+                            <td>@item.Designation</td>
+                            <td class="text-end">@String.Format("{0:C}", item.BasicSalary ?? 0m)</td>
+                            <td class="text-end">@String.Format("{0:C}", item.HourlyRate ?? 0m)</td>
+                            <td>
+                                @if (item.IsActive == true)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.EmployeeId">Edit</a>
+                                <a class="btn btn-sm btn-outline-secondary ms-1" asp-action="Details" asp-route-id="@item.EmployeeId">Details</a>
+                                @if (item.IsActive == true)
+                                {
+                                    <a class="btn btn-sm btn-outline-danger ms-1" asp-action="Delete" asp-route-id="@item.EmployeeId">Deactivate</a>
+                                }
+                                else
+                                {
+                                    <form asp-action="Activate" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.EmployeeId" />
+                                        <button type="submit" class="btn btn-sm btn-success ms-1">Activate</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

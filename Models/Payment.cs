@@ -13,16 +13,22 @@ public partial class Payment
     public int PaymentId { get; set; }
 
     [Column("InvoiceID")]
+    [Display(Name = "Invoice")]
     public int InvoiceId { get; set; }
 
     [Column(TypeName = "datetime")]
+    [Display(Name = "Payment Date")]
+    [DataType(DataType.DateTime)]
     public DateTime? PaymentDate { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
+    [Display(Name = "Amount Paid")]
     public decimal AmountPaid { get; set; }
 
     [StringLength(50)]
     [Unicode(false)]
+    [Display(Name = "Payment Method")]
     public string? PaymentMethod { get; set; }
 
     [StringLength(100)]

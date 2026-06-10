@@ -4,63 +4,29 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<h1>Item Details</h1>
 
-<div>
-    <h4>PurchaseOrderItem</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrderId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Quantity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Quantity)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UnitCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UnitCost)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalCost)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Part)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Part)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseOrder)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseOrder)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PoitemId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Purchase Order Item</h5>
+        <dl class="row">
+            <dt class="col-sm-3">Purchase Order</dt>
+            <dd class="col-sm-9">@("PO-" + (Model.PurchaseOrder?.PurchaseOrderId.ToString() ?? "-"))</dd>
+
+            <dt class="col-sm-3">Part</dt>
+            <dd class="col-sm-9">@Model.Part?.PartName</dd>
+
+            <dt class="col-sm-3">Quantity</dt>
+            <dd class="col-sm-9">@Model.Quantity</dd>
+
+            <dt class="col-sm-3">Unit Cost</dt>
+            <dd class="col-sm-9">@String.Format("{0:C}", Model.UnitCost ?? 0m)</dd>
+
+            <dt class="col-sm-3">Line Total</dt>
+            <dd class="col-sm-9">@String.Format("{0:C}", Model.TotalCost ?? 0m)</dd>
+        </dl>
+
+        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@Model?.PoitemId">Edit</a>
+        <a class="btn btn-sm btn-outline-secondary ms-1" asp-action="Index">Back</a>
+    </div>
 </div>

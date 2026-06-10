@@ -26,8 +26,13 @@
 
                 <div class="col-md-6">
                     <label asp-for="VehicleId" class="form-label">Vehicle <span class="text-danger">*</span></label>
-                    <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles">
+                    @* <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles">
                         <option value="">-- Select Vehicle --</option>
+                    </select> *@
+                    <select asp-for="VehicleId"
+                            class="form-select"
+                            asp-items="ViewBag.Vehicles">
+                        <option value="">-- Select Customer First --</option>
                     </select>
                     <span asp-validation-for="VehicleId" class="text-danger"></span>
                 </div>
@@ -103,3 +108,74 @@
 <div class="mt-3">
     <a asp-action="Index" class="btn btn-link">Back to List</a>
 </div>
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const customerDropdown =
+                document.getElementById("CustomerId");
+
+            const vehicleDropdown =
+                document.getElementById("VehicleId");
+
+            customerDropdown.addEventListener("change", function () {
+
+                let customerId = this.value;
+
+                vehicleDropdown.innerHTML =
+                    '<option value="">Loading...</option>';
+
+                if (!customerId)
+                {
+                    vehicleDropdown.innerHTML =
+                        '<option value="">-- Select Customer First --</option>';
+
+                    return;
+                }
+
+                fetch('/JobOrders/GetVehiclesByCustomer?customerId='
+                    + customerId)
+
+                    .then(response => response.json())
+
+                    .then(data => {
+
+                        vehicleDropdown.innerHTML =
+                            '<option value="">-- Select Vehicle --</option>';
+
+                        data.forEach(vehicle => {
+
+                            let option =
+                                document.createElement("option");
+
+                            option.value =
+                                vehicle.vehicleId;
+
+                            option.text =
+                                vehicle.text;
+
+                            vehicleDropdown.appendChild(option);
+
+                        });
+
+                    })
+
+                    .catch(error => {
+
+                        console.error(error);
+
+                        vehicleDropdown.innerHTML =
+                            '<option value="">Error loading vehicles</option>';
+
+                    });
+
+            });
+
+        });
+    </script>
+}

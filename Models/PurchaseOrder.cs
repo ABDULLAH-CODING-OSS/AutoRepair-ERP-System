@@ -13,6 +13,7 @@ public partial class PurchaseOrder
     public int PurchaseOrderId { get; set; }
 
     [Column("SupplierID")]
+    [Display(Name = "Supplier")]
     public int SupplierId { get; set; }
 
     [Column("CreatedByUserID")]
@@ -20,6 +21,7 @@ public partial class PurchaseOrder
 
     public DateOnly? OrderDate { get; set; }
 
+    [Display(Name = "Expected Delivery Date")]
     public DateOnly? ExpectedDeliveryDate { get; set; }
 
     [StringLength(50)]
@@ -27,6 +29,7 @@ public partial class PurchaseOrder
     public string? Status { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
+    [Display(Name = "Total Amount")]
     public decimal? TotalAmount { get; set; }
 
     [ForeignKey("CreatedByUserId")]
