@@ -59,6 +59,16 @@ public class JobServiceItemsController : Controller
             "JobOrderId",
             "JobNumber");
 
+        // If the default selection (first returned job) already has a mechanic, mark mechanic readonly
+        var defaultJob = _context.JobOrders.Where(j => j.Status != "Completed" && j.Status != "Cancelled").OrderBy(j => j.CreatedAt).FirstOrDefault();
+        if (defaultJob != null && defaultJob.MechanicId.HasValue)
+        {
+            ViewBag.ReadonlyMechanic = true;
+            var mech = _context.Employees.Find(defaultJob.MechanicId.Value);
+            ViewBag.ReadonlyMechanicText = mech != null ? mech.FirstName + " " + mech.LastName : "Assigned";
+            ViewBag.DefaultMechanicId = defaultJob.MechanicId;
+        }
+
         ViewBag.Services = new SelectList(
             _context.Services,
             "ServiceId",
@@ -68,6 +78,19 @@ public class JobServiceItemsController : Controller
             _context.Employees.Where(e => e.Designation == "Mechanic"),
             "EmployeeId",
             "FirstName");
+
+        // If a job was preselected via querystring, detect its mechanic and set readonly flag
+        var jobIdStr = HttpContext.Request.Query["jobId"].FirstOrDefault();
+        if (int.TryParse(jobIdStr, out var jobId))
+        {
+            var job = _context.JobOrders.Include(j => j.Mechanic).FirstOrDefault(j => j.JobOrderId == jobId);
+            if (job != null && job.MechanicId.HasValue)
+            {
+                ViewBag.ReadonlyMechanic = true;
+                ViewBag.ReadonlyMechanicText = job.Mechanic != null ? job.Mechanic.FirstName + " " + job.Mechanic.LastName : "Assigned";
+                ViewBag.DefaultMechanicId = job.MechanicId;
+            }
+        }
 
         return View();
     }
@@ -97,6 +120,13 @@ public class JobServiceItemsController : Controller
 
             // determine if this is the first service item for the job
             var existingCount = _context.JobServiceItems.Count(j => j.JobOrderId == jobserviceitem.JobOrderId);
+
+            // If the related job has a mechanic assigned, respect it and override the selection
+            var relatedJob = await _context.JobOrders.FindAsync(jobserviceitem.JobOrderId);
+            if (relatedJob != null && relatedJob.MechanicId.HasValue)
+            {
+                jobserviceitem.MechanicId = relatedJob.MechanicId;
+            }
 
             _context.Add(jobserviceitem);
             await _context.SaveChangesAsync();
@@ -132,6 +162,13 @@ public class JobServiceItemsController : Controller
             "EmployeeId",
             "FirstName",
             jobserviceitem.MechanicId);
+        // If the item already has mechanic or its parent job has mechanic, mark view to render mechanic as readonly
+        ViewBag.ReadonlyMechanic = jobserviceitem.MechanicId.HasValue || (jobserviceitem.JobOrder != null && jobserviceitem.JobOrder.MechanicId.HasValue);
+        if (ViewBag.ReadonlyMechanic == true)
+        {
+            var job = jobserviceitem.JobOrder ?? _context.JobOrders.Include(j=>j.Mechanic).FirstOrDefault(j=>j.JobOrderId==jobserviceitem.JobOrderId);
+            ViewBag.ReadonlyMechanicText = job?.Mechanic != null ? job.Mechanic.FirstName + " " + job.Mechanic.LastName : "Assigned";
+        }
 
         return View(jobserviceitem);
     }
@@ -164,12 +201,24 @@ public class JobServiceItemsController : Controller
             "ServiceId",
             "ServiceName",
             jobserviceitem.ServiceId);
-
         ViewBag.Mechanics = new SelectList(
             _context.Employees.Where(e => e.Designation == "Mechanic"),
             "EmployeeId",
             "FirstName",
             jobserviceitem.MechanicId);
+
+        // Ensure we always check the parent job for assigned mechanic and set readonly flag accordingly
+        var relatedJob = await _context.JobOrders.Include(j => j.Mechanic).FirstOrDefaultAsync(j => j.JobOrderId == jobserviceitem.JobOrderId);
+        ViewBag.ReadonlyMechanic = jobserviceitem.MechanicId.HasValue || (relatedJob != null && relatedJob.MechanicId.HasValue);
+        if (ViewBag.ReadonlyMechanic == true)
+        {
+            ViewBag.ReadonlyMechanicText = relatedJob?.Mechanic != null ? relatedJob.Mechanic.FirstName + " " + relatedJob.Mechanic.LastName : "Assigned";
+            // ensure displayed and persisted value uses the job's mechanic when assigned
+            if (relatedJob != null && relatedJob.MechanicId.HasValue)
+            {
+                jobserviceitem.MechanicId = relatedJob.MechanicId;
+            }
+        }
 
         return View(jobserviceitem);
     }
@@ -194,6 +243,13 @@ public class JobServiceItemsController : Controller
         {
             try
             {
+                // if related job has mechanic assigned, do not allow overriding
+                var relatedJob = await _context.JobOrders.FindAsync(jobserviceitem.JobOrderId);
+                if (relatedJob != null && relatedJob.MechanicId.HasValue)
+                {
+                    jobserviceitem.MechanicId = relatedJob.MechanicId;
+                }
+
                 // ensure hourly rate and service price reflect selected Service and HoursWorked
                 var service = await _context.Services.FindAsync(jobserviceitem.ServiceId);
                 if (service != null)

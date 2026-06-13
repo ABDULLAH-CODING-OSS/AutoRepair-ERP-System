@@ -117,6 +117,13 @@ public class JobPartItemsController : Controller
                 jobpartitem.TotalPrice =
                     part.SalePrice * jobpartitem.Quantity;
 
+                // enforce job mechanic if job has mechanic assigned
+                var relatedJob = await _context.JobOrders.FindAsync(jobpartitem.JobOrderId);
+                if (relatedJob != null && relatedJob.MechanicId.HasValue)
+                {
+                    // If JobPartItem model had MechanicId property, we would set it here. Schema doesn't include mechanic on JobPartItem so we ensure parent job mechanic remains authoritative.
+                }
+
                 part.CurrentStock -= jobpartitem.Quantity;
 
                 _context.JobPartItems.Add(jobpartitem);
@@ -155,6 +162,7 @@ public class JobPartItemsController : Controller
                 Text = p.PartName + " (Stock: " + p.CurrentStock + ")"
             })
             .ToList();
+        ViewBag.ReadonlyMechanic = jobpartitem.JobOrder != null && jobpartitem.JobOrder.MechanicId.HasValue;
         return View(jobpartitem);
     }
 

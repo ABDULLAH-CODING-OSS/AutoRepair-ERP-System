@@ -1,48 +1,36 @@
 @model AutoRepairERD.Models.UserRole
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Assign Role to User";
 }
 
-<h1>Create</h1>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Assign Role</h4>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-<h4>UserRole</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <input asp-for="UserId" class="form-control" />
+            <div class="mb-3">
+                <label class="form-label">User</label>
+                <select asp-for="UserId" class="form-select" asp-items="ViewBag.Users">
+                    <option value="">-- Select user --</option>
+                </select>
                 <span asp-validation-for="UserId" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="RoleId" class="control-label"></label>
-                <input asp-for="RoleId" class="form-control" />
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select asp-for="RoleId" class="form-select" asp-items="ViewBag.Roles">
+                    <option value="">-- Select role --</option>
+                </select>
                 <span asp-validation-for="RoleId" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <input asp-for="Role" class="form-control" />
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="User" class="control-label"></label>
-                <input asp-for="User" class="form-control" />
-                <span asp-validation-for="User" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="d-flex">
+                <button type="submit" class="btn btn-primary">Assign Role</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>

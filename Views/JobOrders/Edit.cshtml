@@ -23,12 +23,32 @@
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AdvisorId" class="form-label">Service Advisor</label>
-                    <select asp-for="AdvisorId" class="form-select" asp-items="ViewBag.Advisors"></select>
+                    @if (ViewBag.IsMechanic == true)
+                    {
+                        <select class="form-select" disabled>
+                            <option>@(Model.Advisor != null ? Model.Advisor.FirstName + " " + Model.Advisor.LastName : "-")</option>
+                        </select>
+                        <input type="hidden" asp-for="AdvisorId" />
+                    }
+                    else
+                    {
+                        <select asp-for="AdvisorId" class="form-select" asp-items="ViewBag.Advisors"></select>
+                    }
                     <span asp-validation-for="AdvisorId" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
                     <label asp-for="MechanicId" class="form-label">Mechanic</label>
-                    <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics"></select>
+                    @if (ViewBag.IsMechanic == true)
+                    {
+                        <select class="form-select" disabled>
+                            <option>@(Model.Mechanic != null ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-")</option>
+                        </select>
+                        <input type="hidden" asp-for="MechanicId" />
+                    }
+                    else
+                    {
+                        <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics"></select>
+                    }
                     <span asp-validation-for="MechanicId" class="text-danger"></span>
                 </div>
             @* <div class="form-group">
@@ -96,13 +116,27 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Final Cost</label>
-                    @if (Model?.Invoices != null && Model.Invoices.Any())
+                    @if (ViewBag.IsMechanic == true)
                     {
-                        <input class="form-control" value="@(Model.FinalCost.HasValue ? Model.FinalCost.Value.ToString("F2") : "")" readonly />
+                        @if (Model?.FinalCost != null)
+                        {
+                            <input class="form-control" value="@(Model.FinalCost.HasValue ? Model.FinalCost.Value.ToString("F2") : "")" readonly />
+                        }
+                        else
+                        {
+                            <input class="form-control" value="Not Generated" readonly />
+                        }
                     }
                     else
                     {
-                        <input class="form-control" value="Not Generated" readonly />
+                        @if (Model?.Invoices != null && Model.Invoices.Any())
+                        {
+                            <input class="form-control" value="@(Model.FinalCost.HasValue ? Model.FinalCost.Value.ToString("F2") : "")" readonly />
+                        }
+                        else
+                        {
+                            <input class="form-control" value="Not Generated" readonly />
+                        }
                     }
                 </div>
 

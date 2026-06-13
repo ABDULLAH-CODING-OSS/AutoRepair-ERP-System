@@ -19,23 +19,27 @@ namespace AutoRepairERD.Filters
 
             if (userId == null)
             {
-                context.Result = new RedirectToActionResult(
-                    "Login",
-                    "Auth",
-                    null);
-
+                context.Result = new RedirectToActionResult("Login", "Auth", null);
                 return;
             }
 
-            if (_roles.Length > 0 &&
-                !_roles.Contains(roleName))
+            // If roles were specified, ensure the current session role is present and allowed
+            if (_roles.Length > 0)
             {
-                context.Result = new ContentResult
+                if (string.IsNullOrEmpty(roleName))
                 {
-                    Content = "Access Denied"
-                };
+                    // No role in session -> access denied
+                    context.Result = new RedirectToActionResult("AccessDenied", "Home", null);
+                    return;
+                }
 
-                return;
+                // Case-insensitive check
+                var allowed = _roles.Any(r => string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
+                if (!allowed)
+                {
+                    context.Result = new RedirectToActionResult("AccessDenied", "Home", null);
+                    return;
+                }
             }
 
             base.OnActionExecuting(context);

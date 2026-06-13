@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using AutoRepairERD.Filters;
-[SessionAuthorize]
+[RoleAuthorize("Admin","Owner")]
 
 public class AttendancesController : Controller
 {

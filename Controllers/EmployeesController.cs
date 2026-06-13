@@ -6,6 +6,7 @@ using AutoRepairERD.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using AutoRepairERD.Filters;
 
+[RoleAuthorize("Admin","Owner")]
 [SessionAuthorize]
 
 public class EmployeesController : Controller

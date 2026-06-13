@@ -1,38 +1,22 @@
 @model AutoRepairERD.Models.Role
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Role Details";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">@Model.RoleName</h4>
+        <div class="text-muted mb-3">@Model.Description</div>
 
-<div>
-    <h4>Role</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.RoleName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.RoleName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UserRoles)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UserRoles)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.RoleId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        <dl class="row">
+            <dt class="col-sm-3">Assigned Users</dt>
+            <dd class="col-sm-9">@(ViewBag.AssignedCount ?? Model.UserRoles?.Count() ?? 0)</dd>
+        </dl>
+
+        <div class="d-flex">
+            <a asp-action="Edit" asp-route-id="@Model.RoleId" class="btn btn-primary">Edit</a>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+        </div>
+    </div>
 </div>

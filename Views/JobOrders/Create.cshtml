@@ -39,9 +39,26 @@
 
                 <div class="col-md-6">
                     <label asp-for="AdvisorId" class="form-label">Service Advisor</label>
-                    <select asp-for="AdvisorId" class="form-select" asp-items="ViewBag.Advisors">
-                        <option value="">-- Select Advisor --</option>
-                    </select>
+                    @if (ViewBag.DefaultAdvisorId != null)
+                    {
+                        <input type="hidden" asp-for="AdvisorId" value="@ViewBag.DefaultAdvisorId" />
+                        var advisors = ViewBag.Advisors as List<SelectListItem>;
+                        var advisorText = "";
+                        if (advisors != null && ViewBag.DefaultAdvisorId != null)
+                        {
+                            foreach (var a in advisors)
+                            {
+                                if (a.Value == ViewBag.DefaultAdvisorId.ToString()) { advisorText = a.Text; break; }
+                            }
+                        }
+                        <input class="form-control" value="@advisorText" readonly />
+                    }
+                    else
+                    {
+                        <select asp-for="AdvisorId" class="form-select" asp-items="ViewBag.Advisors">
+                            <option value="">-- Select Advisor --</option>
+                        </select>
+                    }
                     <span asp-validation-for="AdvisorId" class="text-danger"></span>
                 </div>
 
@@ -51,6 +68,16 @@
                         <option value="">-- Select Mechanic --</option>
                     </select>
                     <span asp-validation-for="MechanicId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Priority</label>
+                    <select name="Priority" class="form-select">
+                        <option value="">Normal</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
                 </div>
             @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>

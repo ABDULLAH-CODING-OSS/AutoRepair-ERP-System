@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
-
+using AutoRepairERD.Filters;
+[RoleAuthorize("Admin","Owner")]
 public class PayrollsController : Controller
 {
     private readonly ApplicationDbContext _context;

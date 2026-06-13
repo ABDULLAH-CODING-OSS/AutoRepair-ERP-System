@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 [RoleAuthorize("Admin")]
 
+[RoleAuthorize("Admin","Owner")]
 public class RolesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -15,9 +16,38 @@ public class RolesController : Controller
     }
 
     // GET: ROLES
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(string search = "", string filter = "all")
     {
-        return View(await _context.Roles.ToListAsync());
+        // Seed defaults if no roles
+        if (!await _context.Roles.AnyAsync())
+        {
+            var defaults = new[] { "Owner", "Admin", "Service Advisor", "Mechanic", "Inventory Manager", "Receptionist" };
+            foreach (var r in defaults)
+            {
+                _context.Roles.Add(new Role { RoleName = r, Description = r + " role" });
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        var rolesQuery = _context.Roles.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+            rolesQuery = rolesQuery.Where(r => r.RoleName.Contains(search));
+
+        ViewBag.Search = search;
+        ViewBag.Filter = filter;
+
+        var list = await rolesQuery
+            .Select(r => new RoleListItem
+            {
+                RoleId = r.RoleId,
+                RoleName = r.RoleName,
+                Description = r.Description,
+                AssignedCount = _context.UserRoles.Count(ur => ur.RoleId == r.RoleId)
+            })
+            .OrderBy(r => r.RoleName)
+            .ToListAsync();
+
+        return View(list);
     }
 
     // GET: ROLES/Details/5
@@ -51,12 +81,21 @@ public class RolesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("RoleId,RoleName,Description,UserRoles")] Role role)
     {
+        if (string.IsNullOrWhiteSpace(role.RoleName))
+            ModelState.AddModelError("RoleName", "Role Name is required.");
+
+        if (_context.Roles.Any(r => r.RoleName == role.RoleName))
+            ModelState.AddModelError("RoleName", "Role name already exists.");
+
         if (ModelState.IsValid)
         {
             _context.Add(role);
             await _context.SaveChangesAsync();
+            TempData["Toast"] = "Role created.";
+            TempData["ToastType"] = "success";
             return RedirectToAction(nameof(Index));
         }
+
         return View(role);
     }
 
@@ -92,7 +131,13 @@ public class RolesController : Controller
         {
             try
             {
-                _context.Update(role);
+                var existing = await _context.Roles.FindAsync(id);
+                if (existing == null) return NotFound();
+
+                existing.RoleName = role.RoleName;
+                existing.Description = role.Description;
+
+                _context.Update(existing);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -120,12 +165,14 @@ public class RolesController : Controller
         }
 
         var role = await _context.Roles
+            .Include(r => r.UserRoles)
             .FirstOrDefaultAsync(m => m.RoleId == id);
         if (role == null)
         {
             return NotFound();
         }
 
+        ViewBag.AssignedCount = role.UserRoles?.Count() ?? 0;
         return View(role);
     }
 
@@ -134,13 +181,25 @@ public class RolesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var role = await _context.Roles.FindAsync(id);
-        if (role != null)
+        var role = await _context.Roles
+            .Include(r => r.UserRoles)
+            .FirstOrDefaultAsync(r => r.RoleId == id);
+
+        if (role == null)
+            return NotFound();
+
+        if (role.UserRoles != null && role.UserRoles.Any())
         {
-            _context.Roles.Remove(role);
+            TempData["Toast"] = "This role is assigned to users and cannot be deleted.";
+            TempData["ToastType"] = "danger";
+            return RedirectToAction(nameof(Delete), new { id });
         }
 
+        _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
+
+        TempData["Toast"] = "Role deleted.";
+        TempData["ToastType"] = "success";
         return RedirectToAction(nameof(Index));
     }
 

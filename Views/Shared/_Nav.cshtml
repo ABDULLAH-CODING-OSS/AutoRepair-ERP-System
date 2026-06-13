@@ -1,0 +1,66 @@
+@{
+    var role = Context.Session.GetString("RoleName") ?? "";
+    var username = Context.Session.GetString("Username") ?? "";
+}
+
+<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AutoRepairERD</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+            <ul class="navbar-nav flex-grow-1">
+                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a></li>
+
+                @* Common modules *@
+                @if (role == "Admin" || role == "Owner" || role == "Service Advisor" || role == "Receptionist")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="Customers" asp-action="Index">Customers</a></li>
+                }
+
+                @if (role == "Admin" || role == "Owner" || role == "Inventory Manager")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="Parts" asp-action="Index">Parts</a></li>
+                }
+
+                @if (role == "Admin" || role == "Owner")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="Employees" asp-action="Index">Employees</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="PurchaseOrders" asp-action="Index">Purchase Orders</a></li>
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="Invoices" asp-action="Index">Invoices</a></li>
+                }
+
+                @* Mechanics must not access Attendance; Attendance is admin/owner only *@
+                @if (role == "Admin" || role == "Owner")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="Attendances" asp-action="Index">Attendance</a></li>
+                }
+
+                @* Job Orders: show full Job Orders for non-mechanics; mechanics see My Assigned Jobs link *@
+                @if (role == "Mechanic")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="JobOrders" asp-action="MyAssignedJobs">My Assigned Jobs</a></li>
+                }
+                else if (role == "Admin" || role == "Owner" || role == "Service Advisor" || role == "Inventory Manager" || role == "Receptionist")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="JobOrders" asp-action="Index">Job Orders</a></li>
+                }
+
+                @if (role == "Owner")
+                {
+                    <li class="nav-item"><a class="nav-link text-dark" asp-controller="AuditLogs" asp-action="Index">Audit Logs</a></li>
+                }
+
+            </ul>
+
+            <ul class="navbar-nav">
+                <li class="nav-item me-2 text-muted">@username (@role)</li>
+                <li class="nav-item">
+                    <a asp-controller="Auth" asp-action="Logout" class="btn btn-danger btn-sm">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

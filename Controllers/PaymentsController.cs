@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
-[SessionAuthorize]
+[RoleAuthorize("Admin","Owner","Service Advisor")]
 
 
 public class PaymentsController : Controller
@@ -37,6 +37,12 @@ public class PaymentsController : Controller
         }
 
         var payment = await _context.Payments
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.JobOrder)
+                    .ThenInclude(j => j.Customer)
+            .Include(p => p.Invoice)
+                .ThenInclude(i => i.JobOrder)
+                    .ThenInclude(j => j.Vehicle)
             .FirstOrDefaultAsync(m => m.PaymentId == id);
         if (payment == null)
         {

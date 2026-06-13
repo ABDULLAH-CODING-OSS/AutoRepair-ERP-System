@@ -14,7 +14,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Job Order <span class="text-danger">*</span></label>
-                <select asp-for="JobOrderId" class="form-select" asp-items="ViewBag.JobOrders"></select>
+        <select asp-for="JobOrderId" id="jobOrderSelect" class="form-select" asp-items="ViewBag.JobOrders"></select>
                 <span asp-validation-for="JobOrderId" class="text-danger"></span>
             </div>
 
@@ -24,11 +24,19 @@
                 <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            @* <div class="mb-3">
                 <label class="form-label">Mechanic</label>
-                <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics"></select>
+                @if (ViewBag.ReadonlyMechanic == true)
+                {
+                    <div class="form-control-plaintext">@(ViewBag.ReadonlyMechanicText ?? "Assigned")</div>
+                    <input type="hidden" asp-for="MechanicId" />
+                }
+                else
+                {
+                    <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics" id="mechanicSelect"></select>
+                }
                 <span asp-validation-for="MechanicId" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <div class="mb-3">
                 <label asp-for="HoursWorked" class="form-label">Hours Worked</label>
@@ -52,4 +60,52 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        (function () {
+            function checkJobMechanic(jobId) {
+                if (!jobId) return;
+                fetch('/JobOrders/GetJobMechanic?jobId=' + jobId)
+                    .then(r => r.json())
+                    .then(data => {
+                        var mechSelect = document.getElementById('mechanicSelect');
+                        if (data && data.mechanicId) {
+                            if (mechSelect) {
+                                mechSelect.value = data.mechanicId;
+                                mechSelect.disabled = true;
+                            } else {
+                                // if select isn't present (server rendered readonly), set hidden input
+                                var hidden = document.querySelector('input[name="MechanicId"]');
+                                if (hidden) hidden.value = data.mechanicId;
+                            }
+                        } else {
+                            if (mechSelect) mechSelect.disabled = false;
+                        }
+                    });
+            }
+
+            // On initial load: if a default mechanic id is provided from the server,
+            // set the mechanic select and make it readonly (disabled).
+            var defaultMech = '@(ViewBag.DefaultMechanicId ?? "")';
+            var mechSelect = document.getElementById('mechanicSelect');
+            if (mechSelect && defaultMech) {
+                mechSelect.value = defaultMech;
+                mechSelect.disabled = true;
+            }
+
+            // Update mechanic selection when job order changes.
+            var jobOrderSelect = document.getElementById('jobOrderSelect');
+            if (jobOrderSelect) {
+                jobOrderSelect.addEventListener('change', function () {
+                    checkJobMechanic(this.value);
+                });
+            }
+
+            // On load, if a job is already selected, check its mechanic.
+            var selectedJob = jobOrderSelect ? jobOrderSelect.value : '';
+            if (selectedJob) {
+                checkJobMechanic(selectedJob);
+            }
+        })();
+    </script>
 }

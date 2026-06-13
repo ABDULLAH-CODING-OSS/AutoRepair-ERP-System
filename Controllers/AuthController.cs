@@ -42,8 +42,8 @@ namespace AutoRepairERD.Controllers
 
             //return RedirectToAction("Index", "Home");
             var userRole = _context.UserRoles
-            .Include(ur => ur.Role)
-            .FirstOrDefault(ur => ur.UserId == user.UserId);
+                .Include(ur => ur.Role)
+                .FirstOrDefault(ur => ur.UserId == user.UserId);
 
             HttpContext.Session.SetInt32("UserID", user.UserId);
             HttpContext.Session.SetString("Username", user.Username);
@@ -52,7 +52,12 @@ namespace AutoRepairERD.Controllers
             {
                 HttpContext.Session.SetInt32("RoleID", userRole.RoleId);
                 HttpContext.Session.SetString("RoleName", userRole.Role.RoleName);
+                return RedirectToAction("Index", "Home");
             }
+
+            // If no role assigned, block login and show friendly message
+            ViewBag.Error = "No role assigned to this account. Contact administrator.";
+            return View(model);
 
             return RedirectToAction("Index", "Home");
         }

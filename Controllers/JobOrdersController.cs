@@ -4,8 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;   
-[SessionAuthorize]
-
+[RoleAuthorize("Admin","Owner","Service Advisor","Inventory Manager","Receptionist","Mechanic")]
 public class JobOrdersController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -15,9 +14,35 @@ public class JobOrdersController : Controller
         _context = context;
     }
 
+    // GET: JOBORDERS/GetJobMechanic?jobId=123
+    [HttpGet]
+    public JsonResult GetJobMechanic(int jobId)
+    {
+        var job = _context.JobOrders
+            .Include(j => j.Mechanic)
+            .FirstOrDefault(j => j.JobOrderId == jobId);
+
+        if (job == null)
+        {
+            return Json(new { mechanicId = (int?)null, mechanicName = "" });
+        }
+
+        return Json(new
+        {
+            mechanicId = job.MechanicId,
+            mechanicName = job.Mechanic != null ? job.Mechanic.FirstName + " " + job.Mechanic.LastName : ""
+        });
+    }
+
     // GET: JOBORDERS
     public async Task<IActionResult> Index()    
     {
+        // Mechanics should not access the full Job Orders index
+        var role = HttpContext.Session.GetString("RoleName") ?? "";
+        if (role == "Mechanic")
+        {
+            return RedirectToAction(nameof(MyAssignedJobs));
+        }
         var jobs = await _context.JobOrders
             .Include(j => j.Customer)
             .Include(j => j.Vehicle)
@@ -26,6 +51,75 @@ public class JobOrdersController : Controller
             .ToListAsync();
 
         return View(jobs);
+    }
+
+    // GET: JOBORDERS/MyAssignedJobs
+    // Shows only jobs assigned to the currently logged-in mechanic
+    public async Task<IActionResult> MyAssignedJobs(string q, string status)
+    {
+        var userId = HttpContext.Session.GetInt32("UserID");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        // Find employee linked to this user
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.UserId == userId.Value);
+
+        if (employee == null)
+        {
+            return RedirectToAction("AccessDenied", "Home");
+        }
+
+        var query = _context.JobOrders
+            .Where(j => j.MechanicId == employee.EmployeeId)
+            .Include(j => j.Customer)
+            .Include(j => j.Vehicle)
+            .Include(j => j.Advisor)
+            .Include(j => j.Mechanic)
+            .AsQueryable();
+
+        // Search by job number, customer name, vehicle registration
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var qlow = q.Trim().ToLower();
+            query = query.Where(j => (j.JobNumber != null && j.JobNumber.ToLower().Contains(qlow))
+                || (j.Customer != null && (j.Customer.FirstName + " " + j.Customer.LastName).ToLower().Contains(qlow))
+                || (j.Vehicle != null && j.Vehicle.LicensePlate != null && j.Vehicle.LicensePlate.ToLower().Contains(qlow)));
+        }
+
+        // Filter by status
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(j => j.Status == status);
+        }
+
+        ViewBag.SearchQuery = q;
+        ViewBag.FilterStatus = status;
+
+        var jobs = await query.OrderByDescending(j => j.CreatedAt).ToListAsync();
+
+        // Build view models extracting priority token from DiagnosisNotes
+        var vmList = jobs.Select(j => new AutoRepairERD.Models.ViewModels.AssignedJobViewModel
+        {
+            Job = j,
+            Priority = ExtractPriority(j.DiagnosisNotes)
+        }).ToList();
+
+        return View(vmList);
+    }
+
+    private string ExtractPriority(string notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes)) return null;
+        // looks for [Priority:High] token
+        var start = notes.IndexOf("[Priority:", StringComparison.OrdinalIgnoreCase);
+        if (start < 0) return null;
+        var end = notes.IndexOf(']', start);
+        if (end <= start) return null;
+        var token = notes.Substring(start + 10, end - (start + 10));
+        return token;
     }
 
     // GET: JOBORDERS/Details/5
@@ -41,10 +135,29 @@ public class JobOrdersController : Controller
             .Include(j => j.Vehicle)
             .Include(j => j.Advisor)
             .Include(j => j.Mechanic)
+            .Include(j => j.JobServiceItems)
+            .Include(j => j.JobPartItems)
             .FirstOrDefaultAsync(m => m.JobOrderId == id);
         if (joborder == null)
         {
             return NotFound();
+        }
+
+        // If current user is a mechanic, ensure they can only view their assigned jobs
+        var role = HttpContext.Session.GetString("RoleName") ?? "";
+        if (role == "Mechanic")
+        {
+            var userId = HttpContext.Session.GetInt32("UserID");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId.Value);
+            if (employee == null || joborder.MechanicId != employee.EmployeeId)
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
         }
 
         return View(joborder);
@@ -55,6 +168,7 @@ public class JobOrdersController : Controller
     //{
     //    return View();
     //}
+    [RoleAuthorize("Admin","Owner","Service Advisor")]
     public IActionResult Create()
     {
         ViewBag.Customers = _context.Customers
@@ -74,6 +188,17 @@ public class JobOrdersController : Controller
             })
             .ToList();
 
+        // Preselect Service Advisor as the currently logged-in employee if applicable (any employee)
+        var userId = HttpContext.Session.GetInt32("UserID");
+        if (userId.HasValue)
+        {
+            var emp = _context.Employees.FirstOrDefault(e => e.UserId == userId.Value);
+            if (emp != null)
+            {
+                ViewBag.DefaultAdvisorId = emp.EmployeeId;
+            }
+        }
+
         ViewBag.Mechanics = _context.Employees
             .Where(e => e.Designation == "Mechanic")
             .Select(e => new SelectListItem
@@ -83,6 +208,7 @@ public class JobOrdersController : Controller
             })
             .ToList();
 
+        // No mechanic context needed on Create (job not assigned yet)
         return View();
     }
     [HttpGet]
@@ -104,6 +230,7 @@ public class JobOrdersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize("Admin","Owner","Service Advisor")]
     public async Task<IActionResult> Create(
      [Bind("CustomerId,VehicleId,AdvisorId,MechanicId,ComplaintDescription,DiagnosisNotes,EstimatedCompletionDate,EstimatedCost")]
     JobOrder joborder)
@@ -154,6 +281,26 @@ public class JobOrdersController : Controller
             joborder.JobNumber =
                 "JOB" + DateTime.Now.ToString("yyyyMMddHHmmss");
             joborder.Status = "Pending";
+            // If advisor not set but current user is a Service Advisor, auto-assign
+            if (!joborder.AdvisorId.HasValue)
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserID");
+                if (currentUserId.HasValue)
+                {
+                    var currEmp = _context.Employees.FirstOrDefault(e => e.UserId == currentUserId.Value && e.Designation == "Service Advisor");
+                    if (currEmp != null)
+                    {
+                        joborder.AdvisorId = currEmp.EmployeeId;
+                    }
+                }
+            }
+
+            // Capture priority from form (no schema change) by appending to DiagnosisNotes as a minimal workaround
+            var priority = HttpContext.Request.Form["Priority"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(priority))
+            {
+                joborder.DiagnosisNotes = (joborder.DiagnosisNotes ?? "") + "\n[Priority:" + priority + "]";
+            }
             _context.Add(joborder);
 
             await _context.SaveChangesAsync();
@@ -202,6 +349,25 @@ public class JobOrdersController : Controller
                 Text = e.FirstName + " " + e.LastName
             })
             .ToList();
+
+        // If mechanic, ensure only assigned mechanic can edit and present limited UI
+        var role = HttpContext.Session.GetString("RoleName") ?? "";
+        if (role == "Mechanic")
+        {
+            var userId = HttpContext.Session.GetInt32("UserID");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId.Value);
+            if (employee == null || joborder.MechanicId != employee.EmployeeId)
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+            ViewBag.IsMechanic = true;
+        }
 
         return View(joborder);
     }
@@ -369,10 +535,15 @@ public class JobOrdersController : Controller
         var existingJob = await _context.JobOrders
             .AsNoTracking()
             .FirstOrDefaultAsync(j => j.JobOrderId == id);
-        if (existingJob.Status == "Completed")
+        if (existingJob == null)
+        {
+            return NotFound();
+        }
+
+        if (existingJob.Status == "Completed" || existingJob.Status == "Cancelled")
         {
             TempData["Error"] =
-                "Completed jobs cannot be modified.";
+                "Completed or cancelled jobs cannot be modified.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -410,6 +581,85 @@ public class JobOrdersController : Controller
                     Console.WriteLine($"{item.Key}: {error.ErrorMessage}");
                 }
             }
+        }
+
+        var role = HttpContext.Session.GetString("RoleName") ?? "";
+
+        if (role == "Mechanic")
+        {
+            // Mechanics can only update status (and optionally notes). Validate ownership and enforce allowed transitions.
+            var userId = HttpContext.Session.GetInt32("UserID");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId.Value);
+            if (employee == null)
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+            var existing = await _context.JobOrders.AsNoTracking().FirstOrDefaultAsync(j => j.JobOrderId == id);
+            if (existing == null || existing.MechanicId != employee.EmployeeId)
+            {
+                return RedirectToAction("AccessDenied", "Home");
+            }
+
+            // Enforce allowed transitions: Pending -> In Progress -> Completed
+            var oldStatus = existing.Status ?? "";
+            var newStatus = joborder.Status ?? "";
+
+            bool validTransition = false;
+            if (oldStatus == "Pending" && newStatus == "In Progress") validTransition = true;
+            else if (oldStatus == "In Progress" && newStatus == "Completed") validTransition = true;
+            else if (oldStatus == newStatus) validTransition = true; // allow idempotent
+
+            if (!validTransition)
+            {
+                ModelState.AddModelError("Status", "Invalid status transition.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.IsMechanic = true;
+                return View(joborder);
+            }
+
+            // Preserve protected fields from existing record
+            joborder.CustomerId = existing.CustomerId;
+            joborder.VehicleId = existing.VehicleId;
+            joborder.AdvisorId = existing.AdvisorId;
+            joborder.MechanicId = existing.MechanicId;
+            joborder.CreatedByUserId = existing.CreatedByUserId;
+            joborder.JobNumber = existing.JobNumber;
+            joborder.CreatedAt = existing.CreatedAt;
+            joborder.FinalCost = existing.FinalCost;
+
+            // If status changed to Completed, set CompletionDate if not set
+            if (oldStatus != "Completed" && newStatus == "Completed")
+            {
+                joborder.CompletionDate = DateTime.Now;
+            }
+
+            try
+            {
+                _context.Update(joborder);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!JobOrderExists(joborder.JobOrderId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return RedirectToAction(nameof(MyAssignedJobs));
         }
 
         if (ModelState.IsValid)
@@ -534,6 +784,7 @@ public class JobOrdersController : Controller
     // POST: JOBORDERS/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [RoleAuthorize("Admin","Owner","Service Advisor")]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
         var joborder = await _context.JobOrders.FindAsync(id);

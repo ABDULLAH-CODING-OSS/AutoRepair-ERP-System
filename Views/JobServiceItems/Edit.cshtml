@@ -25,11 +25,18 @@
                 <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            @* <div class="mb-3">
                 <label class="form-label">Mechanic</label>
-                <div class="form-control-plaintext">@((Model?.Mechanic != null) ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-" )</div>
-                <input type="hidden" asp-for="MechanicId" />
-            </div>
+                @if (ViewBag.ReadonlyMechanic == true)
+                {
+                    <div class="form-control-plaintext">@((Model?.Mechanic != null) ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-" )</div>
+                    <input type="hidden" asp-for="MechanicId" />
+                }
+                else
+                {
+                    <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics"></select>
+                }
+            </div> *@
 
             <div class="mb-3">
                 <label asp-for="HoursWorked" class="form-label">Hours Worked</label>

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
-[SessionAuthorize]
+[RoleAuthorize("Admin","Owner","Service Advisor")]
 public class InvoicesController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -38,7 +38,9 @@ public class InvoicesController : Controller
 
         var invoice = await _context.Invoices
             .Include(i => i.JobOrder)
-            .ThenInclude(j => j.Customer)
+                .ThenInclude(j => j.Customer)
+            .Include(i => i.JobOrder)
+                .ThenInclude(j => j.Vehicle)
             .FirstOrDefaultAsync(m => m.InvoiceId == id);
         if (invoice == null)
         {

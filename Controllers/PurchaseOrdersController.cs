@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
-[SessionAuthorize]
+[RoleAuthorize("Admin","Owner","Inventory Manager")]
 
 public class PurchaseOrdersController : Controller
 {

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 [RoleAuthorize("Admin")]
 
+[RoleAuthorize("Admin","Owner")]
 public class UsersController : Controller
 {
     private readonly ApplicationDbContext _context;
