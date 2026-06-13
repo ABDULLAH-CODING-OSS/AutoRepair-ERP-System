@@ -1,80 +1,41 @@
 @model AutoRepairERD.Models.StockTransaction
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Transaction Details";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Transaction Details</h4>
+        <dl class="row">
+            <dt class="col-sm-3">Date</dt>
+            <dd class="col-sm-9">@(Model.TransactionDate?.ToString("dd-MMM-yyyy"))</dd>
 
-<div>
-    <h4>StockTransaction</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TransactionType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TransactionType)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Quantity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Quantity)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PreviousStock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PreviousStock)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NewStock)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NewStock)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReferenceNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReferenceNumber)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Remarks)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Remarks)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TransactionDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TransactionDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Part)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Part)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.TransactionId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+            <dt class="col-sm-3">Part</dt>
+            <dd class="col-sm-9">@Model.Part?.PartName</dd>
+
+            <dt class="col-sm-3">Transaction Type</dt>
+            <dd class="col-sm-9">@Model.TransactionType</dd>
+
+            <dt class="col-sm-3">Quantity</dt>
+            <dd class="col-sm-9">@Model.Quantity</dd>
+
+            <dt class="col-sm-3">Remarks</dt>
+            <dd class="col-sm-9">@Model.Remarks</dd>
+        </dl>
+
+        <a asp-action="Edit" asp-route-transactionid="@Model?.TransactionId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back</a>
+        @{
+            var isSystem = !string.IsNullOrWhiteSpace(Model?.ReferenceNumber) && (Model.ReferenceNumber.StartsWith("PO-") || Model.ReferenceNumber.StartsWith("JOB-"));
+        }
+        @if (!isSystem)
+        {
+            <a asp-action="Delete" asp-route-transactionid="@Model?.TransactionId" class="btn btn-danger ms-2">Delete</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-danger ms-2 disabled" aria-disabled="true" title="System-generated transactions cannot be deleted">Delete</button>
+        }
+    </div>
 </div>

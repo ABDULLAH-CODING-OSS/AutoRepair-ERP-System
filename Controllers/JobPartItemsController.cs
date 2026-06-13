@@ -124,18 +124,21 @@ public class JobPartItemsController : Controller
                     // If JobPartItem model had MechanicId property, we would set it here. Schema doesn't include mechanic on JobPartItem so we ensure parent job mechanic remains authoritative.
                 }
 
-                part.CurrentStock -= jobpartitem.Quantity;
+                // Normalize current stock to avoid null arithmetic
+                var currentStock = part.CurrentStock ?? 0;
+                var qty = jobpartitem.Quantity;
+                part.CurrentStock = currentStock - qty;
 
                 _context.JobPartItems.Add(jobpartitem);
                 var transaction = new StockTransaction
                 {
                     PartId = part.PartId,
-                    TransactionType = "OUT",
-                    Quantity = jobpartitem.Quantity,
-                    PreviousStock = part.CurrentStock + jobpartitem.Quantity,
+                    TransactionType = "Stock Out",
+                    Quantity = qty,
+                    PreviousStock = currentStock,
                     NewStock = part.CurrentStock,
                     ReferenceNumber = "JOB-" + jobpartitem.JobOrderId,
-                    Remarks = "Part used in Job Order",
+                    Remarks = $"Part used in Job Order #{jobpartitem.JobOrderId}",
                     TransactionDate = DateTime.Now
                 };
 

@@ -60,6 +60,9 @@ public partial class User
     [InverseProperty("CreatedByUser")]
     public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
 
+    //[InverseProperty("CreatedByUser")]
+    //public virtual ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();
+
     [InverseProperty("User")]
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 

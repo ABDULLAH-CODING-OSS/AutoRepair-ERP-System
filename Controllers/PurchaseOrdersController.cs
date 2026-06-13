@@ -219,28 +219,51 @@ public class PurchaseOrdersController : Controller
 
                 if (!stockAlreadyReceived && purchaseorder.Status == "Received")
                 {
-                    //foreach (var item in existingPO.PurchaseOrderItems)
-                    //{
-                    //    var part = await _context.Parts
-                    //        .FindAsync(item.PartId);
-
-                    //    if (part != null)
-                    //    {
-                    //        part.CurrentStock += item.Quantity;
-                    //    }
-                    //}
                     var poItems = await _context.PurchaseOrderItems
-    .Where(x => x.PurchaseOrderId == purchaseorder.PurchaseOrderId)
-    .ToListAsync();
+                        .Where(x => x.PurchaseOrderId == purchaseorder.PurchaseOrderId)
+                        .ToListAsync();
 
                     foreach (var item in poItems)
                     {
-                        var part = await _context.Parts.FindAsync(item.PartId);
+                        var qty = item.Quantity ?? 0;
+                        if (qty <= 0) continue; // nothing to receive for this line
 
-                        if (part != null)
+                        var part = await _context.Parts.FindAsync(item.PartId);
+                        if (part == null) continue;
+
+                        // Build a per-line reference to avoid duplicate per PO item
+                        var refNumber = $"PO-{purchaseorder.PurchaseOrderId}-{item.PoitemId}";
+
+                        // Extra duplicate protection: check part, ref and amount
+                        var existsTransaction = await _context.StockTransactions
+                            .AnyAsync(s => s.ReferenceNumber == refNumber
+                                           && s.PartId == item.PartId
+                                           && s.Quantity == qty
+                                           && s.TransactionType == "Stock In");
+
+                        if (existsTransaction) continue;
+
+                        var previousStock = part.CurrentStock ?? 0;
+                        var newStock = previousStock + qty;
+
+                        var supplierName = _context.Suppliers.Where(s => s.SupplierId == purchaseorder.SupplierId)
+                            .Select(s => s.CompanyName).FirstOrDefault();
+
+                        var stockTransaction = new StockTransaction
                         {
-                            part.CurrentStock += item.Quantity ?? 0;
-                        }
+                            PartId = item.PartId,
+                            TransactionType = "Stock In",
+                            Quantity = qty,
+                            PreviousStock = previousStock,
+                            NewStock = newStock,
+                            ReferenceNumber = refNumber,
+                            TransactionDate = DateTime.Now,
+                            Remarks = $"Purchase Order #{purchaseorder.PurchaseOrderId} received from {supplierName}"
+                        };
+
+                        _context.StockTransactions.Add(stockTransaction);
+                        part.CurrentStock = newStock;
+                        _context.Update(part);
                     }
                 }
 
