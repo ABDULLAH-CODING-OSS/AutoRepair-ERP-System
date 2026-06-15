@@ -3,15 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using AutoRepairERD.Services;
 
 [RoleAuthorize("Owner", "Admin", "Inventory Manager")]
 public class StockTransactionsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notifications;
 
-    public StockTransactionsController(ApplicationDbContext context)
+    public StockTransactionsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
     {
         _context = context;
+        _notifications = notifications;
     }
 
     // GET: STOCKTRANSACTIONS with search and filters
@@ -128,7 +131,42 @@ public class StockTransactionsController : Controller
 
         _context.Add(stocktransaction);
         _context.Update(part);
+        // synchronize low stock alerts for this part
+        LowStockAlertManager.SyncPart(_context, part.PartId);
         await _context.SaveChangesAsync();
+
+        // Notifications: Low stock and Out of stock
+        try
+        {
+            var prev = stocktransaction.PreviousStock ?? 0;
+            var newStock = stocktransaction.NewStock ?? 0;
+            var reorder = part.ReorderLevel ?? 0;
+            // Roles to notify: Inventory Manager, Admin, Owner
+            var invRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Inventory Manager");
+            var adminRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+            var ownerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+
+            // Low stock: crossed from above reorder to <= reorder
+            if (prev > reorder && newStock <= reorder)
+            {
+                var msg = $"{part.PartName} stock is {newStock} (reorder {reorder})";
+                if (invRole != null) await _notifications.CreateForRoleAsync(invRole.RoleId, "LowStock", "Low stock alert", msg, HttpContext.Session.GetInt32("UserID"));
+                if (adminRole != null) await _notifications.CreateForRoleAsync(adminRole.RoleId, "LowStock", "Low stock alert", msg, HttpContext.Session.GetInt32("UserID"));
+                if (ownerRole != null) await _notifications.CreateForRoleAsync(ownerRole.RoleId, "LowStock", "Low stock alert", msg, HttpContext.Session.GetInt32("UserID"));
+            }
+            // Out of stock: crossed to zero
+            if (prev > 0 && newStock == 0)
+            {
+                var msg = $"{part.PartName} is out of stock.";
+                if (invRole != null) await _notifications.CreateForRoleAsync(invRole.RoleId, "OutOfStock", "Out of stock", msg, HttpContext.Session.GetInt32("UserID"));
+                if (adminRole != null) await _notifications.CreateForRoleAsync(adminRole.RoleId, "OutOfStock", "Out of stock", msg, HttpContext.Session.GetInt32("UserID"));
+                if (ownerRole != null) await _notifications.CreateForRoleAsync(ownerRole.RoleId, "OutOfStock", "Out of stock", msg, HttpContext.Session.GetInt32("UserID"));
+            }
+        }
+        catch
+        {
+            // swallow notification errors to avoid breaking stock workflow
+        }
 
         TempData["Success"] = $"Stock transaction created successfully. {part.PartName}: {currentStock} → {stocktransaction.NewStock}";
         return RedirectToAction(nameof(Index));
@@ -206,6 +244,8 @@ public class StockTransactionsController : Controller
         {
             _context.Update(part);
             _context.Update(existing);
+            // synchronize low stock alerts for this part
+            LowStockAlertManager.SyncPart(_context, part.PartId);
             await _context.SaveChangesAsync();
             TempData["Success"] = "Transaction updated successfully.";
         }
@@ -265,6 +305,8 @@ public class StockTransactionsController : Controller
             {
                 part.CurrentStock = stocktransaction.PreviousStock.Value;
                 _context.Update(part);
+                // synchronize low stock alerts for this part
+                LowStockAlertManager.SyncPart(_context, part.PartId);
             }
 
             _context.StockTransactions.Remove(stocktransaction);

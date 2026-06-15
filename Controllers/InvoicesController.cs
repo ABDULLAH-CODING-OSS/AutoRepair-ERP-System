@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class InvoicesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notifications;
 
-    public InvoicesController(ApplicationDbContext context)
+    public InvoicesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
     {
         _context = context;
+        _notifications = notifications;
     }
 
     // GET: INVOICES
@@ -142,6 +144,32 @@ public class InvoicesController : Controller
                 _context.Update(job);
                 await _context.SaveChangesAsync();
             }
+
+            // Notification: Invoice Generated
+            try
+            {
+                var ownerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+                var adminRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                if (ownerRole != null)
+                {
+                    await _notifications.CreateForRoleAsync(ownerRole.RoleId, "InvoiceGenerated", "Invoice generated", $"Invoice {invoice.InvoiceNumber} generated for job {invoice.JobOrderId}.", HttpContext.Session.GetInt32("UserID"));
+                }
+                if (adminRole != null)
+                {
+                    await _notifications.CreateForRoleAsync(adminRole.RoleId, "InvoiceGenerated", "Invoice generated", $"Invoice {invoice.InvoiceNumber} generated for job {invoice.JobOrderId}.", HttpContext.Session.GetInt32("UserID"));
+                }
+
+                // High value check: configurable threshold - use 100000 as default
+                var threshold = 100000m;
+                if ((decimal)(invoice.GrandTotal) >= threshold)
+                {
+                    if (ownerRole != null)
+                    {
+                        await _notifications.CreateForRoleAsync(ownerRole.RoleId, "HighValueInvoice", "High value invoice", $"Invoice {invoice.InvoiceNumber} amount {invoice.GrandTotal:C} exceeds threshold.", HttpContext.Session.GetInt32("UserID"));
+                    }
+                }
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         ViewBag.JobOrders = new SelectList(

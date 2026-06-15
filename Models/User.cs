@@ -14,20 +14,27 @@ public partial class User
     [Column("UserID")]
     public int UserId { get; set; }
 
-    [StringLength(100)]
+    [Required]
+    [StringLength(100, ErrorMessage = "Username cannot exceed 100 characters.")]
     [Unicode(false)]
+    [Display(Name = "Username")]
     public string Username { get; set; } = null!;
 
-    [StringLength(100)]
+    [EmailAddress(ErrorMessage = "Invalid email address.")]
+    [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters.")]
     [Unicode(false)]
+    [Display(Name = "Email")]
     public string? Email { get; set; }
 
+    [Required]
     [StringLength(255)]
     [Unicode(false)]
+    [Display(Name = "Password")]
     public string PasswordHash { get; set; } = null!;
 
     [StringLength(100)]
     [Unicode(false)]
+    [Display(Name = "Full Name")]
     public string? FullName { get; set; }
 
     [StringLength(20)]

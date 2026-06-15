@@ -1,65 +1,68 @@
 @model IEnumerable<AutoRepairERD.Models.LowStockAlert>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Low Stock Alerts";
 }
 
-<h1>Index</h1>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3">
+            <h4 class="card-title">Low Stock Alerts</h4>
+            @* No manual creation of alerts *@
+        </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.PartId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CurrentQuantity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ReorderLevel)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AlertDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Part)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.PartId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CurrentQuantity)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ReorderLevel)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.AlertDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Part)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AlertId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AlertId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AlertId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Part</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Level</th>
+                        <th>Alert Date</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Part?.PartName</td>
+                        <td>@item.Part?.Sku</td>
+                        <td>@item.Part?.Category?.CategoryName</td>
+                        <td>
+                            @if ((item.CurrentQuantity ?? 0) == 0)
+                            {
+                                <span class="badge bg-danger">Out Of Stock</span>
+                            }
+                            @item.CurrentQuantity
+                        </td>
+                        <td>@item.ReorderLevel</td>
+                        <td>@(item.AlertDate?.ToString("dd-MMM-yyyy"))</td>
+                        <td>
+                            @switch(item.Status)
+                            {
+                                case "Active":
+                                    <span class="badge bg-warning">Active Alert</span>
+                                    break;
+                                case "Resolved":
+                                    <span class="badge bg-success">Resolved</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@item.Status</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-alertid="@item.AlertId" class="btn btn-sm btn-outline-secondary">Details</a>
+                            <a asp-action="Edit" asp-route-alertid="@item.AlertId" class="btn btn-sm btn-outline-primary ms-1">Edit</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

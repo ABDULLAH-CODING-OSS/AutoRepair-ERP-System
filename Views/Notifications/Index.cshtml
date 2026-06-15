@@ -1,71 +1,57 @@
 @model IEnumerable<AutoRepairERD.Models.Notification>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Notifications";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Message)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NotificationType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsRead)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Message)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.NotificationType)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.IsRead)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.User)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.NotificationId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.NotificationId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.NotificationId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Notifications</h5>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Created On</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var n in Model)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@n.NotificationType</span></td>
+                            <td>@n.Title</td>
+                            <td>@(n.Message?.Length > 100 ? n.Message.Substring(0, 100) + "..." : n.Message)</td>
+                            <td>
+                                @if (n.IsRead == true)
+                                {
+                                    <span class="badge bg-secondary">Read</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">Unread</span>
+                                }
+                            </td>
+                            <td>@n.CreatedAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@n.NotificationId">View</a>
+                                <form asp-action="MarkRead" method="post" class="d-inline me-1">
+                                    <input type="hidden" name="id" value="@n.NotificationId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Mark Read</button>
+                                </form>
+                                <form asp-action="MarkUnread" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@n.NotificationId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Mark Unread</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -358,6 +358,17 @@ public class EmployeesController : Controller
 
             try
             {
+                // Sync linked user(s) active state with employee
+                if (existing.UserId.HasValue)
+                {
+                    var linkedUser = await _context.Users.FindAsync(existing.UserId.Value);
+                    if (linkedUser != null)
+                    {
+                        linkedUser.IsActive = existing.IsActive;
+                        _context.Users.Update(linkedUser);
+                    }
+                }
+
                 _context.Update(existing);
                 await _context.SaveChangesAsync();
             }
@@ -393,6 +404,18 @@ public class EmployeesController : Controller
 
         employee.IsActive = true;
         _context.Update(employee);
+
+        // Also activate linked user if present
+        if (employee.UserId.HasValue)
+        {
+            var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
+            if (linkedUser != null)
+            {
+                linkedUser.IsActive = true;
+                _context.Users.Update(linkedUser);
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
@@ -444,6 +467,17 @@ public class EmployeesController : Controller
         employee.IsActive = false;
 
         _context.Update(employee);
+
+        // Also deactivate linked user if present
+        if (employee.UserId.HasValue)
+        {
+            var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
+            if (linkedUser != null)
+            {
+                linkedUser.IsActive = false;
+                _context.Users.Update(linkedUser);
+            }
+        }
 
         await _context.SaveChangesAsync();
 

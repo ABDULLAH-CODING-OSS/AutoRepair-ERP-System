@@ -23,6 +23,22 @@
 
                     <form asp-action="Login" method="post">
 
+                        @if (Model.Roles != null && Model.Roles.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Select Role</label>
+                                <select asp-for="SelectedRoleId" class="form-select">
+                                    <option value="">-- Select role --</option>
+                                    @foreach (var r in Model.Roles)
+                                    {
+                                        <option value="@r.Item1">@r.Item2</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
+                            </div>
+                        }
+
+
                         <div class="mb-3">
                             <label asp-for="Username" class="form-label"></label>
                             <input asp-for="Username" class="form-control" />

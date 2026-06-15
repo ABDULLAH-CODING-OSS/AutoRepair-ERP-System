@@ -3,16 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
+using AutoRepairERD.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 [RoleAuthorize("Admin","Owner","Inventory Manager")]
 
 public class PurchaseOrdersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notifications;
 
-    public PurchaseOrdersController(ApplicationDbContext context)
+    public PurchaseOrdersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
     {
         _context = context;
+        _notifications = notifications;
     }
 
     // GET: PURCHASEORDERS
@@ -90,10 +93,23 @@ public class PurchaseOrdersController : Controller
         {
             ModelState.AddModelError("ExpectedDeliveryDate", "Expected Delivery Date cannot be before the Order Date.");
         }
-        if (ModelState.IsValid)
+                if (ModelState.IsValid)
         {
             _context.Add(purchaseorder);
             await _context.SaveChangesAsync();
+            // Notify inventory managers that a new PO is created
+            try
+            {
+                var inv = _context.Roles.FirstOrDefault(r => r.RoleName == "Inventory Manager");
+                var admin = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                var owner = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+                var msg = $"Purchase Order #{purchaseorder.PurchaseOrderId} created.";
+                if (inv != null) await _notifications.CreateForRoleAsync(inv.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
+                if (admin != null) await _notifications.CreateForRoleAsync(admin.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
+                if (owner != null) await _notifications.CreateForRoleAsync(owner.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
+            }
+            catch { }
+
             return RedirectToAction(nameof(Index));
         }
         ViewBag.Suppliers = _context.Suppliers
@@ -264,10 +280,27 @@ public class PurchaseOrdersController : Controller
                         _context.StockTransactions.Add(stockTransaction);
                         part.CurrentStock = newStock;
                         _context.Update(part);
+                        // sync low stock alerts after PO receive
+                        LowStockAlertManager.SyncPart(_context, part.PartId);
+                        // synchronize low stock alerts for this part
+                        LowStockAlertManager.SyncPart(_context, part.PartId);
                     }
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Notify after PO received
+                try
+                {
+                    var inv = _context.Roles.FirstOrDefault(r => r.RoleName == "Inventory Manager");
+                    var admin = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                    var owner = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+                    var msg = $"Purchase Order #{purchaseorder.PurchaseOrderId} has been received and stock updated.";
+                    if (inv != null) await _notifications.CreateForRoleAsync(inv.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+                    if (admin != null) await _notifications.CreateForRoleAsync(admin.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+                    if (owner != null) await _notifications.CreateForRoleAsync(owner.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {

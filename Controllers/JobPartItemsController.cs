@@ -143,7 +143,8 @@ public class JobPartItemsController : Controller
                 };
 
                 _context.StockTransactions.Add(transaction);
-
+                // synchronize low stock alerts for this part
+                AutoRepairERD.Services.LowStockAlertManager.SyncPart(_context, part.PartId);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));

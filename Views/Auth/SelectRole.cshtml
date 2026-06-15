@@ -1,0 +1,31 @@
+@model AutoRepairERD.ViewModels.RoleSelectionViewModel
+
+@{
+    ViewData["Title"] = "Select Role";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Welcome @Model.Username</h4>
+        <p>Please select the role you want to use for this session.</p>
+
+        <form asp-action="SelectRole" method="post">
+            <input type="hidden" name="UserId" value="@Model.UserId" />
+            <div class="mb-3">
+                <label class="form-label">Select Role</label>
+                <select name="SelectedRoleId" class="form-select">
+                    <option value="">-- Select role --</option>
+                    @foreach (var r in Model.Roles)
+                    {
+                        <option value="@r.Item1">@r.Item2</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Continue</button>
+                <a asp-action="Login" class="btn btn-secondary">Back</a>
+            </div>
+        </form>
+    </div>
+</div>

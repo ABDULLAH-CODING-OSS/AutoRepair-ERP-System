@@ -1,59 +1,36 @@
 @model AutoRepairERD.Models.LowStockAlert
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Alert Details";
 }
 
-<h1>Details</h1>
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Alert Details</h4>
+        <dl class="row">
+            <dt class="col-sm-3">Part</dt>
+            <dd class="col-sm-9">@Model.Part?.PartName</dd>
 
-<div>
-    <h4>LowStockAlert</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CurrentQuantity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CurrentQuantity)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReorderLevel)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReorderLevel)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AlertDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AlertDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Part)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Part)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AlertId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+            <dt class="col-sm-3">SKU</dt>
+            <dd class="col-sm-9">@Model.Part?.Sku</dd>
+
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Part?.Category?.CategoryName</dd>
+
+            <dt class="col-sm-3">Current Stock</dt>
+            <dd class="col-sm-9">@Model.CurrentQuantity</dd>
+
+            <dt class="col-sm-3">Reorder Level</dt>
+            <dd class="col-sm-9">@Model.ReorderLevel</dd>
+
+            <dt class="col-sm-3">Alert Date</dt>
+            <dd class="col-sm-9">@(Model.AlertDate?.ToString("dd-MMM-yyyy"))</dd>
+
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">@Model.Status</dd>
+        </dl>
+
+        <a asp-action="Edit" asp-route-alertid="@Model.AlertId" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary ms-1">Back</a>
+    </div>
 </div>

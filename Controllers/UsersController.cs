@@ -2,6 +2,7 @@
 using AutoRepairERD.Filters;
 using AutoRepairERD.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 [RoleAuthorize("Admin")]
 
@@ -16,9 +17,15 @@ public class UsersController : Controller
     }
 
     // GET: USERS
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index()
     {
-        return View(await _context.Users.ToListAsync());
+        // Basic listing with related data to avoid N+1 queries
+        var usersQuery = _context.Users
+            .Include(u => u.Employees)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .AsQueryable();
+
+        return View(await usersQuery.ToListAsync());
     }
 
     // GET: USERS/Details/5
@@ -30,6 +37,8 @@ public class UsersController : Controller
         }
 
         var user = await _context.Users
+            .Include(u => u.Employees)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(m => m.UserId == id);
         if (user == null)
         {
@@ -39,27 +48,7 @@ public class UsersController : Controller
         return View(user);
     }
 
-    // GET: USERS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: USERS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("UserId,Username,Email,PasswordHash,FullName,Phone,IsActive,CreatedAt,AuditLogs,Customers,Employees,Invoices,JobOrders,Notifications,PurchaseOrders,UserRoles,Vehicles")] User user)
-    {
-        if (ModelState.IsValid)
-        {
-            _context.Add(user);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(user);
-    }
+    // NOTE: Create actions removed. Users are created by the Employee module only.
 
     // GET: USERS/Edit/5
     public async Task<IActionResult> Edit(int? id)
@@ -68,12 +57,15 @@ public class UsersController : Controller
         {
             return NotFound();
         }
-
-        var user = await _context.Users.FindAsync(id);
+        var user = await _context.Users
+            .Include(u => u.Employees)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.UserId == id);
         if (user == null)
         {
             return NotFound();
         }
+        // Edit page is account management only: employee and roles are read-only in the view
         return View(user);
     }
 
@@ -82,38 +74,7 @@ public class UsersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("UserId,Username,Email,PasswordHash,FullName,Phone,IsActive,CreatedAt,AuditLogs,Customers,Employees,Invoices,JobOrders,Notifications,PurchaseOrders,UserRoles,Vehicles")] User user)
-    {
-        if (id != user.UserId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(user);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(user.UserId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(user);
-    }
-
-    // GET: USERS/Delete/5
-    public async Task<IActionResult> Delete(int? id)
+    public async Task<IActionResult> Edit(int? id, string? email, bool? isActive)
     {
         if (id == null)
         {
@@ -121,27 +82,116 @@ public class UsersController : Controller
         }
 
         var user = await _context.Users
+            .Include(u => u.Employees)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.UserId == id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        // Validate email
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ModelState.AddModelError("Email", "Email is required.");
+        }
+        else
+        {
+            var emailAttr = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
+            if (!emailAttr.IsValid(email))
+            {
+                ModelState.AddModelError("Email", "Invalid email address.");
+            }
+            else
+            {
+                // Check duplicate email
+                var duplicate = await _context.Users.AnyAsync(u => u.UserId != id && u.Email == email);
+                if (duplicate)
+                {
+                    ModelState.AddModelError("Email", "This email is already in use by another account.");
+                }
+            }
+        }
+
+        if (!ModelState.IsValid)
+        {
+            // Preserve attempted values for display
+            user.Email = email;
+            user.IsActive = isActive;
+            return View(user);
+        }
+
+        // Apply updates
+        user.Email = email;
+        user.IsActive = isActive;
+        _context.Update(user);
+
+        // Sync linked employees' IsActive to match user
+        var linkedEmployees = await _context.Employees.Where(e => e.UserId == user.UserId).ToListAsync();
+        if (linkedEmployees.Any())
+        {
+            foreach (var emp in linkedEmployees)
+            {
+                emp.IsActive = isActive;
+            }
+            _context.Employees.UpdateRange(linkedEmployees);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET: USERS/Deactivate/5
+    public async Task<IActionResult> Deactivate(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var user = await _context.Users
+            .Include(u => u.Employees)
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(m => m.UserId == id);
         if (user == null)
         {
             return NotFound();
         }
 
-        return View(user);
+        return View("Deactivate", user);
     }
 
-    // POST: USERS/Delete/5
-    [HttpPost, ActionName("Delete")]
+    // POST: USERS/DeactivateConfirmed/5
+    [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
+    public async Task<IActionResult> DeactivateConfirmed(int id)
     {
         var user = await _context.Users.FindAsync(id);
-        if (user != null)
+        if (user == null)
         {
-            _context.Users.Remove(user);
+            return NotFound();
+        }
+
+        // Soft-deactivate the user
+        user.IsActive = false;
+        _context.Users.Update(user);
+
+        // Also deactivate any linked Employee records to keep user/employee status consistent
+        var linkedEmployees = await _context.Employees.Where(e => e.UserId == user.UserId).ToListAsync();
+        if (linkedEmployees.Any())
+        {
+            foreach (var emp in linkedEmployees)
+            {
+                emp.IsActive = false;
+            }
+            _context.Employees.UpdateRange(linkedEmployees);
         }
 
         await _context.SaveChangesAsync();
+        TempData["Message"] = "User account deactivated.";
+
         return RedirectToAction(nameof(Index));
     }
 

@@ -11,6 +11,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Notification service and hosted background service
+builder.Services.AddScoped<AutoRepairERD.Services.NotificationService>();
+builder.Services.AddHostedService<AutoRepairERD.Services.NotificationHostedService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

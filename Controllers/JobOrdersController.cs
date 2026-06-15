@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class JobOrdersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notifications;
 
-    public JobOrdersController(ApplicationDbContext context)
+    public JobOrdersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
     {
         _context = context;
+        _notifications = notifications;
     }
 
     // GET: JOBORDERS/GetJobMechanic?jobId=123
@@ -304,6 +306,45 @@ public class JobOrdersController : Controller
             _context.Add(joborder);
 
             await _context.SaveChangesAsync();
+
+            // Notification: Job Order Created
+            try
+            {
+                // If an advisor was explicitly assigned, notify that advisor only. Otherwise notify Service Advisor role members.
+                if (joborder.AdvisorId.HasValue)
+                {
+                    var adv = _context.Employees.FirstOrDefault(e => e.EmployeeId == joborder.AdvisorId.Value);
+                    if (adv != null && adv.UserId.HasValue)
+                    {
+                        await _notifications.CreateForUserAsync(adv.UserId.Value, "JobCreated", "New Job Order", $"Job {joborder.JobNumber} created and assigned to you.", HttpContext.Session.GetInt32("UserID"));
+                    }
+                }
+                else
+                {
+                    var saRoleId = _context.Roles.Where(r => r.RoleName == "Service Advisor").Select(r => r.RoleId).FirstOrDefault();
+                    if (saRoleId != 0)
+                    {
+                        await _notifications.CreateForRoleAsync(saRoleId, "JobCreated", "New Job Order", $"Job {joborder.JobNumber} created.", HttpContext.Session.GetInt32("UserID"));
+                    }
+                }
+
+                // Also notify management (Admin and Owner)
+                var adminId = _context.Roles.Where(r => r.RoleName == "Admin").Select(r => r.RoleId).FirstOrDefault();
+                var ownerId = _context.Roles.Where(r => r.RoleName == "Owner").Select(r => r.RoleId).FirstOrDefault();
+                if (adminId != 0) await _notifications.CreateForRoleAsync(adminId, "JobCreated", "New Job Order", $"Job {joborder.JobNumber} created.", HttpContext.Session.GetInt32("UserID"));
+                if (ownerId != 0) await _notifications.CreateForRoleAsync(ownerId, "JobCreated", "New Job Order", $"Job {joborder.JobNumber} created.", HttpContext.Session.GetInt32("UserID"));
+
+                // If mechanic assigned at creation, notify that mechanic user
+                if (joborder.MechanicId.HasValue)
+                {
+                    var mech = _context.Employees.FirstOrDefault(e => e.EmployeeId == joborder.MechanicId.Value);
+                    if (mech != null && mech.UserId.HasValue)
+                    {
+                        await _notifications.CreateForUserAsync(mech.UserId.Value, "JobAssigned", "Job assigned", $"You have been assigned job {joborder.JobNumber}.", HttpContext.Session.GetInt32("UserID"));
+                    }
+                }
+            }
+            catch { }
 
             return RedirectToAction(nameof(Index));
         }
@@ -644,8 +685,40 @@ public class JobOrdersController : Controller
 
             try
             {
+                var oldMechanicId = existingJob.MechanicId;
+
                 _context.Update(joborder);
                 await _context.SaveChangesAsync();
+
+                // Notify on assignment change
+                try
+                {
+                    if (oldMechanicId != joborder.MechanicId && joborder.MechanicId.HasValue)
+                    {
+                        var mech = _context.Employees.FirstOrDefault(e => e.EmployeeId == joborder.MechanicId.Value);
+                        if (mech != null && mech.UserId.HasValue)
+                        {
+                            await _notifications.CreateForUserAsync(mech.UserId.Value, "JobAssigned", "Job assigned", $"You have been assigned job {joborder.JobNumber}.", HttpContext.Session.GetInt32("UserID"));
+                        }
+                    }
+                    // Notify on completion
+                    if (((existingJob.Status ?? "") != "Completed") && joborder.Status == "Completed")
+                    {
+                        // Notify advisor user if present
+                        var advisor = _context.Employees.FirstOrDefault(e => e.EmployeeId == joborder.AdvisorId);
+                        if (advisor != null && advisor.UserId.HasValue)
+                        {
+                            await _notifications.CreateForUserAsync(advisor.UserId.Value, "JobCompleted", "Job completed", $"Job {joborder.JobNumber} has been completed.", HttpContext.Session.GetInt32("UserID"));
+                        }
+
+                        // Notify management roles: Admin and Owner
+                        var adminRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                        var ownerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+                        if (adminRole != null) await _notifications.CreateForRoleAsync(adminRole.RoleId, "JobCompleted", "Job completed", $"Job {joborder.JobNumber} has been completed.", HttpContext.Session.GetInt32("UserID"));
+                        if (ownerRole != null) await _notifications.CreateForRoleAsync(ownerRole.RoleId, "JobCompleted", "Job completed", $"Job {joborder.JobNumber} has been completed.", HttpContext.Session.GetInt32("UserID"));
+                    }
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {

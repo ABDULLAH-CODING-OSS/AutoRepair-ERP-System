@@ -1,149 +1,95 @@
 
 using Microsoft.AspNetCore.Mvc;
+using AutoRepairERD.Filters;
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using AutoRepairERD.Services;
 
+[SessionAuthorize]
 public class NotificationsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly NotificationService _service;
 
-    public NotificationsController(ApplicationDbContext context)
+    public NotificationsController(ApplicationDbContext context, NotificationService service)
     {
         _context = context;
+        _service = service;
     }
 
     // GET: NOTIFICATIONS
-    public async Task<IActionResult> Index()    
+        public async Task<IActionResult> Index()
     {
-        return View(await _context.Notifications.ToListAsync());
+        var uid = HttpContext.Session.GetInt32("UserID");
+        if (uid == null) return Forbid();
+            var list = await _context.Notifications
+                .Include(n => n.User)
+                .Where(n => n.UserId == uid.Value)
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
+
+            return View(list);
     }
 
     // GET: NOTIFICATIONS/Details/5
-    public async Task<IActionResult> Details(int? notificationid)
+    public async Task<IActionResult> Details(int? id)
     {
-        if (notificationid == null)
-        {
-            return NotFound();
-        }
+        if (id == null) return NotFound();
+        var n = await _context.Notifications.Include(x => x.User).FirstOrDefaultAsync(x => x.NotificationId == id);
+        if (n == null) return NotFound();
+        var uid = HttpContext.Session.GetInt32("UserID");
+        if (uid == null) return Forbid();
+        if (!await UserHasAccessAsync(uid.Value, n)) return Forbid();
 
-        var notification = await _context.Notifications
-            .FirstOrDefaultAsync(m => m.NotificationId == notificationid);
-        if (notification == null)
-        {
-            return NotFound();
-        }
-
-        return View(notification);
+        await _service.MarkReadAsync(n.NotificationId);
+        return View(n);
     }
 
-    // GET: NOTIFICATIONS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: NOTIFICATIONS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("NotificationId,UserId,Title,Message,NotificationType,IsRead,CreatedAt,User")] Notification notification)
+    public async Task<IActionResult> MarkRead(int id)
     {
-        if (ModelState.IsValid)
-        {
-            _context.Add(notification);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-        return View(notification);
-    }
+        var uid = HttpContext.Session.GetInt32("UserID");
+        if (uid == null) return Forbid();
+        var n = await _context.Notifications.FindAsync(id);
+        if (n == null) return NotFound();
+        if (!await UserHasAccessAsync(uid.Value, n)) return Forbid();
 
-    // GET: NOTIFICATIONS/Edit/5
-    public async Task<IActionResult> Edit(int? notificationid)
-    {
-        if (notificationid == null)
-        {
-            return NotFound();
-        }
-
-        var notification = await _context.Notifications.FindAsync(notificationid);
-        if (notification == null)
-        {
-            return NotFound();
-        }
-        return View(notification);
-    }
-
-    // POST: NOTIFICATIONS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? notificationid, [Bind("NotificationId,UserId,Title,Message,NotificationType,IsRead,CreatedAt,User")] Notification notification)
-    {
-        if (notificationid != notification.NotificationId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(notification);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!NotificationExists(notification.NotificationId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(notification);
-    }
-
-    // GET: NOTIFICATIONS/Delete/5
-    public async Task<IActionResult> Delete(int? notificationid)
-    {
-        if (notificationid == null)
-        {
-            return NotFound();
-        }
-
-        var notification = await _context.Notifications
-            .FirstOrDefaultAsync(m => m.NotificationId == notificationid);
-        if (notification == null)
-        {
-            return NotFound();
-        }
-
-        return View(notification);
-    }
-
-    // POST: NOTIFICATIONS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? notificationid)
-    {
-        var notification = await _context.Notifications.FindAsync(notificationid);
-        if (notification != null)
-        {
-            _context.Notifications.Remove(notification);
-        }
-
-        await _context.SaveChangesAsync();
+        await _service.MarkReadAsync(id);
         return RedirectToAction(nameof(Index));
     }
 
-    private bool NotificationExists(int? notificationid)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkUnread(int id)
     {
-        return _context.Notifications.Any(e => e.NotificationId == notificationid);
+        var uid = HttpContext.Session.GetInt32("UserID");
+        if (uid == null) return Forbid();
+        var n = await _context.Notifications.FindAsync(id);
+        if (n == null) return NotFound();
+        if (!await UserHasAccessAsync(uid.Value, n)) return Forbid();
+
+        await _service.MarkUnreadAsync(id);
+        return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Archive(int id)
+    {
+        var uid = HttpContext.Session.GetInt32("UserID");
+        if (uid == null) return Forbid();
+        var n = await _context.Notifications.FindAsync(id);
+        if (n == null) return NotFound();
+        if (!await UserHasAccessAsync(uid.Value, n)) return Forbid();
+
+        await _service.ArchiveAsync(id);
+        return RedirectToAction(nameof(Index));
+    }
+
+        private async Task<bool> UserHasAccessAsync(int userId, Notification n)
+        {
+            // Notifications are created per-user in current DB schema. Access allowed when UserId matches.
+            return n.UserId != null && n.UserId == userId;
+        }
 }

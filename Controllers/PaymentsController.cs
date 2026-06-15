@@ -10,10 +10,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class PaymentsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notifications;
 
-    public PaymentsController(ApplicationDbContext context)
+    public PaymentsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
     {
         _context = context;
+        _notifications = notifications;
     }
 
     // GET: PAYMENTS
@@ -148,6 +150,24 @@ public class PaymentsController : Controller
 
             _context.Update(invoice);
             await _context.SaveChangesAsync();
+
+            // Notification: Payment Received
+            try
+            {
+                // Notify owner/admin role
+                var ownerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+                var adminRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                if (ownerRole != null) await _notifications.CreateForRoleAsync(ownerRole.RoleId, "PaymentReceived", "Payment received", $"Payment of {payment.AmountPaid:C} received for Invoice {invoice.InvoiceNumber}.", HttpContext.Session.GetInt32("UserID"));
+                if (adminRole != null) await _notifications.CreateForRoleAsync(adminRole.RoleId, "PaymentReceived", "Payment received", $"Payment of {payment.AmountPaid:C} received for Invoice {invoice.InvoiceNumber}.", HttpContext.Session.GetInt32("UserID"));
+
+                // Notify invoice creator if exists
+                if (invoice.CreatedByUserId.HasValue)
+                {
+                    await _notifications.CreateForUserAsync(invoice.CreatedByUserId.Value, "PaymentReceived", "Payment received", $"Payment of {payment.AmountPaid:C} received for Invoice {invoice.InvoiceNumber}.", HttpContext.Session.GetInt32("UserID"));
+                }
+            }
+            catch { }
+
             return RedirectToAction(nameof(Index));
         }
         return View(payment);
