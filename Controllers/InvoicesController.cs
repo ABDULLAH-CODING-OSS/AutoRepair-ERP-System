@@ -163,9 +163,15 @@ public class InvoicesController : Controller
                 var threshold = 100000m;
                 if ((decimal)(invoice.GrandTotal) >= threshold)
                 {
+                    var title = "High value invoice";
+                    var message = $"High value invoice {invoice.InvoiceNumber} generated. Amount: {invoice.GrandTotal:N0}.";
                     if (ownerRole != null)
                     {
-                        await _notifications.CreateForRoleAsync(ownerRole.RoleId, "HighValueInvoice", "High value invoice", $"Invoice {invoice.InvoiceNumber} amount {invoice.GrandTotal:C} exceeds threshold.", HttpContext.Session.GetInt32("UserID"));
+                        await _notifications.CreateForRoleAsync(ownerRole.RoleId, "Invoices", title, message, HttpContext.Session.GetInt32("UserID"));
+                    }
+                    if (adminRole != null)
+                    {
+                        await _notifications.CreateForRoleAsync(adminRole.RoleId, "Invoices", title, message, HttpContext.Session.GetInt32("UserID"));
                     }
                 }
             }

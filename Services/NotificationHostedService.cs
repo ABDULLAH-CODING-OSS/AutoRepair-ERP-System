@@ -57,6 +57,28 @@ namespace AutoRepairERD.Services
                         var message = "Daily summary generated.";
                         await notificationService.CreateForRoleAsync(ownerRole.RoleId, "System", title, message);
                     }
+
+                    // Rule: Vehicle return reminder (vehicles not returned for service in 90+ days)
+                    var cutoff90 = DateTime.Now.AddDays(-90);
+                    var jobs90 = await context.JobOrders
+                        .Include(j => j.Customer)
+                        .Include(j => j.Vehicle)
+                        .Where(j => j.CompletionDate != null && j.CompletionDate <= cutoff90 && j.CompletionDate > cutoff90.AddDays(-2))
+                        .ToListAsync();
+
+                    foreach (var job in jobs90)
+                    {
+                        var customerName = job.Customer?.FirstName + (string.IsNullOrEmpty(job.Customer?.LastName) ? "" : " " + job.Customer?.LastName);
+                        var vehicleDesc = job.Vehicle?.Make ?? job.Vehicle?.LicensePlate ?? "vehicle";
+                        var title = "Vehicle return reminder";
+                        var message = $"Customer {customerName ?? "Unknown"}'s {job.Vehicle?.Make ?? job.Vehicle?.LicensePlate ?? "vehicle"} has not returned for service in over 90 days.";
+                        var saRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Service Advisor");
+                        if (saRole != null)
+                        {
+                            // Avoid duplicate reminders by relying on the narrow date window (90 +/- 2 days)
+                            await notificationService.CreateForRoleAsync(saRole.RoleId, "Customer Follow-Up", title, message, null, "JobOrder", job.JobOrderId);
+                        }
+                    }
                 }
                 catch
                 {

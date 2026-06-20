@@ -8,10 +8,12 @@ using AutoRepairERD.Filters;
 public class CustomersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public CustomersController(ApplicationDbContext context)
+    public CustomersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: CUSTOMERS
@@ -62,6 +64,20 @@ public class CustomersController : Controller
 
             _context.Add(customer);
             await _context.SaveChangesAsync();
+
+            // Batch 3: NEW CUSTOMER CREATED - notify Admin
+            try
+            {
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                if (adminRole != null)
+                {
+                    var title = "New Customer";
+                    var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
+                    var message = $"New customer {name} has been registered.";
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Customer", title, message);
+                }
+            }
+            catch { }
 
             return RedirectToAction(nameof(Index));
         }

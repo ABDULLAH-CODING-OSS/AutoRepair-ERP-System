@@ -10,10 +10,12 @@ using Microsoft.EntityFrameworkCore;
 public class UsersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public UsersController(ApplicationDbContext context)
+    public UsersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: USERS
@@ -123,6 +125,7 @@ public class UsersController : Controller
         }
 
         // Apply updates
+        var previousIsActive = user.IsActive ?? false;
         user.Email = email;
         user.IsActive = isActive;
         _context.Update(user);
@@ -139,6 +142,40 @@ public class UsersController : Controller
         }
 
         await _context.SaveChangesAsync();
+
+        // Batch 2: EMPLOYEE ACCOUNT ACTIVATED / DEACTIVATED notifications
+        try
+        {
+            var newIsActive = user.IsActive ?? false;
+            if (!previousIsActive && newIsActive)
+            {
+                // Activated
+                var title = "Employee Account Activated";
+                var message = $"Employee account {user.Username} has been activated.";
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+                if (ownerRole != null)
+                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+            }
+            else if (previousIsActive && !(user.IsActive ?? false))
+            {
+                // Deactivated
+                var title = "Employee Account Deactivated";
+                var message = $"Employee account {user.Username} has been deactivated.";
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+                if (ownerRole != null)
+                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+            }
+        }
+        catch
+        {
+            // Do not block user update on notification failures
+        }
 
         return RedirectToAction(nameof(Index));
     }
@@ -191,6 +228,23 @@ public class UsersController : Controller
 
         await _context.SaveChangesAsync();
         TempData["Message"] = "User account deactivated.";
+
+        // Batch 2: EMPLOYEE ACCOUNT DEACTIVATED notification (Admin and Owner)
+        try
+        {
+            var title = "Employee Account Deactivated";
+            var message = $"Employee account {user.Username} has been deactivated.";
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+            var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+            if (adminRole != null)
+                await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+            if (ownerRole != null)
+                await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+        }
+        catch
+        {
+            // swallow notification errors
+        }
 
         return RedirectToAction(nameof(Index));
     }

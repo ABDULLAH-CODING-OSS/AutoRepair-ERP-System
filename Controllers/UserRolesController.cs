@@ -10,10 +10,12 @@ using Microsoft.EntityFrameworkCore;
 public class UserRolesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public UserRolesController(ApplicationDbContext context)
+    public UserRolesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: USERROLES
@@ -104,6 +106,26 @@ public class UserRolesController : Controller
             await _context.SaveChangesAsync();
             TempData["Toast"] = "Role assigned to user.";
             TempData["ToastType"] = "success";
+            // Batch 2: ROLE ASSIGNED notification (to Admin)
+            try
+            {
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                if (adminRole != null)
+                {
+                    var user = await _context.Users.FindAsync(UserId.Value);
+                    var role = await _context.Roles.FindAsync(RoleId.Value);
+                    if (user != null && role != null)
+                    {
+                        var title = "Role Assigned";
+                        var message = $"{role.RoleName} role assigned to {user.FullName ?? user.Username}.";
+                        await _notificationService.CreateForRoleAsync(adminRole.RoleId, "System", title, message);
+                    }
+                }
+            }
+            catch
+            {
+                // swallow
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -208,10 +230,30 @@ public class UserRolesController : Controller
         var userrole = await _context.UserRoles.FindAsync(id);
         if (userrole != null)
         {
+            // Capture details for notification before deletion
+            var user = await _context.Users.FindAsync(userrole.UserId);
+            var role = await _context.Roles.FindAsync(userrole.RoleId);
+
             _context.UserRoles.Remove(userrole);
             await _context.SaveChangesAsync();
             TempData["Toast"] = "Assignment removed.";
             TempData["ToastType"] = "success";
+
+            // Batch 2: ROLE REMOVED notification (to Admin)
+            try
+            {
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                if (adminRole != null && user != null && role != null)
+                {
+                    var title = "Role Removed";
+                    var message = $"{role.RoleName} role removed from {user.FullName ?? user.Username}.";
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "System", title, message);
+                }
+            }
+            catch
+            {
+                // swallow
+            }
         }
 
         return RedirectToAction(nameof(Index));

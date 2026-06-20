@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 public class VehiclesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public VehiclesController(ApplicationDbContext context)
+    public VehiclesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: VEHICLES
@@ -132,6 +134,22 @@ public class VehiclesController : Controller
             try
             {
                 await _context.SaveChangesAsync();
+                // Batch 3: NEW VEHICLE REGISTERED - notify Admin and Service Advisor
+                try
+                {
+                    var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                    var saRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Service Advisor");
+                    var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
+                    var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "Unknown";
+                    var title = "New Vehicle Registered";
+                    var message = $"New vehicle {vehicle.LicensePlate} registered for {custName}.";
+                    if (adminRole != null)
+                        await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Vehicle", title, message);
+                    if (saRole != null)
+                        await _notificationService.CreateForRoleAsync(saRole.RoleId, "Vehicle", title, message);
+                }
+                catch { }
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException dbEx)

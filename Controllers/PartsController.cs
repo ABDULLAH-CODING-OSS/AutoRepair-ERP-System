@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class PartsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public PartsController(ApplicationDbContext context)
+    public PartsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: PARTS
@@ -75,6 +77,19 @@ public class PartsController : Controller
             try
             {
                 await _context.SaveChangesAsync();
+                // Batch 3: NEW PART CREATED - notify Inventory Manager and Admin
+                try
+                {
+                    var invRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Inventory Manager");
+                    var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                    var title = "New Inventory Item";
+                    var message = $"New inventory item {part.PartName} has been added.";
+                    if (invRole != null)
+                        await _notificationService.CreateForRoleAsync(invRole.RoleId, "Inventory", title, message);
+                    if (adminRole != null)
+                        await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
+                }
+                catch { }
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException dbEx)

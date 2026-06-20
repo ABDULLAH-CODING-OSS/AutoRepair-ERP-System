@@ -9,10 +9,12 @@ using AutoRepairERD.Filters;
 public class AttendancesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public AttendancesController(ApplicationDbContext context)
+    public AttendancesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: ATTENDANCES
@@ -134,6 +136,27 @@ public class AttendancesController : Controller
 
             await _context.SaveChangesAsync();
 
+            // Batch 2: ATTENDANCE ABSENCE ALERT (only when status == "Absent")
+            try
+            {
+                if (string.Equals(attendance.Status, "Absent", StringComparison.OrdinalIgnoreCase))
+                {
+                    var employee = await _context.Employees.FindAsync(attendance.EmployeeId);
+                    var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                    if (adminRole != null && employee != null)
+                    {
+                        var title = "Attendance Absence";
+                        var dateStr = attendance.AttendanceDate.ToString();
+                        var message = $"{employee.FirstName} {employee.LastName} marked absent on {dateStr}.";
+                        await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Attendance", title, message);
+                    }
+                }
+            }
+            catch
+            {
+                // Do not block attendance workflow on notification failure
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -195,6 +218,10 @@ public class AttendancesController : Controller
         // when Employee (navigation) is not posted from the form.
         ModelState.Remove("Employee");
 
+        // Fetch existing record to determine status change
+        var existing = await _context.Attendances.AsNoTracking().FirstOrDefaultAsync(a => a.AttendanceId == attendance.AttendanceId);
+        var previousStatus = existing?.Status;
+
         if (ModelState.IsValid)
         {
             try
@@ -208,6 +235,29 @@ public class AttendancesController : Controller
 
                 _context.Update(attendance);
                 await _context.SaveChangesAsync();
+
+                // Batch 2: ATTENDANCE ABSENCE ALERT when status changed to Absent
+                try
+                {
+                    var becameAbsent = !string.Equals(previousStatus, "Absent", StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(attendance.Status, "Absent", StringComparison.OrdinalIgnoreCase);
+                    if (becameAbsent)
+                    {
+                        var employee = await _context.Employees.FindAsync(attendance.EmployeeId);
+                        var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                        if (adminRole != null && employee != null)
+                        {
+                            var title = "Attendance Absence";
+                            var dateStr = attendance.AttendanceDate.ToString();
+                            var message = $"{employee.FirstName} {employee.LastName} marked absent on {dateStr}.";
+                            await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Attendance", title, message);
+                        }
+                    }
+                }
+                catch
+                {
+                    // swallow
+                }
             }
             catch (DbUpdateConcurrencyException)
             {

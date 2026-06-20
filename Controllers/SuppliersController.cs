@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class SuppliersController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.NotificationService _notificationService;
 
-    public SuppliersController(ApplicationDbContext context)
+    public SuppliersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: SUPPLIERS
@@ -56,6 +58,19 @@ public class SuppliersController : Controller
         {
             _context.Add(supplier);
             await _context.SaveChangesAsync();
+            // Batch 3: NEW SUPPLIER CREATED - notify Inventory Manager and Admin
+            try
+            {
+                var invRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Inventory Manager");
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var title = "New Supplier";
+                var message = $"New supplier {supplier.CompanyName} has been added.";
+                if (invRole != null)
+                    await _notificationService.CreateForRoleAsync(invRole.RoleId, "Inventory", title, message);
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         return View(supplier);

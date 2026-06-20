@@ -5,6 +5,7 @@ using AutoRepairERD.Models;
 using AutoRepairERD.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using AutoRepairERD.Filters;
+using AutoRepairERD.Services;
 
 [RoleAuthorize("Admin","Owner")]
 [SessionAuthorize]
@@ -12,10 +13,12 @@ using AutoRepairERD.Filters;
 public class EmployeesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly NotificationService _notificationService;
 
-    public EmployeesController(ApplicationDbContext context)
+    public EmployeesController(ApplicationDbContext context, NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET: EMPLOYEES
@@ -232,6 +235,24 @@ public class EmployeesController : Controller
 
             await transaction.CommitAsync();
 
+            // Batch 2: NEW EMPLOYEE CREATED notification
+            try
+            {
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+                var title = "New Employee";
+                var message = $"New employee {employee.FirstName} {employee.LastName} has been added.";
+
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+                if (ownerRole != null)
+                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+            }
+            catch
+            {
+                // Swallow notification exceptions so employee creation is not blocked
+            }
+
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -418,6 +439,27 @@ public class EmployeesController : Controller
 
         await _context.SaveChangesAsync();
 
+        // Batch 2: EMPLOYEE ACCOUNT ACTIVATED - notify Admin and Owner about linked user activation
+        try
+        {
+            if (employee.UserId.HasValue)
+            {
+                var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+                var title = "Employee Account Activated";
+                var message = $"Employee account {employee.EmployeeCode} has been activated.";
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+                if (ownerRole != null)
+                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+            }
+        }
+        catch
+        {
+            // Do not block activation on notification failure
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -480,6 +522,27 @@ public class EmployeesController : Controller
         }
 
         await _context.SaveChangesAsync();
+
+        // Batch 2: EMPLOYEE ACCOUNT DEACTIVATED - notify Admin and Owner about linked user deactivation
+        try
+        {
+            if (employee.UserId.HasValue)
+            {
+                var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
+                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
+                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
+                var title = "Employee Account Deactivated";
+                var message = $"Employee account {employee.EmployeeCode} has been deactivated.";
+                if (adminRole != null)
+                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
+                if (ownerRole != null)
+                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
+            }
+        }
+        catch
+        {
+            // Do not block deactivation on notification failure
+        }
 
         TempData["Toast"] = "Employee deactivated.";
         TempData["ToastType"] = "warning";
