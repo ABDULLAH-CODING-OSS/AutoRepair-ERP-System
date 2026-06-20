@@ -1,0 +1,62 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Generate Payroll";
+}
+
+<h1>Generate Payroll</h1>
+
+<form asp-action="Generate" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Employee</label>
+        <select name="EmployeeId" class="form-select">
+            <option value="">-- Select --</option>
+            @foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
+            {
+                var isSelected = ViewBag.SelectedEmployee != null && (int)ViewBag.SelectedEmployee == e.EmployeeId;
+                if (isSelected)
+                {
+                    <option value="@e.EmployeeId" selected="selected">@e.Display</option>
+                }
+                else
+                {
+                    <option value="@e.EmployeeId">@e.Display</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Month</label>
+            <select name="PayrollMonth" class="form-select">
+                <option value="">-- Select Month --</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    var monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m);
+                    var isSel = ViewBag.SelectedMonth != null && (int)ViewBag.SelectedMonth == m;
+                    if (isSel)
+                    {
+                        <option value="@m" selected="selected">@monthName</option>
+                    }
+                    else
+                    {
+                        <option value="@m">@monthName</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Year</label>
+            <input type="number" name="PayrollYear" class="form-control" min="2000" max="2100" value="@(ViewBag.SelectedYear ?? DateTime.Now.Year)" />
+        </div>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Generate</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

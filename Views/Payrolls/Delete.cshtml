@@ -4,127 +4,36 @@
     ViewData["Title"] = "Delete";
 }
 
-<h1>Delete</h1>
+<h1>Cancel Payroll</h1>
 
-<h3>Are you sure you want to delete this?</h3>
+<h3>Are you sure you want to cancel this payroll? This will remove the payroll record so it can be regenerated.</h3>
 <div>
-    <h4>AutoRepairERD.Models.Payroll</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EmployeeId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EmployeeId)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PayrollMonth)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PayrollMonth)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PayrollYear)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PayrollYear)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalWorkingDays)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalWorkingDays)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalPresentDays)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalPresentDays)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OvertimeHours)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OvertimeHours)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.BonusAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.BonusAmount)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DeductionAmount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DeductionAmount)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.GrossSalary)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.GrossSalary)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NetSalary)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NetSalary)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PaymentDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PaymentDate)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PayrollStatus)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PayrollStatus)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Employee)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SalaryAdjustments)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SalaryAdjustments)
-        </dd>
-    </dl>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="PayrollId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Payroll</h5>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Employee</dt>
+                <dd class="col-sm-9">@((Model.Employee != null) ? (Model.Employee.EmployeeCode + " - " + Model.Employee.FirstName + " " + (Model.Employee.LastName ?? "")).Trim() : "Unknown")</dd>
+
+                <dt class="col-sm-3">Payroll Number</dt>
+                <dd class="col-sm-9">@Model.PayrollNumber</dd>
+
+                <dt class="col-sm-3">Payroll Period</dt>
+                <dd class="col-sm-9">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.PayrollMonth ?? 0) @Model.PayrollYear</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@Model.PayrollStatus</dd>
+
+                <dt class="col-sm-3">Net Salary</dt>
+                <dd class="col-sm-9">@String.Format("{0:C}", Model.NetSalary)</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form asp-action="Delete" method="post" class="mt-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="payrollid" value="@Model.PayrollId" />
+        <input type="submit" value="Cancel Payroll" class="btn btn-danger" /> |
+        <a asp-action="Index" class="btn btn-link">Back to List</a>
     </form>
 </div>

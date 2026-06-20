@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Notification service and hosted background service
 builder.Services.AddScoped<AutoRepairERD.Services.NotificationService>();
 builder.Services.AddHostedService<AutoRepairERD.Services.NotificationHostedService>();
+// Payroll calculation service
+builder.Services.AddScoped<AutoRepairERD.Services.PayrollCalculationService>();
 
 var app = builder.Build();
 

@@ -19,6 +19,10 @@ public partial class Payroll
 
     public int? PayrollYear { get; set; }
 
+    [StringLength(32)]
+    [Unicode(false)]
+    public string? PayrollNumber { get; set; }
+
     public int? TotalWorkingDays { get; set; }
 
     public int? TotalPresentDays { get; set; }

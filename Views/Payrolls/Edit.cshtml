@@ -14,77 +14,74 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="PayrollId" />
             <div class="form-group">
-                <label asp-for="EmployeeId" class="control-label"></label>
-                <input asp-for="EmployeeId" class="form-control" />
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                <label class="control-label">Payroll Number</label>
+                <input class="form-control" value="@Model.PayrollNumber" readonly />
             </div>
             <div class="form-group">
-                <label asp-for="PayrollMonth" class="control-label"></label>
-                <input asp-for="PayrollMonth" class="form-control" />
-                <span asp-validation-for="PayrollMonth" class="text-danger"></span>
+                <label class="control-label">Employee</label>
+                <input class="form-control" value="@(Model.Employee?.FirstName + " " + Model.Employee?.LastName)" readonly />
             </div>
             <div class="form-group">
-                <label asp-for="PayrollYear" class="control-label"></label>
-                <input asp-for="PayrollYear" class="form-control" />
-                <span asp-validation-for="PayrollYear" class="text-danger"></span>
+                <label class="control-label">Payroll Period</label>
+                <input class="form-control" value="@(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.PayrollMonth ?? 0) + " " + Model.PayrollYear)" readonly />
             </div>
             <div class="form-group">
                 <label asp-for="TotalWorkingDays" class="control-label"></label>
-                <input asp-for="TotalWorkingDays" class="form-control" />
+                <input asp-for="TotalWorkingDays" class="form-control" readonly />
                 <span asp-validation-for="TotalWorkingDays" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TotalPresentDays" class="control-label"></label>
-                <input asp-for="TotalPresentDays" class="form-control" />
-                <span asp-validation-for="TotalPresentDays" class="text-danger"></span>
+                <label class="control-label">Present Days</label>
+                <input name="manualPresentDays" type="number" min="0" max="@(Model.TotalWorkingDays ?? 0)" value="@(Model.TotalPresentDays ?? 0)" class="form-control" />
+                <span class="form-text">Adjust present days if attendance needs correction, then click Recalculate.</span>
             </div>
             <div class="form-group">
                 <label asp-for="OvertimeHours" class="control-label"></label>
-                <input asp-for="OvertimeHours" class="form-control" />
+                <input asp-for="OvertimeHours" class="form-control" readonly />
                 <span asp-validation-for="OvertimeHours" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="BonusAmount" class="control-label"></label>
-                <input asp-for="BonusAmount" class="form-control" />
+                <input asp-for="BonusAmount" class="form-control" readonly />
                 <span asp-validation-for="BonusAmount" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DeductionAmount" class="control-label"></label>
-                <input asp-for="DeductionAmount" class="form-control" />
+                <input asp-for="DeductionAmount" class="form-control" readonly />
                 <span asp-validation-for="DeductionAmount" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="GrossSalary" class="control-label"></label>
-                <input asp-for="GrossSalary" class="form-control" />
+                <input asp-for="GrossSalary" class="form-control" readonly />
                 <span asp-validation-for="GrossSalary" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="NetSalary" class="control-label"></label>
-                <input asp-for="NetSalary" class="form-control" />
+                <input asp-for="NetSalary" class="form-control" readonly />
                 <span asp-validation-for="NetSalary" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="PaymentDate" class="control-label"></label>
-                <input asp-for="PaymentDate" class="form-control" />
-                <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                <label class="control-label">Payment Date</label>
+                <input class="form-control" value="@(Model.PaymentDate?.ToString() ?? "")" readonly />
             </div>
             <div class="form-group">
                 <label asp-for="PayrollStatus" class="control-label"></label>
-                <input asp-for="PayrollStatus" class="form-control" />
+                <select name="payrollStatus" class="form-select">
+                    <option value="Generated" selected="@(Model.PayrollStatus=="Generated")">Generated</option>
+                    <option value="Pending" selected="@(Model.PayrollStatus=="Pending")">Pending</option>
+                    <option value="Paid" selected="@(Model.PayrollStatus=="Paid")">Paid</option>
+                    <option value="Cancelled" selected="@(Model.PayrollStatus=="Cancelled")">Cancelled</option>
+                </select>
                 <span asp-validation-for="PayrollStatus" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Employee" class="control-label"></label>
-                <input asp-for="Employee" class="form-control" />
-                <span asp-validation-for="Employee" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SalaryAdjustments" class="control-label"></label>
-                <input asp-for="SalaryAdjustments" class="form-control" />
-                <span asp-validation-for="SalaryAdjustments" class="text-danger"></span>
-            </div>
+            <!-- Removed editable navigation properties and collections from edit form -->
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
+                @if (Model.PayrollStatus != "Paid")
+                {
+                    <button type="submit" formaction="@Url.Action("Recalculate", "Payrolls", new { payrollid = Model.PayrollId })" formmethod="post" class="btn btn-secondary ms-2">Recalculate</button>
+                    <button formaction="@Url.Action("MarkPaid", "Payrolls", new { payrollid = Model.PayrollId })" formmethod="post" class="btn btn-success ms-2">Mark Paid</button>
+                }
             </div>
         </form>
     </div>
