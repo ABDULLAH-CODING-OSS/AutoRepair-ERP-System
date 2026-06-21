@@ -229,15 +229,26 @@ namespace AutoRepairERD.Services
             var jobBonus = completedJobsCount * 100m;
 
             // Aggregate salary adjustments linked to this payroll
-            var adjustments = await _context.SalaryAdjustments.Where(sa => sa.PayrollId == existingPayroll.PayrollId).ToListAsync();
-            var salaryAdjustmentsTotal = adjustments.Sum(a => a.Amount ?? 0m);
+            var adjustments = await _context.SalaryAdjustments
+                .Where(sa => sa.PayrollId == existingPayroll.PayrollId && (sa.IsActive == null || sa.IsActive == true) && (sa.AdjustmentStatus == null || sa.AdjustmentStatus != "Cancelled"))
+                .ToListAsync();
+
+            // Separate adjustments by type and apply ERP rules:
+            // Bonus and Allowance increase salary, Deduction and Penalty decrease salary
+            var bonusTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Bonus", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
+            var allowanceTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Allowance", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
+            var deductionTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Deduction", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
+            var penaltyTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Penalty", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
+
+            var salaryAdjustmentsTotal = bonusTotal + allowanceTotal - deductionTotal - penaltyTotal;
 
             var basicSalary = employee.BasicSalary ?? 0m;
             var dailyRate = requiredWorkingDays > 0 ? decimal.Divide(basicSalary, requiredWorkingDays) : 0m;
             var attendanceDeduction = dailyRate * totalAbsentDays;
 
-            var grossSalary = basicSalary + jobBonus + salaryAdjustmentsTotal + overtimePay;
-            var netSalary = grossSalary - attendanceDeduction;
+            // Gross salary: base + job bonus + positive adjustments + overtime
+            var grossSalary = basicSalary + jobBonus + bonusTotal + allowanceTotal + overtimePay;
+            var netSalary = grossSalary - attendanceDeduction - deductionTotal - penaltyTotal;
 
             if (netSalary < 0) return new PayrollCalculationResult { Success = false, Error = "Calculated net salary is negative. Please review adjustments." };
 

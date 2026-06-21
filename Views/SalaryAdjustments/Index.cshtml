@@ -7,47 +7,59 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
+<div class="mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-auto">
+            <input type="text" name="q" placeholder="Search" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <select name="type" class="form-control">
+                <option value="">All Types</option>
+                <option>Bonus</option>
+                <option>Allowance</option>
+                <option>Deduction</option>
+                <option>Penalty</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <select name="status" class="form-control">
+                <option value="">Any Status</option>
+                <option>Active</option>
+                <option>Cancelled</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-secondary">Filter</button>
+        </div>
+    </form>
+</div>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.PayrollId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AdjustmentType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Amount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Reason)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Payroll)
-            </th>
+            <th>Adjustment Type</th>
+            <th>Amount</th>
+            <th>Reason</th>
+            <th>Employee Code</th>
+            <th>Employee Name</th>
+            <th>Payroll Number</th>
+            <th>Payroll Period</th>
+            <th>Status</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td>
-                @Html.DisplayFor(model => item.PayrollId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.AdjustmentType)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Amount)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Reason)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Payroll)
-            </td>
+            <td>@item.AdjustmentType</td>
+            <td>@String.Format("{0:C}", item.Amount ?? 0m)</td>
+            <td>@item.Reason</td>
+            <td>@(item?.Payroll?.Employee?.EmployeeCode ?? "")</td>
+            <td>@(item?.Payroll?.Employee != null ? (item.Payroll.Employee.FirstName + " " + (item.Payroll.Employee.LastName ?? "")).Trim() : "")</td>
+            <td>@(item?.Payroll?.PayrollNumber ?? "")</td>
+            <td>@(item?.Payroll?.PayrollMonth != null ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(item.Payroll.PayrollMonth ?? 0) + " " + (item?.Payroll?.PayrollYear?.ToString() ?? "") : "")</td>
+            <td>@(item.IsActive == false || item.AdjustmentStatus == "Cancelled" ? "Cancelled" : (item.AdjustmentStatus ?? "Active"))</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.AdjustmentId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.AdjustmentId">Details</a> |

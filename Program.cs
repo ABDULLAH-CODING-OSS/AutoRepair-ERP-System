@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
+// Provide access to HttpContext for services/controllers that need session or IP info
+builder.Services.AddHttpContextAccessor();
 // Register SQL Server DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(

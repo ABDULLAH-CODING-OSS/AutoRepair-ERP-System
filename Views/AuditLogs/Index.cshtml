@@ -1,83 +1,123 @@
 @model IEnumerable<AutoRepairERD.Models.AuditLog>
+@inject AutoRepairERD.Models.ApplicationDbContext _db
+@using Microsoft.EntityFrameworkCore
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Audit Logs";
 }
 
-<h1>Index</h1>
+<h1>Audit Logs</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+@{
+    // summary cards (small async counts)
+    var totalAudits = await _db.AuditLogs.CountAsync();
+    var today = DateTime.Today;
+    var todaysAudits = await _db.AuditLogs.CountAsync(a => a.ActionDate >= today);
+    var payrollAudits = await _db.AuditLogs.CountAsync(a => a.TableName == "Payrolls");
+    var salaryAdjAudits = await _db.AuditLogs.CountAsync(a => a.TableName == "SalaryAdjustments");
+}
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card text-bg-primary mb-2">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-white-50">Total Audits</h6>
+                <h3 class="card-title">@totalAudits</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-success mb-2">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-white-50">Today's Audits</h6>
+                <h3 class="card-title">@todaysAudits</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-info mb-2">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-white-50">Payroll Audits</h6>
+                <h3 class="card-title">@payrollAudits</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-warning mb-2">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-white-50">Salary Adjustment Audits</h6>
+                <h3 class="card-title">@salaryAdjAudits</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text" name="q" value="@Context.Request.Query["q"]" placeholder="Search user, action, module..." class="form-control" />
+    </div>
+        <div class="col-auto">
+        <select name="module" class="form-control">
+            <option value="All">All Modules</option>
+            <option value="Payrolls">Payrolls</option>
+            <option value="SalaryAdjustments">SalaryAdjustments</option>
+            <option value="Notifications">Notifications</option>
+            <option value="JobOrders">JobOrders</option>
+            <option value="PurchaseOrders">PurchaseOrders</option>
+            <option value="Invoices">Invoices</option>
+            <option value="Payments">Payments</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="range" class="form-control">
+            <option value="all">All</option>
+            <option value="today">Today</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TableName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.RecordId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ActionType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OldValues)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewValues)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ActionDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Ipaddress)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
+            <th>Date</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Module</th>
+            <th>Record ID</th>
+            <th>IP</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TableName)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.RecordId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ActionType)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.OldValues)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.NewValues)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ActionDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Ipaddress)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.User)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AuditLogId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AuditLogId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AuditLogId">Delete</a>
-            </td>
+            <td>@(item.ActionDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</td>
+            <td>@(item.User?.Username ?? "System")</td>
+            <td>@(item.User != null ? (item.User.UserRoles?.FirstOrDefault()?.Role?.RoleName ?? "") : "System")</td>
+            <td>@(item.ActionType ?? "-")</td>
+            <td>@(item.TableName ?? "-")</td>
+            <td>@(item.RecordId?.ToString() ?? "-")</td>
+            <td><small class="text-muted">@(item.Ipaddress ?? "-")</small></td>
+            <td><a asp-action="Details" asp-route-auditlogid="@item.AuditLogId">Details</a></td>
         </tr>
 }
     </tbody>
 </table>
+<nav aria-label="Page navigation">
+  <ul class="pagination">
+    @{ var cp = ViewBag.CurrentPage as int? ?? 1; var tp = ViewBag.TotalPages as int? ?? 1; var ps = ViewBag.PageSize as int? ?? 50; }
+    <li class="page-item @(cp <= 1 ? "disabled" : "")">
+      <a class="page-link" href="?q=@ViewBag.Query&module=@ViewBag.Module&range=@ViewBag.Range&page=@(cp-1)&pageSize=@ps">Previous</a>
+    </li>
+    <li class="page-item disabled"><span class="page-link">Page @cp of @tp</span></li>
+    <li class="page-item @(cp >= tp ? "disabled" : "")">
+      <a class="page-link" href="?q=@ViewBag.Query&module=@ViewBag.Module&range=@ViewBag.Range&page=@(cp+1)&pageSize=@ps">Next</a>
+    </li>
+  </ul>
+</nav>

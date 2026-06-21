@@ -26,7 +26,16 @@ public partial class SalaryAdjustment
     [Unicode(false)]
     public string? Reason { get; set; }
 
+    [StringLength(20)]
+    [Unicode(false)]
+    public string? AdjustmentStatus { get; set; }
+
+    public bool? IsActive { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? CreatedAt { get; set; }
+
     [ForeignKey("PayrollId")]
     [InverseProperty("SalaryAdjustments")]
-    public virtual Payroll Payroll { get; set; } = null!;
+    public virtual Payroll? Payroll { get; set; }
 }

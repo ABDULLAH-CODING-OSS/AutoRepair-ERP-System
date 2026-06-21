@@ -1,80 +1,72 @@
 @model AutoRepairERD.Models.AuditLog
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Audit Details";
+
+    string FormatKeyValueRows(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "N/A";
+        // Expect format: key1=val1;key2=val2;...
+        var parts = raw.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var sb = new System.Text.StringBuilder();
+        foreach (var p in parts)
+        {
+            var kv = p.Split('=', 2);
+            var k = kv.Length > 0 ? kv[0] : "";
+            var v = kv.Length > 1 ? kv[1] : "";
+            sb.Append($"<div><strong>{System.Net.WebUtility.HtmlEncode(k)}</strong>: {System.Net.WebUtility.HtmlEncode(v)}</div>");
+        }
+        return sb.ToString();
+    }
 }
 
-<h1>Details</h1>
+<h1>Audit Details</h1>
 
-<div>
-    <h4>AuditLog</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UserId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UserId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TableName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TableName)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.RecordId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.RecordId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ActionType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ActionType)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OldValues)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OldValues)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NewValues)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NewValues)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ActionDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ActionDate)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Ipaddress)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Ipaddress)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User)
-        </dd>
-    </dl>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Audit Information</h5>
+                <p><strong>Action:</strong> @(Model?.ActionType ?? "N/A")</p>
+                <p><strong>Module:</strong> @(Model?.TableName ?? "N/A")</p>
+                <p><strong>Record ID:</strong> @(Model?.RecordId?.ToString() ?? "N/A")</p>
+                <p><strong>Date/Time:</strong> @(Model?.ActionDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">User Information</h5>
+                <p><strong>User:</strong> @(Model?.User?.Username ?? "System")</p>
+                <p><strong>Role:</strong> @(Model?.User != null ? (Model.User.UserRoles?.FirstOrDefault()?.Role?.RoleName ?? "System") : "System")</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Change Information</h5>
+                <div>
+                    <h6>Old Values</h6>
+                    @Html.Raw(FormatKeyValueRows(Model?.OldValues))
+                </div>
+                <div class="mt-3">
+                    <h6>New Values</h6>
+                    @Html.Raw(FormatKeyValueRows(Model?.NewValues))
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Technical Information</h5>
+                <p><strong>IP Address:</strong> <small class="text-muted">@(Model?.Ipaddress ?? "N/A")</small></p>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AuditLogId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>

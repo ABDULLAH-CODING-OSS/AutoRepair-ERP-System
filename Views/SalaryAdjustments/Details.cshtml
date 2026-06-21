@@ -7,44 +7,26 @@
 <h1>Details</h1>
 
 <div>
-    <h4>SalaryAdjustment</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PayrollId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PayrollId)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AdjustmentType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AdjustmentType)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Amount)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Amount)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Reason)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Reason)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Payroll)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Payroll)
-        </dd>
-    </dl>
+    <div class="card mb-3">
+        <div class="card-header">Employee Information</div>
+        <div class="card-body">
+            <p><strong>Employee Code:</strong> @(Model?.Payroll?.Employee?.EmployeeCode ?? "-")</p>
+            <p><strong>Employee Name:</strong> @((Model?.Payroll?.Employee != null) ? ((Model?.Payroll?.Employee?.FirstName ?? "") + " " + (Model?.Payroll?.Employee?.LastName ?? "")).Trim() : "Unknown")</p>
+            <p><strong>Payroll Number:</strong> @(Model?.Payroll?.PayrollNumber ?? "-")</p>
+            <p><strong>Payroll Period:</strong> @(Model?.Payroll?.PayrollMonth != null ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Payroll.PayrollMonth ?? 0) + " " + (Model?.Payroll?.PayrollYear?.ToString() ?? "") : "-")</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">Adjustment Information</div>
+        <div class="card-body">
+            <p><strong>Adjustment Type:</strong> @(Model?.AdjustmentType ?? "-")</p>
+            <p><strong>Amount:</strong> @String.Format("{0:C}", Model?.Amount ?? 0m)</p>
+            <p><strong>Reason:</strong> @(Model?.Reason ?? "-")</p>
+            <p><strong>Status:</strong> @(Model.IsActive == false || Model.AdjustmentStatus == "Cancelled" ? "Cancelled" : (Model.AdjustmentStatus ?? "Active"))</p>
+            <p><strong>Created At:</strong> @(Model.CreatedAt?.ToString("g") ?? "-")</p>
+        </div>
+    </div>
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.AdjustmentId">Edit</a> |

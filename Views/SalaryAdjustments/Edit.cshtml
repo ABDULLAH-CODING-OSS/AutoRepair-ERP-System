@@ -14,13 +14,17 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="AdjustmentId" />
             <div class="form-group">
-                <label asp-for="PayrollId" class="control-label"></label>
-                <input asp-for="PayrollId" class="form-control" />
-                <span asp-validation-for="PayrollId" class="text-danger"></span>
+                <label class="control-label">Payroll</label>
+                <input class="form-control" value="@(Model?.Payroll?.PayrollNumber ?? "-") + " - " + (Model?.Payroll?.Employee?.EmployeeCode ?? "-") + " - " + ((Model?.Payroll?.Employee != null) ? ((Model?.Payroll?.Employee?.FirstName ?? "") + " " + (Model?.Payroll?.Employee?.LastName ?? "")).Trim() : "Unknown") + " - " + (Model?.Payroll?.PayrollMonth != null ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Payroll.PayrollMonth ?? 0) : "") + " " + (Model?.Payroll?.PayrollYear?.ToString() ?? "")" readonly />
             </div>
             <div class="form-group">
-                <label asp-for="AdjustmentType" class="control-label"></label>
-                <input asp-for="AdjustmentType" class="form-control" />
+                <label asp-for="AdjustmentType" class="control-label">Adjustment Type</label>
+                <select asp-for="AdjustmentType" class="form-control">
+                    <option>Bonus</option>
+                    <option>Allowance</option>
+                    <option>Deduction</option>
+                    <option>Penalty</option>
+                </select>
                 <span asp-validation-for="AdjustmentType" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -33,11 +37,7 @@
                 <input asp-for="Reason" class="form-control" />
                 <span asp-validation-for="Reason" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Payroll" class="control-label"></label>
-                <input asp-for="Payroll" class="form-control" />
-                <span asp-validation-for="Payroll" class="text-danger"></span>
-            </div>
+            <!-- Payroll navigation property is read-only and not editable -->
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

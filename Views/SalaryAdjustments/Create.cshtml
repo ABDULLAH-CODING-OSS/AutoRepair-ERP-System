@@ -11,17 +11,33 @@
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+            @if (TempData["SalaryAdjustDebug"] != null)
+            {
+                <div class="alert alert-info">
+                    <pre>@TempData["SalaryAdjustDebug"]</pre>
+                </div>
+            }
+
             <div class="form-group">
-                <label asp-for="PayrollId" class="control-label"></label>
-                <input asp-for="PayrollId" class="form-control" />
+                <label asp-for="PayrollId" class="control-label">Payroll</label>
+                <select asp-for="PayrollId" class="form-control" asp-items="@(ViewBag.Payrolls as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)">
+                    <option value="">-- Select payroll --</option>
+                </select>
                 <span asp-validation-for="PayrollId" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="AdjustmentType" class="control-label"></label>
-                <input asp-for="AdjustmentType" class="form-control" />
+                <label asp-for="AdjustmentType" class="control-label">Adjustment Type</label>
+                <select asp-for="AdjustmentType" class="form-control">
+                    <option value="">-- Select type --</option>
+                    <option>Bonus</option>
+                    <option>Allowance</option>
+                    <option>Deduction</option>
+                    <option>Penalty</option>
+                </select>
                 <span asp-validation-for="AdjustmentType" class="text-danger"></span>
             </div>
 
@@ -37,11 +53,7 @@
                 <span asp-validation-for="Reason" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Payroll" class="control-label"></label>
-                <input asp-for="Payroll" class="form-control" />
-                <span asp-validation-for="Payroll" class="text-danger"></span>
-            </div>
+            <!-- Payroll navigation property should not be editable -->
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
@@ -52,3 +64,7 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
