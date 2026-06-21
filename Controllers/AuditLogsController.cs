@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoRepairERD.Models;
 using AutoRepairERD.Filters;
 
-[RoleAuthorize("Admin")]
+[RoleAuthorize("Admin","Owner")]
 public class AuditLogsController : Controller
 {
     private readonly ApplicationDbContext _context;
