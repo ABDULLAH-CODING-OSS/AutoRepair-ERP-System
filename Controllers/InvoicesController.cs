@@ -176,6 +176,30 @@ public class InvoicesController : Controller
                 }
             }
             catch { }
+            // Audit: Invoice Generated (best-effort)
+            try
+            {
+                var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
+                var customer = jobRef?.Customer;
+                var vehicle = jobRef?.Vehicle;
+                var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
+                var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
+
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Invoices",
+                    RecordId = invoice.InvoiceId,
+                    ActionType = "Invoice Generated",
+                    OldValues = null,
+                    NewValues = $"InvoiceNumber={invoice.InvoiceNumber};JobNumber={invoice.JobOrderId};Customer={custName};Vehicle={vehicleDesc};Amount={invoice.GrandTotal}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         ViewBag.JobOrders = new SelectList(
@@ -336,6 +360,30 @@ public class InvoicesController : Controller
                     _context.Update(job);
                     await _context.SaveChangesAsync();
                 }
+                // Audit: Invoice Updated (best-effort)
+                try
+                {
+                    var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
+                    var customer = jobRef?.Customer;
+                    var vehicle = jobRef?.Vehicle;
+                    var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
+                    var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
+
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Invoices",
+                        RecordId = invoice.InvoiceId,
+                        ActionType = "Invoice Updated",
+                        OldValues = $"InvoiceNumber={existingInvoice.InvoiceNumber};Amount={existingInvoice.GrandTotal}",
+                        NewValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={invoice.GrandTotal};Customer={custName};Vehicle={vehicleDesc}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -391,6 +439,30 @@ public class InvoicesController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Invoice Deleted (best-effort)
+        try
+        {
+            var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
+            var customer = jobRef?.Customer;
+            var vehicle = jobRef?.Vehicle;
+            var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
+            var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
+
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Invoices",
+                RecordId = invoice.InvoiceId,
+                ActionType = "Invoice Deleted",
+                OldValues = $"InvoiceNumber={invoice.InvoiceNumber};JobNumber={invoice.JobOrderId};Customer={custName};Vehicle={vehicleDesc};Amount={invoice.GrandTotal}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
         return RedirectToAction(nameof(Index));
     }
 

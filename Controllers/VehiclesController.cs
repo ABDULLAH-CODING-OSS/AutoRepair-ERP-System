@@ -150,6 +150,27 @@ public class VehiclesController : Controller
                 }
                 catch { }
 
+                // Audit: Vehicle Created (best-effort)
+                try
+                {
+                    var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
+                    var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Vehicles",
+                        RecordId = vehicle.VehicleId,
+                        ActionType = "Vehicle Created",
+                        OldValues = null,
+                        NewValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException dbEx)
@@ -330,8 +351,29 @@ public class VehiclesController : Controller
         {
             try
             {
+                var original = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.VehicleId == vehicle.VehicleId);
                 _context.Update(vehicle);
                 await _context.SaveChangesAsync();
+                // Audit: Vehicle Updated (best-effort)
+                try
+                {
+                    var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
+                    var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Vehicles",
+                        RecordId = vehicle.VehicleId,
+                        ActionType = "Vehicle Updated",
+                        OldValues = original != null ? $"Vehicle={original.LicensePlate};VIN={original.Vin};Customer={( (await _context.Customers.FindAsync(original.CustomerId))?.FirstName ?? "") }" : null,
+                        NewValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException)
@@ -419,6 +461,27 @@ public class VehiclesController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Vehicle Deleted (best-effort)
+        try
+        {
+            var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
+            var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Vehicles",
+                RecordId = vehicle.VehicleId,
+                ActionType = "Vehicle Deleted",
+                OldValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

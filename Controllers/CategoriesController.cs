@@ -55,6 +55,24 @@ public class CategoriesController : Controller
         {
             _context.Add(category);
             await _context.SaveChangesAsync();
+            // Audit: Category Created (best-effort)
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Categories",
+                    RecordId = category.CategoryId,
+                    ActionType = "Category Created",
+                    OldValues = null,
+                    NewValues = $"CategoryName={category.CategoryName};Description={category.Description}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         return View(category);
@@ -92,8 +110,27 @@ public class CategoriesController : Controller
         {
             try
             {
+                var existing = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId);
                 _context.Update(category);
                 await _context.SaveChangesAsync();
+                // Audit: Category Updated (best-effort)
+                try
+                {
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Categories",
+                        RecordId = category.CategoryId,
+                        ActionType = "Category Updated",
+                        OldValues = existing != null ? $"CategoryName={existing.CategoryName};Description={existing.Description}" : null,
+                        NewValues = $"CategoryName={category.CategoryName};Description={category.Description}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -141,6 +178,24 @@ public class CategoriesController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Category Deleted (best-effort)
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Categories",
+                RecordId = category.CategoryId,
+                ActionType = "Category Deleted",
+                OldValues = $"CategoryName={category.CategoryName};Description={category.Description}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
         return RedirectToAction(nameof(Index));
     }
 

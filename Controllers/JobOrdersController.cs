@@ -307,6 +307,32 @@ public class JobOrdersController : Controller
 
             await _context.SaveChangesAsync();
 
+            // Audit: Job Created (best-effort)
+            try
+            {
+                var cust = await _context.Customers.FindAsync(joborder.CustomerId);
+                var veh = await _context.Vehicles.FindAsync(joborder.VehicleId);
+                var mech = joborder.MechanicId.HasValue ? await _context.Employees.FindAsync(joborder.MechanicId.Value) : null;
+                var custName = cust != null ? (cust.FirstName + " " + cust.LastName) : "";
+                var vehDesc = veh != null ? (veh.Make + " " + veh.Model + " - " + veh.LicensePlate) : "";
+                var mechName = mech != null ? (mech.FirstName + " " + mech.LastName) : "";
+
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "JobOrders",
+                    RecordId = joborder.JobOrderId,
+                    ActionType = "Job Created",
+                    OldValues = null,
+                    NewValues = $"JobNumber={joborder.JobNumber};Customer={custName};Vehicle={vehDesc};Mechanic={mechName};Status={joborder.Status}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
+
             // Notification: Job Order Created
             try
             {
@@ -690,6 +716,47 @@ public class JobOrdersController : Controller
                 _context.Update(joborder);
                 await _context.SaveChangesAsync();
 
+                // Audit: Job Updated / Status change / Cancelled (best-effort)
+                try
+                {
+                    var custOld = await _context.Customers.FindAsync(existingJob.CustomerId);
+                    var vehOld = await _context.Vehicles.FindAsync(existingJob.VehicleId);
+                    var mechOld = existingJob.MechanicId.HasValue ? await _context.Employees.FindAsync(existingJob.MechanicId.Value) : null;
+                    var custNew = await _context.Customers.FindAsync(joborder.CustomerId);
+                    var vehNew = await _context.Vehicles.FindAsync(joborder.VehicleId);
+                    var mechNew = joborder.MechanicId.HasValue ? await _context.Employees.FindAsync(joborder.MechanicId.Value) : null;
+
+                    var oldValues = $"JobNumber={existingJob.JobNumber};Customer={(custOld!=null?custOld.FirstName+" "+custOld.LastName:"")};Vehicle={(vehOld!=null?vehOld.Make+" "+vehOld.Model+" - "+vehOld.LicensePlate:"")};Mechanic={(mechOld!=null?mechOld.FirstName+" "+mechOld.LastName:"")};Status={existingJob.Status}";
+                    var newValues = $"JobNumber={joborder.JobNumber};Customer={(custNew!=null?custNew.FirstName+" "+custNew.LastName:"")};Vehicle={(vehNew!=null?vehNew.Make+" "+vehNew.Model+" - "+vehNew.LicensePlate:"")};Mechanic={(mechNew!=null?mechNew.FirstName+" "+mechNew.LastName:"")};Status={joborder.Status}";
+
+                    string actionType = "Job Updated";
+                    if ((existingJob.Status ?? "") != joborder.Status)
+                    {
+                        if (joborder.Status == "Completed") actionType = "Job Completed";
+                        else if (joborder.Status == "Cancelled") actionType = "Job Cancelled";
+                        else actionType = "Job Status Updated";
+                    }
+                    else if (existingJob.MechanicId != joborder.MechanicId)
+                    {
+                        actionType = "Job Assigned";
+                    }
+
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "JobOrders",
+                        RecordId = joborder.JobOrderId,
+                        ActionType = actionType,
+                        OldValues = oldValues,
+                        NewValues = newValues,
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
+
                 // Notify on assignment change
                 try
                 {
@@ -717,6 +784,47 @@ public class JobOrdersController : Controller
                         if (adminRole != null) await _notifications.CreateForRoleAsync(adminRole.RoleId, "JobCompleted", "Job completed", $"Job {joborder.JobNumber} has been completed.", HttpContext.Session.GetInt32("UserID"));
                         if (ownerRole != null) await _notifications.CreateForRoleAsync(ownerRole.RoleId, "JobCompleted", "Job completed", $"Job {joborder.JobNumber} has been completed.", HttpContext.Session.GetInt32("UserID"));
                     }
+                }
+                catch { }
+
+                // Audit: Job Updated / Assignment / Status change (best-effort)
+                try
+                {
+                    var custOld = await _context.Customers.FindAsync(existingJob.CustomerId);
+                    var vehOld = await _context.Vehicles.FindAsync(existingJob.VehicleId);
+                    var mechOld = existingJob.MechanicId.HasValue ? await _context.Employees.FindAsync(existingJob.MechanicId.Value) : null;
+                    var custNew = await _context.Customers.FindAsync(joborder.CustomerId);
+                    var vehNew = await _context.Vehicles.FindAsync(joborder.VehicleId);
+                    var mechNew = joborder.MechanicId.HasValue ? await _context.Employees.FindAsync(joborder.MechanicId.Value) : null;
+
+                    var oldValues = $"JobNumber={existingJob.JobNumber};Customer={(custOld!=null?custOld.FirstName+" "+custOld.LastName:"")};Vehicle={(vehOld!=null?vehOld.Make+" "+vehOld.Model+" - "+vehOld.LicensePlate:"")};Mechanic={(mechOld!=null?mechOld.FirstName+" "+mechOld.LastName:"")};Status={existingJob.Status}";
+                    var newValues = $"JobNumber={joborder.JobNumber};Customer={(custNew!=null?custNew.FirstName+" "+custNew.LastName:"")};Vehicle={(vehNew!=null?vehNew.Make+" "+vehNew.Model+" - "+vehNew.LicensePlate:"")};Mechanic={(mechNew!=null?mechNew.FirstName+" "+mechNew.LastName:"")};Status={joborder.Status}";
+
+                    string actionType = "Job Updated";
+                    if ((existingJob.Status ?? "") != joborder.Status)
+                    {
+                        if (joborder.Status == "Completed") actionType = "Job Completed";
+                        else if (joborder.Status == "Cancelled") actionType = "Job Cancelled";
+                        else actionType = "Job Status Updated";
+                    }
+                    else if (existingJob.MechanicId != joborder.MechanicId)
+                    {
+                        actionType = "Job Assigned";
+                    }
+
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "JobOrders",
+                        RecordId = joborder.JobOrderId,
+                        ActionType = actionType,
+                        OldValues = oldValues,
+                        NewValues = newValues,
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
                 }
                 catch { }
             }

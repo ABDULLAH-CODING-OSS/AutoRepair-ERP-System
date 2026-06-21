@@ -143,6 +143,30 @@ public class UsersController : Controller
 
         await _context.SaveChangesAsync();
 
+        // Audit: User Updated (email / active)
+        try
+        {
+            var oldVals = $"Email={user.Email};IsActive={previousIsActive}";
+            var newVals = $"Email={email};IsActive={user.IsActive}";
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Users",
+                RecordId = user.UserId,
+                ActionType = "User Updated",
+                OldValues = oldVals,
+                NewValues = newVals,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            // Do not block user update on audit failure
+        }
+
         // Batch 2: EMPLOYEE ACCOUNT ACTIVATED / DEACTIVATED notifications
         try
         {
@@ -174,7 +198,7 @@ public class UsersController : Controller
         }
         catch
         {
-            // Do not block user update on notification failures
+            // Do not block user update on notification failures (best-effort)
         }
 
         return RedirectToAction(nameof(Index));

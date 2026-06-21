@@ -253,6 +253,28 @@ public class EmployeesController : Controller
                 // Swallow notification exceptions so employee creation is not blocked
             }
 
+            // Audit: Employee Created
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Employees",
+                    RecordId = employee.EmployeeId,
+                    ActionType = "Employee Created",
+                    OldValues = null,
+                    NewValues = $"EmployeeCode={employee.EmployeeCode};EmployeeName={employee.FirstName} {employee.LastName};Position={employee.Designation}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                // Do not block employee creation on audit failure
+            }
+
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -439,6 +461,28 @@ public class EmployeesController : Controller
 
         await _context.SaveChangesAsync();
 
+        // Audit: Employee Reactivated
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Employees",
+                RecordId = employee.EmployeeId,
+                ActionType = "Employee Reactivated",
+                OldValues = "IsActive=False",
+                NewValues = "IsActive=True",
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            // Do not block activation on audit failure
+        }
+
         // Batch 2: EMPLOYEE ACCOUNT ACTIVATED - notify Admin and Owner about linked user activation
         try
         {
@@ -546,6 +590,28 @@ public class EmployeesController : Controller
 
         TempData["Toast"] = "Employee deactivated.";
         TempData["ToastType"] = "warning";
+        // Audit: Employee Deactivated
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Employees",
+                RecordId = employee.EmployeeId,
+                ActionType = "Employee Deactivated",
+                OldValues = "IsActive=True",
+                NewValues = "IsActive=False",
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            // Do not block deactivation on audit failure
+        }
+
         return RedirectToAction(nameof(Index));
     }
     private bool EmployeeExists(int? id)

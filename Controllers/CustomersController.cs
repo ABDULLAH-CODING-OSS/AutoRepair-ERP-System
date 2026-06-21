@@ -79,6 +79,26 @@ public class CustomersController : Controller
             }
             catch { }
 
+            // Audit: Customer Created (best-effort)
+            try
+            {
+                var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Customers",
+                    RecordId = customer.CustomerId,
+                    ActionType = "Customer Created",
+                    OldValues = null,
+                    NewValues = $"Customer={name};Phone={customer.Phone};Email={customer.Email}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -117,8 +137,29 @@ public class CustomersController : Controller
         {
             try
             {
+                var existing = await _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
                 _context.Update(customer);
                 await _context.SaveChangesAsync();
+                // Audit: Customer Updated (best-effort)
+                try
+                {
+                    var oldName = existing != null ? existing.FirstName + (string.IsNullOrEmpty(existing.LastName)?"":" "+existing.LastName) : null;
+                    var newName = customer.FirstName + (string.IsNullOrEmpty(customer.LastName)?"":" "+customer.LastName);
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Customers",
+                        RecordId = customer.CustomerId,
+                        ActionType = "Customer Updated",
+                        OldValues = existing != null ? $"Customer={oldName};Phone={existing.Phone};Email={existing.Email}" : null,
+                        NewValues = $"Customer={newName};Phone={customer.Phone};Email={customer.Email}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -166,6 +207,26 @@ public class CustomersController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Customer Deleted (best-effort)
+        try
+        {
+            var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Customers",
+                RecordId = customer.CustomerId,
+                ActionType = "Customer Deleted",
+                OldValues = $"Customer={name};Phone={customer.Phone};Email={customer.Email}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

@@ -71,6 +71,24 @@ public class SuppliersController : Controller
                     await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
             }
             catch { }
+            // Audit: Supplier Created (best-effort)
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Suppliers",
+                    RecordId = supplier.SupplierId,
+                    ActionType = "Supplier Created",
+                    OldValues = null,
+                    NewValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         return View(supplier);
@@ -108,8 +126,27 @@ public class SuppliersController : Controller
         {
             try
             {
+                var existing = await _context.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == supplier.SupplierId);
                 _context.Update(supplier);
                 await _context.SaveChangesAsync();
+                // Audit: Supplier Updated (best-effort)
+                try
+                {
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Suppliers",
+                        RecordId = supplier.SupplierId,
+                        ActionType = "Supplier Updated",
+                        OldValues = existing != null ? $"Supplier={existing.CompanyName};Contact={existing.ContactPerson};Phone={existing.Phone}" : null,
+                        NewValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -157,6 +194,25 @@ public class SuppliersController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Supplier Deleted (best-effort)
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Suppliers",
+                RecordId = supplier.SupplierId,
+                ActionType = "Supplier Deleted",
+                OldValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

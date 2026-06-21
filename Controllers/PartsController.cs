@@ -90,6 +90,26 @@ public class PartsController : Controller
                         await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
                 }
                 catch { }
+                // Audit: Part Created (best-effort)
+                try
+                {
+                    var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
+                    var category = await _context.Categories.FindAsync(part.CategoryId);
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Parts",
+                        RecordId = part.PartId,
+                        ActionType = "Part Created",
+                        OldValues = null,
+                        NewValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException dbEx)
@@ -153,8 +173,29 @@ public class PartsController : Controller
         {
             try
             {
+                var existing = await _context.Parts.AsNoTracking().FirstOrDefaultAsync(p => p.PartId == part.PartId);
                 _context.Update(part);
                 await _context.SaveChangesAsync();
+                // Audit: Part Updated (best-effort)
+                try
+                {
+                    var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
+                    var category = await _context.Categories.FindAsync(part.CategoryId);
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Parts",
+                        RecordId = part.PartId,
+                        ActionType = "Part Updated",
+                        OldValues = existing != null ? $"Part={existing.PartName};SKU={existing.Sku};Category={( (await _context.Categories.FindAsync(existing.CategoryId))?.CategoryName ?? "")};Supplier={( (await _context.Suppliers.FindAsync(existing.SupplierId))?.CompanyName ?? "")};CurrentStock={existing.CurrentStock}" : null,
+                        NewValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -215,6 +256,26 @@ public class PartsController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Part Deleted (best-effort)
+        try
+        {
+            var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
+            var category = await _context.Categories.FindAsync(part.CategoryId);
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Parts",
+                RecordId = part.PartId,
+                ActionType = "Part Deleted",
+                OldValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
         return RedirectToAction(nameof(Index));
     }
 

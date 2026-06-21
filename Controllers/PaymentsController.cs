@@ -150,6 +150,26 @@ public class PaymentsController : Controller
 
             _context.Update(invoice);
             await _context.SaveChangesAsync();
+        // Audit: Payment Deleted (best-effort)
+        try
+        {
+            var job = await _context.JobOrders.Include(j => j.Customer).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
+            var customerName = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "";
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Payments",
+                RecordId = payment.PaymentId,
+                ActionType = "Payment Deleted",
+                OldValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={payment.AmountPaid};Method={payment.PaymentMethod};Customer={customerName}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
 
             // Notification: Payment Received
             try
@@ -165,6 +185,27 @@ public class PaymentsController : Controller
                 {
                     await _notifications.CreateForUserAsync(invoice.CreatedByUserId.Value, "PaymentReceived", "Payment received", $"Payment of {payment.AmountPaid:C} received for Invoice {invoice.InvoiceNumber}.", HttpContext.Session.GetInt32("UserID"));
                 }
+            }
+            catch { }
+
+            // Audit: Payment Received (best-effort)
+            try
+            {
+                var job = await _context.JobOrders.Include(j => j.Customer).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
+                var customerName = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "";
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Payments",
+                    RecordId = payment.PaymentId,
+                    ActionType = "Payment Received",
+                    OldValues = null,
+                    NewValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={payment.AmountPaid};Method={payment.PaymentMethod};Customer={customerName}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
             }
             catch { }
 

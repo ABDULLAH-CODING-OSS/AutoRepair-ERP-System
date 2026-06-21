@@ -19,7 +19,7 @@ public class LowStockAlertsController : Controller
     public async Task<IActionResult> Index()
     {
         // Ensure alerts are synchronized before showing
-        LowStockAlertManager.SyncAll(_context);
+        LowStockAlertManager.SyncAll(_context, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
         await _context.SaveChangesAsync();
 
         var alerts = await _context.LowStockAlerts

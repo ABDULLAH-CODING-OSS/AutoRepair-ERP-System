@@ -56,6 +56,24 @@ public class ServicesController : Controller
         {
             _context.Add(service);
             await _context.SaveChangesAsync();
+            // Audit: Service Created (best-effort)
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "Services",
+                    RecordId = service.ServiceId,
+                    ActionType = "Service Created",
+                    OldValues = null,
+                    NewValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
         return View(service);
@@ -93,8 +111,27 @@ public class ServicesController : Controller
         {
             try
             {
+                var existing = await _context.Services.AsNoTracking().FirstOrDefaultAsync(s => s.ServiceId == service.ServiceId);
                 _context.Update(service);
                 await _context.SaveChangesAsync();
+                // Audit: Service Updated (best-effort)
+                try
+                {
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "Services",
+                        RecordId = service.ServiceId,
+                        ActionType = "Service Updated",
+                        OldValues = existing != null ? $"ServiceName={existing.ServiceName};FixedPrice={existing.FixedPrice}" : null,
+                        NewValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -142,6 +179,25 @@ public class ServicesController : Controller
         }
 
         await _context.SaveChangesAsync();
+        // Audit: Service Deleted (best-effort)
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "Services",
+                RecordId = service.ServiceId,
+                ActionType = "Service Deleted",
+                OldValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
+                NewValues = null,
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

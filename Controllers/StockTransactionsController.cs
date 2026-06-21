@@ -131,8 +131,8 @@ public class StockTransactionsController : Controller
 
         _context.Add(stocktransaction);
         _context.Update(part);
-        // synchronize low stock alerts for this part
-        LowStockAlertManager.SyncPart(_context, part.PartId);
+        // synchronize low stock alerts for this part (pass user/ip for audit enrichment)
+        LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
         await _context.SaveChangesAsync();
 
         // Notifications: Low stock and Out of stock
@@ -167,6 +167,25 @@ public class StockTransactionsController : Controller
         {
             // swallow notification errors to avoid breaking stock workflow
         }
+
+        // Audit: Stock transaction created (best-effort)
+        try
+        {
+            var audit = new AuditLog
+            {
+                UserId = HttpContext.Session.GetInt32("UserID"),
+                TableName = "StockTransactions",
+                RecordId = stocktransaction.TransactionId,
+                ActionType = stocktransaction.TransactionType == "Stock In" ? "Stock Added" : (stocktransaction.TransactionType == "Stock Out" ? "Stock Removed" : "Stock Adjusted"),
+                OldValues = $"PartId={part.PartId};PartName={part.PartName};PreviousStock={stocktransaction.PreviousStock}",
+                NewValues = $"PartId={part.PartId};PartName={part.PartName};NewStock={stocktransaction.NewStock};Quantity={stocktransaction.Quantity};Ref={stocktransaction.ReferenceNumber}",
+                ActionDate = DateTime.Now,
+                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            };
+            _context.AuditLogs.Add(audit);
+            await _context.SaveChangesAsync();
+        }
+        catch { }
 
         TempData["Success"] = $"Stock transaction created successfully. {part.PartName}: {currentStock} → {stocktransaction.NewStock}";
         return RedirectToAction(nameof(Index));
@@ -245,9 +264,27 @@ public class StockTransactionsController : Controller
             _context.Update(part);
             _context.Update(existing);
             // synchronize low stock alerts for this part
-            LowStockAlertManager.SyncPart(_context, part.PartId);
+                        LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
             await _context.SaveChangesAsync();
             TempData["Success"] = "Transaction updated successfully.";
+                // Audit: Stock transaction updated (best-effort)
+                try
+                {
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "StockTransactions",
+                        RecordId = existing.TransactionId,
+                        ActionType = "Stock Transaction Updated",
+                        OldValues = $"PartId={part.PartId};PartName={part.PartName};OldQuantity={oldQty};OldNewStock={existing.NewStock - ((existing.TransactionType=="Stock Out")?-1:1)*(newQty-oldQty)}",
+                        NewValues = $"PartId={part.PartId};PartName={part.PartName};Quantity={existing.Quantity};NewStock={existing.NewStock};Remarks={existing.Remarks}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -301,16 +338,34 @@ public class StockTransactionsController : Controller
             }
 
             var part = await _context.Parts.FindAsync(stocktransaction.PartId);
-            if (part != null && stocktransaction.PreviousStock.HasValue)
+                if (part != null && stocktransaction.PreviousStock.HasValue)
             {
                 part.CurrentStock = stocktransaction.PreviousStock.Value;
                 _context.Update(part);
                 // synchronize low stock alerts for this part
-                LowStockAlertManager.SyncPart(_context, part.PartId);
+                    LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
             }
 
             _context.StockTransactions.Remove(stocktransaction);
             await _context.SaveChangesAsync();
+            // Audit: Stock transaction deleted (best-effort)
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "StockTransactions",
+                    RecordId = stocktransaction.TransactionId,
+                    ActionType = "Stock Transaction Deleted",
+                    OldValues = $"PartId={stocktransaction.PartId};PartName={(part!=null?part.PartName:"")};PreviousStock={stocktransaction.PreviousStock};NewStock={stocktransaction.NewStock};Quantity={stocktransaction.Quantity};Ref={stocktransaction.ReferenceNumber}",
+                    NewValues = null,
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             TempData["Success"] = "Transaction deleted successfully and stock reversed.";
         }
 

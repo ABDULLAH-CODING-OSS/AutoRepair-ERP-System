@@ -126,6 +126,26 @@ public class UserRolesController : Controller
             {
                 // swallow
             }
+            // Audit: Role Assigned (best-effort)
+            try
+            {
+                var user = await _context.Users.FindAsync(UserId.Value);
+                var role = await _context.Roles.FindAsync(RoleId.Value);
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "UserRoles",
+                    RecordId = userrole.UserRoleId,
+                    ActionType = "Role Assigned",
+                    OldValues = null,
+                    NewValues = $"User={(user!=null?user.FullName??user.Username:UserId.Value.ToString())};Role={(role!=null?role.RoleName:RoleId.Value.ToString())}",
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
             return RedirectToAction(nameof(Index));
         }
 
@@ -185,8 +205,32 @@ public class UserRolesController : Controller
                 existing.UserId = UserId.Value;
                 existing.RoleId = RoleId.Value;
 
+                var before = await _context.UserRoles.AsNoTracking().FirstOrDefaultAsync(ur => ur.UserRoleId == id);
                 _context.Update(existing);
                 await _context.SaveChangesAsync();
+                // Audit: Role Assignment Updated (best-effort)
+                try
+                {
+                    var user = await _context.Users.FindAsync(UserId.Value);
+                    var role = await _context.Roles.FindAsync(RoleId.Value);
+                    var oldVals = before != null ? $"UserId={before.UserId};RoleId={before.RoleId}" : null;
+                    var newVals = $"UserId={existing.UserId};RoleId={existing.RoleId}";
+                    var audit = new AuditLog
+                    {
+                        UserId = HttpContext.Session.GetInt32("UserID"),
+                        TableName = "UserRoles",
+                        RecordId = existing.UserRoleId,
+                        ActionType = "Role Assignment Updated",
+                        OldValues = oldVals,
+                        NewValues = $"User={(user!=null?user.FullName??user.Username:existing.UserId.ToString())};Role={(role!=null?role.RoleName:existing.RoleId.ToString())}",
+                        ActionDate = DateTime.Now,
+                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+                    _context.AuditLogs.Add(audit);
+                    await _context.SaveChangesAsync();
+                }
+                catch { }
+
                 TempData["Toast"] = "Assignment updated.";
                 TempData["ToastType"] = "success";
                 return RedirectToAction(nameof(Index));
@@ -254,6 +298,24 @@ public class UserRolesController : Controller
             {
                 // swallow
             }
+            // Audit: Role Removed (best-effort)
+            try
+            {
+                var audit = new AuditLog
+                {
+                    UserId = HttpContext.Session.GetInt32("UserID"),
+                    TableName = "UserRoles",
+                    RecordId = userrole.UserRoleId,
+                    ActionType = "Role Removed",
+                    OldValues = $"User={(user!=null?user.FullName??user.Username:userrole.UserId.ToString())};Role={(role!=null?role.RoleName:userrole.RoleId.ToString())}",
+                    NewValues = null,
+                    ActionDate = DateTime.Now,
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+                _context.AuditLogs.Add(audit);
+                await _context.SaveChangesAsync();
+            }
+            catch { }
         }
 
         return RedirectToAction(nameof(Index));
