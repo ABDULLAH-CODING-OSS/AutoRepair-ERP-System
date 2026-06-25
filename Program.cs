@@ -7,7 +7,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
+// API Swagger
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen();
+builder.Services.AddSession(options =>
+{
+    // Session timeout: 20 minutes for production, 1 minute for testing
+    options.IdleTimeout = TimeSpan.FromMinutes(20);  // PRODUCTION: 20 min | TESTING: 1 min
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddHttpContextAccessor();
 // Register SQL Server DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -52,6 +64,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+app.UseSwagger();
+
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -66,5 +81,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
+app.MapControllers();
 app.Run();

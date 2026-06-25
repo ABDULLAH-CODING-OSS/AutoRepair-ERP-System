@@ -154,6 +154,28 @@
 <!-- TOAST NOTIFICATION -->
 <div class="toast" id="toast"></div>
 
+<!-- SESSION EXPIRY WARNING MODAL -->
+<div id="session-expiry-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--card2);border:1px solid var(--border2);padding:32px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);max-width:420px;width:90%;font-family:inherit;text-align:center;">
+        <div style="font-size:28px;margin-bottom:12px;">⏰</div>
+        <div style="font-weight:700;font-size:18px;margin-bottom:12px;color:var(--gold);">Session Expiring Soon</div>
+        <div style="font-size:14px;margin-bottom:20px;color:var(--text2);">Your session will expire in <span id="countdown-timer" style="font-weight:700;color:var(--red);">0:30</span></div>
+
+        <div style="background:var(--card);border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:20px;font-size:13px;color:var(--text2);">
+            For security, your session expires after a period of inactivity. Click "Extend" to continue working.
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:center;">
+            <button id="extend-session-modal-btn" class="btn" style="padding:10px 20px;flex:1;cursor:pointer;border:none;border-radius:6px;background:var(--gold);color:var(--card2);font-weight:600;transition:all 0.2s ease;">
+                ✓ Extend Session
+            </button>
+            <button id="logout-session-modal-btn" class="btn-outline" style="padding:10px 20px;flex:1;cursor:pointer;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text);font-weight:600;transition:all 0.2s ease;">
+                🚪 Logout
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- LOGOUT FORM (hidden, submitted by JS) -->
 <form id="logoutForm" method="get" action="/Auth/Logout" style="display:none"></form>
 
@@ -183,6 +205,141 @@ if (typeof toggleMobileMenu === 'undefined') {
     document.body.style.overflow = '';
   };
 }
+
+// Session expiry and extend flow
+(function(){
+    // ========== CONFIGURATION ==========
+    // PRODUCTION: SESSION_TIMEOUT_MIN = 20, WARNING_PERCENT = 75 (warning at 15 min)
+    // TESTING:    SESSION_TIMEOUT_MIN = 1,  WARNING_PERCENT = 50 (warning at 30 sec)
+    // VIVA DEMO:  Adjust both values as needed
+
+    var SESSION_TIMEOUT_MIN = 20;     // PRODUCTION: 20 | TESTING: 1
+    var WARNING_PERCENT = 75;         // PRODUCTION: 75 (15 min) | TESTING: 50 (30 sec)
+    var WARNING_AFTER_MIN = (SESSION_TIMEOUT_MIN * WARNING_PERCENT) / 100;
+    var COUNTDOWN_SHOW_SEC = 30;      // Show countdown for last 30 seconds
+
+    // ========== STATE VARIABLES ==========
+    var warningTimerId = null;
+    var expiryTimerId = null;
+    var countdownTimerId = null;
+    var warningVisible = false;
+    var lastActivityTime = Date.now();
+
+    // ========== UTILITY FUNCTIONS ==========
+    function formatTime(sec) {
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function showWarning() {
+        var el = document.getElementById('session-expiry-modal');
+        if (!el) return;
+        el.style.display = 'flex';  // Use flex to center the modal
+        warningVisible = true;
+        startCountdown();
+    }
+
+    function hideWarning() {
+        var el = document.getElementById('session-expiry-modal');
+        if (!el) return;
+        el.style.display = 'none';
+        warningVisible = false;
+        if (countdownTimerId) clearInterval(countdownTimerId);
+    }
+
+    function startCountdown() {
+        var timeRemaining = SESSION_TIMEOUT_MIN * 60;
+        var countdownEl = document.getElementById('countdown-timer');
+
+        if (countdownTimerId) clearInterval(countdownTimerId);
+
+        var updateCountdown = function() {
+            if (countdownEl) {
+                countdownEl.textContent = formatTime(timeRemaining);
+            }
+            timeRemaining--;
+            if (timeRemaining < 0) {
+                clearInterval(countdownTimerId);
+            }
+        };
+
+        updateCountdown();
+        countdownTimerId = setInterval(updateCountdown, 1000);
+    }
+
+    function redirectToLogin() {
+        window.location.href = '/Auth/Login';
+    }
+
+    function scheduleTimers() {
+        // Clear old timers
+        if (warningTimerId) clearTimeout(warningTimerId);
+        if (expiryTimerId) clearTimeout(expiryTimerId);
+
+        // Schedule new timers
+        warningTimerId = setTimeout(function(){ showWarning(); }, WARNING_AFTER_MIN * 60 * 1000);
+        expiryTimerId = setTimeout(function(){ redirectToLogin(); }, SESSION_TIMEOUT_MIN * 60 * 1000);
+    }
+
+    // Extend session via page request (any action will reset session on server)
+    async function extendSession() {
+        try {
+            // Simple approach: fetch a page that will touch the session
+            var resp = await fetch('/Home/Index', { method: 'GET', credentials: 'include' });
+            if (resp.ok) {
+                lastActivityTime = Date.now();
+                hideWarning();
+                scheduleTimers();
+                showToast('✓ Session extended for another ' + SESSION_TIMEOUT_MIN + ' minute(s).');
+            } else {
+                showToast('⚠ Failed to extend session.');
+            }
+        } catch (e) {
+            console.error('Extend session error:', e);
+            showToast('⚠ Error extending session.');
+        }
+    }
+
+    function resetClientTimers() {
+        var now = Date.now();
+        // Only reset if at least 1 second has passed since last activity
+        if (now - lastActivityTime < 1000) return;
+
+        lastActivityTime = now;
+
+        // If warning is visible, don't reset because user is likely interacting with the modal
+        if (warningVisible) return;
+
+        scheduleTimers();
+    }
+
+    // ========== EVENT LISTENERS ==========
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(function(ev) {
+        window.addEventListener(ev, function(){ resetClientTimers(); }, { passive: true });
+    });
+
+    document.addEventListener('DOMContentLoaded', function(){
+        scheduleTimers();
+
+        var extBtn = document.getElementById('extend-session-modal-btn');
+        var logBtn = document.getElementById('logout-session-modal-btn');
+
+        if (extBtn) {
+            extBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                extendSession();
+            });
+        }
+
+        if (logBtn) {
+            logBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                logoutNow();
+            });
+        }
+    });
+})();
 </script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
