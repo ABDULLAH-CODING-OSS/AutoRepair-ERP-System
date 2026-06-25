@@ -1,0 +1,132 @@
+@model AutoRepairERD.Models.ViewModels.OwnerDashboardViewModel
+@{
+    ViewData["Title"] = "Owner Dashboard";
+    ViewData["ActiveNav"] = "owner-dash";
+    var maxRevenue = Model.RevenueTrend.Any() ? Model.RevenueTrend.Max(p => p.Value) : 0m;
+    var revenueChange = Model.RevenueLastMonth > 0
+        ? Math.Round(((Model.RevenueThisMonth - Model.RevenueLastMonth) / Model.RevenueLastMonth) * 100, 1)
+        : (decimal?)null;
+}
+
+@if (ViewData["UserRole"]?.ToString() == "Admin")
+{
+    <div style="background:linear-gradient(90deg,#2a1a00,#3a2500);border:1px solid var(--gold);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span style="font-size:13px;color:var(--gold)">👁 Admin Preview Mode — Viewing as <strong>Owner</strong></span>
+        <button class="btn-gold btn-sm" onclick="carTransition('/Dashboard/Admin','ADMIN PANEL')">← Back to Admin Panel</button>
+    </div>
+}
+
+@section TopbarActions {
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-gold btn-sm" onclick="carTransition('/JobOrders/Create','CREATE JOB ORDER')">+ New Job Order</button>
+  </div>
+}
+
+<div style="margin-bottom:10px"><p style="font-size:13px;color:var(--text2)">@DateTime.Now.ToString("dddd, dd MMM yyyy") — Welcome back, @(ViewData["UserName"] ?? "")</p></div>
+
+<div class="stats-grid stats-5" style="margin-bottom:20px">
+  <div class="stat-card sc-gold">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01"></path><path d="M18 12h.01"></path></svg></span></div>
+    <div class="stat-val" data-count="@((double)Model.RevenueThisMonth)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Revenue This Month</div>
+    @if (revenueChange.HasValue)
+    {
+        <div class="stat-change @(revenueChange >= 0 ? "up" : "dn")">@(revenueChange >= 0 ? "↑" : "↓") @Math.Abs(revenueChange.Value)% vs last month</div>
+    }
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.42A2 2 0 0 0 7 17.83V22"></path><path d="M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.42A2 2 0 0 0 17 6.17V2"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.ActiveJobOrders">0</div>
+    <div class="stat-lbl">Active Job Orders</div>
+    <div class="stat-change up">@Model.CompletedJobOrdersThisMonth completed this month</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.TotalCustomers">0</div>
+    <div class="stat-lbl">Total Customers</div>
+    <div class="stat-change up">@Model.TotalEmployees active staff</div>
+  </div>
+  <div class="stat-card sc-red" style="cursor:pointer" onclick="carTransition('/LowStockAlerts','LOW STOCK')">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.LowStockAlerts">0</div>
+    <div class="stat-lbl">Low Stock Parts</div>
+    <div class="stat-change dn">Click to view</div>
+  </div>
+  <div class="stat-card sc-red">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></span></div>
+    <div class="stat-val" data-count="@((double)Model.OutstandingBalance)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Outstanding Balance</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Recent Job Orders</span><button class="btn-outline btn-sm" onclick="carTransition('/JobOrders','JOB ORDERS')">View All</button></div>
+    <div class="table-wrap"><table class="erp-table">
+      <thead><tr><th>Job Number</th><th>Customer</th><th>Vehicle</th><th>Status</th><th>Final Cost</th></tr></thead>
+      <tbody>
+        @if (!Model.RecentJobOrders.Any())
+        {
+            <tr><td colspan="5" class="td-muted" style="text-align:center;padding:20px;">No job orders yet.</td></tr>
+        }
+        @foreach (var j in Model.RecentJobOrders)
+        {
+            <tr onclick="carTransition('/JobOrders/Details/@j.JobOrderId','JOB DETAIL')">
+                <td class="td-gold">@j.JobNumber</td>
+                <td>@j.Customer?.FirstName @j.Customer?.LastName</td>
+                <td>@j.Vehicle?.Make @j.Vehicle?.Model</td>
+                <td><span class="badge @BadgeHelper.Css(j.Status)">@j.Status</span></td>
+                <td>PKR @((j.FinalCost ?? j.EstimatedCost ?? 0).ToString("N0"))</td>
+            </tr>
+        }
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Recent Invoices</span><button class="btn-outline btn-sm" onclick="carTransition('/Invoices','INVOICES')">View All</button></div>
+    <div class="table-wrap"><table class="erp-table">
+      <thead><tr><th>Invoice #</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+      <tbody>
+        @if (!Model.RecentInvoices.Any())
+        {
+            <tr><td colspan="4" class="td-muted" style="text-align:center;padding:20px;">No invoices yet.</td></tr>
+        }
+        @foreach (var inv in Model.RecentInvoices)
+        {
+            <tr onclick="carTransition('/Invoices/Details/@inv.InvoiceId','INVOICE DETAIL')">
+                <td class="td-gold">@inv.InvoiceNumber</td>
+                <td>@inv.JobOrder?.Customer?.FirstName @inv.JobOrder?.Customer?.LastName</td>
+                <td>PKR @inv.GrandTotal.ToString("N0")</td>
+                <td><span class="badge @BadgeHelper.Css(inv.PaymentStatus)">@(inv.PaymentStatus ?? "Unpaid")</span></td>
+            </tr>
+        }
+      </tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">Revenue — Last 6 Months</span></div>
+    <div class="chart-bars">
+        @foreach (var p in Model.RevenueTrend)
+        {
+            var pct = maxRevenue > 0 ? Math.Round((double)(p.Value / maxRevenue) * 100, 1) : 0;
+            <div class="cbar-wrap">
+                <div class="cbar-val">@(p.Value >= 1000 ? $"{p.Value / 1000:0.#}k" : p.Value.ToString("0"))</div>
+                <div class="cbar" data-height="@(pct)%" style="background:var(--gold);height:5%"></div>
+                <div class="cbar-lbl">@p.Label</div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+    <div class="quick-actions-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Customers/Create','REGISTER CUSTOMER')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span></span><span style="font-size:12px">New Customer</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/JobOrders/Create','CREATE JOB ORDER')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span><span style="font-size:12px">New Job Order</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Invoices','INVOICES')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01"></path><path d="M18 12h.01"></path></svg></span></span><span style="font-size:12px">Invoices</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Attendances/Mark','MARK ATTENDANCE')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span><span style="font-size:12px">Mark Attendance</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Reports/Sales','SALES REPORT')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"></path><rect x="7" y="13" width="3" height="5"></rect><rect x="12" y="9" width="3" height="9"></rect><rect x="17" y="6" width="3" height="12"></rect></svg></span></span><span style="font-size:12px">Sales Report</span></button>
+    </div>
+</div>

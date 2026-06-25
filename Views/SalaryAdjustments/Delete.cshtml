@@ -1,26 +1,42 @@
 @model AutoRepairERD.Models.SalaryAdjustment
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Salary Adjustment";
 }
 
-<h1>Delete</h1>
+@section TopbarActions {
+  @if (Model.PayrollId != 0)
+  {
+    <a asp-controller="Payrolls" asp-action="Details" asp-route-payrollid="@Model.PayrollId" class="btn-outline btn-sm">← Back to Payroll</a>
+  }
+  else
+  {
+    <a asp-action="Details" asp-route-adjustmentid="@Model.AdjustmentId" class="btn-outline btn-sm">← Back</a>
+  }
+}
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Salary Adjustment</h4>
-    <hr />
-    <div class="alert alert-warning">Are you sure you want to cancel this salary adjustment? This will mark it as Cancelled and it will no longer affect payroll calculations.</div>
-    <div>
-        <p><strong>Employee:</strong> @((Model?.Payroll?.Employee != null) ? ((Model?.Payroll?.Employee?.EmployeeCode ?? "") + " - " + ((Model?.Payroll?.Employee?.FirstName ?? "") + " " + (Model?.Payroll?.Employee?.LastName ?? "")).Trim()) : "-")</p>
-        <p><strong>Payroll:</strong> @(Model?.Payroll?.PayrollNumber ?? "-")</p>
-        <p><strong>Type:</strong> @(Model?.AdjustmentType ?? "-")</p>
-        <p><strong>Amount:</strong> @String.Format("{0:C}", Model?.Amount ?? 0m)</p>
-        <p><strong>Reason:</strong> @(Model?.Reason ?? "-")</p>
+<div class="card">
+  <div class="card-header"><span class="card-title">Delete Salary Adjustment</span></div>
+  <div style="padding:16px">
+    <p style="margin-bottom:16px;color:var(--red)"><strong>⚠ Are you sure you want to delete this salary adjustment?</strong></p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Payroll</label>
+        <div class="td-muted">@(Model.Payroll != null ? Model.Payroll.PayrollNumber : Model.PayrollId.ToString())</div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Type</label>
+        <div class="td-gold">@Model.AdjustmentType</div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Amount</label>
+        <div>PKR @((Model.Amount ?? 0m).ToString("N2"))</div>
+      </div>
     </div>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="AdjustmentId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+    <form asp-action="Delete" asp-route-adjustmentid="@Model.AdjustmentId" method="post">
+      @Html.AntiForgeryToken()
+      <button type="submit" class="btn-outline btn-sm" style="color:var(--red);background:var(--red-dim)">Confirm Delete</button>
+      <a asp-action="Details" asp-route-adjustmentid="@Model.AdjustmentId" class="btn-outline btn-sm" style="margin-left:8px">Cancel</a>
     </form>
+  </div>
 </div>

@@ -1,39 +1,26 @@
 @model IEnumerable<AutoRepairERD.Models.Category>
+@{ ViewData["Title"] = "Categories"; ViewData["ActiveNav"] = "categories"; }
 
-@{
-    ViewData["Title"] = "Categories";
-}
+@section TopbarActions { <a asp-action="Create" class="btn-gold btn-sm">+ Add Category</a> }
 
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Categories</h1>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-  </div>
-
-  <div class="card">
-    <div class="card-body p-0">
-      <table class="table mb-0 table-striped">
-        <thead class="table-light">
+<div class="card">
+  <div class="card-header"><span class="card-title">Part Categories (@Model.Count())</span></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Category Name</th><th>Description</th><th>Parts</th><th></th></tr></thead>
+    <tbody>
+      @if (!Model.Any()) { <tr><td colspan="4" class="td-muted" style="text-align:center;padding:24px">No categories yet.</td></tr> }
+      @foreach (var c in Model)
+      {
           <tr>
-            <th>@Html.DisplayNameFor(m => m.CategoryName)</th>
-            <th>@Html.DisplayNameFor(m => m.Description)</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model) {
-          <tr>
-            <td>@Html.DisplayFor(_ => item.CategoryName)</td>
-            <td>@Html.DisplayFor(_ => item.Description)</td>
-            <td class="text-end">
-              <a asp-action="Edit" asp-route-id="@item.CategoryId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-              <a asp-action="Details" asp-route-id="@item.CategoryId" class="btn btn-sm btn-outline-secondary me-1">Details</a>
-              <a asp-action="Delete" asp-route-id="@item.CategoryId" class="btn btn-sm btn-outline-danger">Delete</a>
+            <td class="td-gold">@c.CategoryName</td>
+            <td class="td-muted">@c.Description</td>
+            <td><span class="badge badge-neutral">@c.Parts.Count</span></td>
+            <td style="white-space:nowrap">
+              <a asp-action="Edit" asp-route-id="@c.CategoryId" class="btn-outline btn-sm">Edit</a>
+              <a asp-action="Delete" asp-route-id="@c.CategoryId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
             </td>
           </tr>
-        }
-        </tbody>
-      </table>
-    </div>
-  </div>
+      }
+    </tbody>
+  </table></div>
 </div>

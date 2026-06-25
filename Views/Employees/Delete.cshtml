@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Deactivate Employee</h4>
 
         <p>Are you sure you want to deactivate this employee?</p>
@@ -24,11 +24,11 @@
             <dd class="col-sm-9">
                 @if (Model.IsActive == true)
                 {
-                    <span class="badge bg-success">Active</span>
+                    <span class="badge badge-active">Active</span>
                 }
                 else
                 {
-                    <span class="badge bg-secondary">Inactive</span>
+                    <span class="badge badge-neutral">Inactive</span>
                 }
             </dd>
         </dl>
@@ -36,8 +36,8 @@
         <form asp-action="Delete" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="EmployeeId" />
-            <div class="d-flex">
-                <button type="submit" class="btn btn-warning">Deactivate Employee</button>
+            <div style="display:flex">
+                <button type="submit" class="btn-gold btn-sm">Deactivate Employee</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

@@ -5,9 +5,9 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h5 class="card-title">@Model.Title</h5>
-        <p class="text-muted">Type: <span class="badge bg-secondary">@Model.NotificationType</span></p>
+        <p class="td-muted">Type: <span class="badge badge-neutral">@Model.NotificationType</span></p>
         <p>@Model.Message</p>
         <dl class="row">
             <dt class="col-sm-3">Recipient</dt>
@@ -20,17 +20,17 @@
             <dd class="col-sm-9">
                 @if (Model.IsRead == true)
                 {
-                    <span class="badge bg-secondary">Read</span>
+                    <span class="badge badge-neutral">Read</span>
                 }
                 else
                 {
-                    <span class="badge bg-primary">Unread</span>
+                    <span class="badge badge-ordered">Unread</span>
                 }
             </dd>
         </dl>
 
-        <div class="mt-3">
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <div style="margin-top:12px">
+            <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
         </div>
     </div>
 </div>

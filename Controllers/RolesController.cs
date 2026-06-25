@@ -3,8 +3,6 @@ using AutoRepairERD.Filters;
 using AutoRepairERD.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-[RoleAuthorize("Admin")]
-
 [RoleAuthorize("Admin","Owner")]
 public class RolesController : Controller
 {
@@ -91,29 +89,6 @@ public class RolesController : Controller
         {
             _context.Add(role);
             await _context.SaveChangesAsync();
-
-            // Audit: Role Created (best-effort, do not block)
-            try
-            {
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Roles",
-                    RecordId = role.RoleId,
-                    ActionType = "Role Created",
-                    OldValues = null,
-                    NewValues = $"RoleName={role.RoleName};Description={role.Description}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch
-            {
-                // Swallow audit exceptions so role creation is not blocked
-            }
-
             TempData["Toast"] = "Role created.";
             TempData["ToastType"] = "success";
             return RedirectToAction(nameof(Index));
@@ -157,37 +132,11 @@ public class RolesController : Controller
                 var existing = await _context.Roles.FindAsync(id);
                 if (existing == null) return NotFound();
 
-                // Capture old values for audit
-                var oldRoleName = existing.RoleName;
-                var oldDescription = existing.Description;
-
                 existing.RoleName = role.RoleName;
                 existing.Description = role.Description;
 
                 _context.Update(existing);
                 await _context.SaveChangesAsync();
-
-                // Audit: Role Updated (best-effort)
-                try
-                {
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Roles",
-                        RecordId = existing.RoleId,
-                        ActionType = "Role Updated",
-                        OldValues = $"RoleName={oldRoleName};Description={oldDescription}",
-                        NewValues = $"RoleName={existing.RoleName};Description={existing.Description}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch
-                {
-                    // Swallow audit exceptions
-                }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -244,34 +193,8 @@ public class RolesController : Controller
             return RedirectToAction(nameof(Delete), new { id });
         }
 
-        // Capture friendly values before delete
-        var roleName = role.RoleName;
-        var roleDesc = role.Description;
-
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
-
-        // Audit: Role Deleted (best-effort)
-        try
-        {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Roles",
-                RecordId = role.RoleId,
-                ActionType = "Role Deleted",
-                OldValues = $"RoleName={roleName};Description={roleDesc}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch
-        {
-            // Swallow audit exceptions so delete is not blocked
-        }
 
         TempData["Toast"] = "Role deleted.";
         TempData["ToastType"] = "success";

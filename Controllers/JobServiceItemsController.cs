@@ -75,9 +75,10 @@ public class JobServiceItemsController : Controller
             "ServiceName");
 
         ViewBag.Mechanics = new SelectList(
-            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            _context.Employees.Where(e => e.Designation == "Mechanic" && e.IsActive == true).OrderBy(e => e.FirstName).ThenBy(e => e.LastName)
+            .Select(e => new { e.EmployeeId, Text = e.FirstName + " " + e.LastName + (string.IsNullOrEmpty(e.Phone) ? "" : " (" + e.Phone + ")") }),
             "EmployeeId",
-            "FirstName");
+            "Text");
 
         // If a job was preselected via querystring, detect its mechanic and set readonly flag
         var jobIdStr = HttpContext.Request.Query["jobId"].FirstOrDefault();
@@ -158,9 +159,10 @@ public class JobServiceItemsController : Controller
             jobserviceitem.ServiceId);
 
         ViewBag.Mechanics = new SelectList(
-            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            _context.Employees.Where(e => e.Designation == "Mechanic" && e.IsActive == true).OrderBy(e => e.FirstName).ThenBy(e => e.LastName)
+            .Select(e => new { e.EmployeeId, Text = e.FirstName + " " + e.LastName + (string.IsNullOrEmpty(e.Phone) ? "" : " (" + e.Phone + ")") }),
             "EmployeeId",
-            "FirstName",
+            "Text",
             jobserviceitem.MechanicId);
         // If the item already has mechanic or its parent job has mechanic, mark view to render mechanic as readonly
         ViewBag.ReadonlyMechanic = jobserviceitem.MechanicId.HasValue || (jobserviceitem.JobOrder != null && jobserviceitem.JobOrder.MechanicId.HasValue);
@@ -190,6 +192,16 @@ public class JobServiceItemsController : Controller
         {
             return NotFound();
         }
+
+        // Check if job is completed or invoiced - prevent editing
+        if (jobserviceitem.JobOrder != null && 
+            (jobserviceitem.JobOrder.Status == "Completed" || jobserviceitem.JobOrder.Status == "Invoiced"))
+        {
+            TempData["Toast"] = "Cannot edit service items from completed or invoiced jobs.";
+            TempData["ToastType"] = "danger";
+            return RedirectToAction("Details", "JobOrders", new { id = jobserviceitem.JobOrderId });
+        }
+
         ViewBag.JobOrders = new SelectList(
     _context.JobOrders.Where(j => j.Status != "Completed" && j.Status != "Cancelled"),
     "JobOrderId",
@@ -202,9 +214,10 @@ public class JobServiceItemsController : Controller
             "ServiceName",
             jobserviceitem.ServiceId);
         ViewBag.Mechanics = new SelectList(
-            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            _context.Employees.Where(e => e.Designation == "Mechanic" && e.IsActive == true).OrderBy(e => e.FirstName).ThenBy(e => e.LastName)
+            .Select(e => new { e.EmployeeId, Text = e.FirstName + " " + e.LastName + (string.IsNullOrEmpty(e.Phone) ? "" : " (" + e.Phone + ")") }),
             "EmployeeId",
-            "FirstName",
+            "Text",
             jobserviceitem.MechanicId);
 
         // Ensure we always check the parent job for assigned mechanic and set readonly flag accordingly
@@ -287,9 +300,10 @@ public class JobServiceItemsController : Controller
             jobserviceitem.ServiceId);
 
         ViewBag.Mechanics = new SelectList(
-            _context.Employees.Where(e => e.Designation == "Mechanic"),
+            _context.Employees.Where(e => e.Designation == "Mechanic" && e.IsActive == true).OrderBy(e => e.FirstName).ThenBy(e => e.LastName)
+            .Select(e => new { e.EmployeeId, Text = e.FirstName + " " + e.LastName + (string.IsNullOrEmpty(e.Phone) ? "" : " (" + e.Phone + ")") }),
             "EmployeeId",
-            "FirstName",
+            "Text",
             jobserviceitem.MechanicId);
         return View(jobserviceitem);
     }
@@ -320,9 +334,21 @@ public class JobServiceItemsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var jobserviceitem = await _context.JobServiceItems.FindAsync(id);
+        var jobserviceitem = await _context.JobServiceItems
+            .Include(j => j.JobOrder)
+            .FirstOrDefaultAsync(m => m.JobServiceItemId == id);
+
         if (jobserviceitem != null)
         {
+            // Check if job is completed or invoiced - prevent deletion
+            if (jobserviceitem.JobOrder != null && 
+                (jobserviceitem.JobOrder.Status == "Completed" || jobserviceitem.JobOrder.Status == "Invoiced"))
+            {
+                TempData["Toast"] = "Cannot delete service items from completed or invoiced jobs.";
+                TempData["ToastType"] = "danger";
+                return RedirectToAction("Details", "JobOrders", new { id = jobserviceitem.JobOrderId });
+            }
+
             _context.JobServiceItems.Remove(jobserviceitem);
         }
 

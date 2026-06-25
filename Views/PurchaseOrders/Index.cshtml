@@ -1,52 +1,33 @@
 @model IEnumerable<AutoRepairERD.Models.PurchaseOrder>
+@{ ViewData["Title"] = "Purchase Orders"; ViewData["ActiveNav"] = "purchase-orders"; }
 
-@{
-    ViewData["Title"] = "Index";
-}
+@section TopbarActions { <a asp-action="Create" class="btn-gold btn-sm">+ New PO</a> }
 
 <div class="card">
-    <div class="card-body">
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Error"]</div>
-        }
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="card-title mb-0">Purchase Orders</h3>
-            <a class="btn btn-primary" asp-action="Create">Create Purchase Order</a>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Supplier</th>
-                        <th>Order Date</th>
-                        <th>Expected Delivery Date</th>
-                        <th>Status</th>
-                        <th class="text-end">Purchase Total</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@(item.Supplier?.CompanyName ?? "-")</td>
-                            <td>@(item.OrderDate?.ToString("yyyy-MM-dd") ?? "-")</td>
-                            <td>@(item.ExpectedDeliveryDate?.ToString("yyyy-MM-dd") ?? "-")</td>
-                            <td>
-                                <span class="badge bg-secondary">@item.Status</span>
-                            </td>
-                            <td class="text-end">@String.Format("{0:C}", item.TotalAmount ?? 0m)</td>
-                            <td>
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.PurchaseOrderId">Edit</a>
-                                <a class="btn btn-sm btn-outline-secondary ms-1" asp-action="Details" asp-route-id="@item.PurchaseOrderId">Details</a>
-                                <a class="btn btn-sm btn-outline-danger ms-1" asp-action="Delete" asp-route-id="@item.PurchaseOrderId">Delete</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+  <div class="card-header"><span class="card-title">Purchase Orders (@Model.Count())</span></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>PO #</th><th>Supplier</th><th>Order Date</th><th>Expected</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      @if (!Model.Any()) { <tr><td colspan="8" class="td-muted" style="text-align:center;padding:24px">No purchase orders yet.</td></tr> }
+      @foreach (var po in Model)
+      {
+          <tr onclick="carTransition('/PurchaseOrders/Details/@po.PurchaseOrderId','PO DETAIL')">
+            <td class="td-gold">#@po.PurchaseOrderId</td>
+            <td>@po.Supplier?.CompanyName</td>
+            <td class="td-muted">@(po.OrderDate?.ToString("MMM d, yyyy"))</td>
+            <td class="td-muted">@(po.ExpectedDeliveryDate?.ToString("MMM d, yyyy"))</td>
+            <td><span class="badge badge-neutral">@po.PurchaseOrderItems.Count</span></td>
+            <td>PKR @(po.TotalAmount?.ToString("N0") ?? "—")</td>
+            <td><span class="badge @BadgeHelper.Css(po.Status)">@(po.Status ?? "Ordered")</span></td>
+            <td style="white-space:nowrap">
+              <a asp-action="Details" asp-route-id="@po.PurchaseOrderId" class="btn-outline btn-sm">View</a>
+              @if (po.Status != "Received" && po.Status != "Cancelled")
+              {
+                  <a asp-action="Receive" asp-route-id="@po.PurchaseOrderId" class="btn-gold btn-sm">Receive</a>
+              }
+            </td>
+          </tr>
+      }
+    </tbody>
+  </table></div>
 </div>

@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class CategoriesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public CategoriesController(ApplicationDbContext context)
+    public CategoriesController(ApplicationDbContext context, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
+        _auditService = auditService;
     }
 
     // GET: CATEGORYS
@@ -55,24 +57,10 @@ public class CategoriesController : Controller
         {
             _context.Add(category);
             await _context.SaveChangesAsync();
-            // Audit: Category Created (best-effort)
-            try
-            {
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Categories",
-                    RecordId = category.CategoryId,
-                    ActionType = "Category Created",
-                    OldValues = null,
-                    NewValues = $"CategoryName={category.CategoryName};Description={category.Description}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch { }
+
+            // Audit log
+            await _auditService.LogCreateAsync("Categories", category.CategoryId, category.CategoryName);
+
             return RedirectToAction(nameof(Index));
         }
         return View(category);
@@ -110,27 +98,11 @@ public class CategoriesController : Controller
         {
             try
             {
-                var existing = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == category.CategoryId);
                 _context.Update(category);
                 await _context.SaveChangesAsync();
-                // Audit: Category Updated (best-effort)
-                try
-                {
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Categories",
-                        RecordId = category.CategoryId,
-                        ActionType = "Category Updated",
-                        OldValues = existing != null ? $"CategoryName={existing.CategoryName};Description={existing.Description}" : null,
-                        NewValues = $"CategoryName={category.CategoryName};Description={category.Description}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Categories", category.CategoryId, null, category.CategoryName);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -174,28 +146,18 @@ public class CategoriesController : Controller
         var category = await _context.Categories.FindAsync(id);
         if (category != null)
         {
+            var categoryName = category.CategoryName;
             _context.Categories.Remove(category);
-        }
+            await _context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
-        // Audit: Category Deleted (best-effort)
-        try
+            // Audit log
+            await _auditService.LogDeleteAsync("Categories", (int)id, categoryName);
+        }
+        else
         {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Categories",
-                RecordId = category.CategoryId,
-                ActionType = "Category Deleted",
-                OldValues = $"CategoryName={category.CategoryName};Description={category.Description}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
             await _context.SaveChangesAsync();
         }
-        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

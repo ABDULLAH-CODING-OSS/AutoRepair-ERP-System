@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Delete Role</h4>
         <p>Are you sure you want to delete this role?</p>
 
@@ -22,15 +22,15 @@
 
         @if ((ViewBag.AssignedCount ?? 0) > 0)
         {
-            <div class="alert alert-warning">This role is assigned to users and cannot be deleted.</div>
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <div style="background:var(--orange-dim);border:1px solid rgba(245,181,56,0.3);border-radius:8px;padding:12px;color:var(--orange);font-size:13px;margin-bottom:12px">This role is assigned to users and cannot be deleted.</div>
+            <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
         }
         else
         {
             <form asp-action="Delete" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="RoleId" />
-                <button type="submit" class="btn btn-danger">Delete Role</button>
+                <button type="submit" class="btn-danger btn-sm">Delete Role</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </form>
         }

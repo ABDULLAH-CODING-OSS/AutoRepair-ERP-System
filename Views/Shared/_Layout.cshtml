@@ -1,32 +1,189 @@
-﻿<!DOCTYPE html>
+@using Microsoft.EntityFrameworkCore
+@inject AutoRepairERD.Models.ApplicationDbContext DbContext
+@{
+    var sessionUserId = Context.Session.GetInt32("UserID");
+    var sessionUsername = Context.Session.GetString("Username") ?? "";
+    var sessionRole = Context.Session.GetString("RoleName") ?? "";
+
+    string displayName = sessionUsername;
+    string initials = "AU";
+
+    if (sessionUserId.HasValue)
+    {
+        var emp = await DbContext.Employees
+            .AsNoTracking()
+            .Where(e => e.UserId == sessionUserId.Value)
+            .Select(e => new { e.FirstName, e.LastName })
+            .FirstOrDefaultAsync();
+
+        if (emp != null)
+        {
+            displayName = $"{emp.FirstName} {emp.LastName}".Trim();
+            var first = string.IsNullOrEmpty(emp.FirstName) ? "" : emp.FirstName.Substring(0, 1);
+            var last = string.IsNullOrEmpty(emp.LastName) ? "" : emp.LastName.Substring(0, 1);
+            var combined = (first + last).ToUpperInvariant();
+            if (!string.IsNullOrEmpty(combined)) initials = combined;
+        }
+        else if (!string.IsNullOrEmpty(sessionUsername))
+        {
+            initials = sessionUsername.Length >= 2 ? sessionUsername.Substring(0, 2).ToUpperInvariant() : sessionUsername.ToUpperInvariant();
+        }
+    }
+
+    ViewData["UserName"] = string.IsNullOrWhiteSpace(displayName) ? "Auto User" : displayName;
+    ViewData["UserInitials"] = initials;
+    ViewData["UserRole"] = string.IsNullOrEmpty(sessionRole) ? "Owner" : sessionRole;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AutoRepairERD</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/AutoRepairERD.styles.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>@ViewData["Title"] — AutoRepair ERP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        @await Html.PartialAsync("_Nav")
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+<input type="hidden" id="current-user-role" value="@(ViewData["UserRole"])">
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - AutoRepairERD - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+<!-- MOBILE TOPBAR -->
+<div class="mobile-topbar" id="mobile-topbar">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open navigation">☰</button>
+  <span class="mobile-brand-name" id="mob-page-title">@(ViewData["Title"] ?? "AutoRepair ERP")</span>
+  <div class="mobile-user-avatar" id="mob-avatar">@(ViewData["UserInitials"])</div>
+</div>
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<!-- CAR TRANSITION OVERLAY -->
+<div id="car-overlay">
+    <div class="dest-label" id="dest-label">LOADING</div>
+    <div id="car-svg-wrap">
+        <svg width="300" height="110" viewBox="0 0 300 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 65 L-10 52 L-10 78 Z" fill="#f5b538" opacity="0.25"/>
+            <rect x="15" y="52" width="270" height="42" rx="6" fill="#192840"/>
+            <path d="M70 52 L90 22 L220 22 L240 52 Z" fill="#142032" stroke="#254060" stroke-width="1"/>
+            <path d="M98 48 L110 28 L168 28 L168 48 Z" fill="#1a3a5c" opacity="0.8"/>
+            <path d="M175 48 L175 28 L212 28 L222 48 Z" fill="#1a3a5c" opacity="0.8"/>
+            <ellipse cx="22" cy="68" rx="7" ry="5" fill="#f5b538" opacity="0.95"/>
+            <ellipse cx="20" cy="68" rx="3" ry="2.5" fill="#fff" opacity="0.8"/>
+            <rect x="280" y="58" width="7" height="13" rx="2" fill="#f04f4f" opacity="0.9"/>
+            <circle cx="80" cy="94" r="16" fill="#0d1520" stroke="#254060" stroke-width="2"/>
+            <circle cx="80" cy="94" r="9" fill="#192840"/>
+            <circle cx="80" cy="94" r="4" fill="#f5b538"/>
+            <circle cx="220" cy="94" r="16" fill="#0d1520" stroke="#254060" stroke-width="2"/>
+            <circle cx="220" cy="94" r="9" fill="#192840"/>
+            <circle cx="220" cy="94" r="4" fill="#f5b538"/>
+            <line x1="150" y1="52" x2="150" y2="94" stroke="#254060" stroke-width="1"/>
+            <rect x="15" y="93" width="270" height="2" rx="1" fill="#f5b538" opacity="0.2"/>
+        </svg>
+    </div>
+    <div class="rev-bars">
+        <div class="rev-bar"></div>
+        <div class="rev-bar"></div>
+        <div class="rev-bar"></div>
+        <div class="rev-bar"></div>
+        <div class="rev-bar"></div>
+    </div>
+</div>
+
+<!-- APP LAYOUT -->
+<div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand" style="position:relative;">
+            <div class="sb-logo">🔧</div>
+            <div class="sb-brand-name">AutoRepair ERP</div>
+            <div class="sb-brand-sub">Workshop Management Suite</div>
+            <button class="sidebar-close-btn" onclick="closeMobileMenu()" aria-label="Close menu">✕</button>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+        <nav class="sidebar-nav">
+            @await Html.PartialAsync("_SidebarNav")
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-chip">
+                <div class="user-avatar">@(ViewData["UserInitials"])</div>
+                <div class="user-info">
+                    <p>@(ViewData["UserName"])</p>
+                    <span>@(ViewData["UserRole"])</span>
+                </div>
+            </div>
+            <!-- Logout with car transition animation -->
+            <button onclick="logoutNow()" class="btn-outline btn-sm btn-full"
+                    style="margin-top:12px;justify-content:center;display:flex;cursor:pointer;width:100%;background:transparent;border:1px solid var(--border2);color:var(--text2)">
+                🚪 Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="topbar">
+            <div style="flex:1">
+                <div class="topbar-title">@ViewData["Title"]</div>
+                @if (ViewData["TopbarSub"] != null)
+                {
+                    <div class="topbar-sub">@ViewData["TopbarSub"]</div>
+                }
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                @await Component.InvokeAsync("NotificationBell")
+                @await RenderSectionAsync("TopbarActions", required: false)
+            </div>
+        </div>
+        @{
+            var flashSuccess = TempData["Toast"] as string;
+            var flashError = TempData["Error"] as string;
+        }
+        <div class="page-content">
+            @if (!string.IsNullOrEmpty(flashSuccess))
+            {
+                <div class="card" style="border-color:var(--green);background:var(--green-dim);margin-bottom:16px;padding:12px 16px;color:var(--green);font-size:13px;font-weight:600;">@flashSuccess</div>
+            }
+            @if (!string.IsNullOrEmpty(flashError))
+            {
+                <div class="card" style="border-color:var(--red);background:var(--red-dim);margin-bottom:16px;padding:12px 16px;color:var(--red);font-size:13px;font-weight:600;">@flashError</div>
+            }
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGOUT FORM (hidden, submitted by JS) -->
+<form id="logoutForm" method="get" action="/Auth/Logout" style="display:none"></form>
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script>
+function logoutNow() {
+    var overlay = document.getElementById('car-overlay');
+    var label   = document.getElementById('dest-label');
+    if (label)   label.textContent = 'LOGGING OUT';
+    if (overlay) overlay.classList.add('show');
+    setTimeout(function(){ document.getElementById('logoutForm').submit(); }, 900);
+}
+// Mobile menu — also defined in site.js; this ensures it works even if site.js loads late
+if (typeof toggleMobileMenu === 'undefined') {
+  window.toggleMobileMenu = function() {
+    var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
+    if (!s) return;
+    var open = s.classList.contains('drawer-open');
+    s.classList.toggle('drawer-open', !open);
+    if (o) o.classList.toggle('visible', !open);
+    document.body.style.overflow = open ? '' : 'hidden';
+  };
+  window.closeMobileMenu = function() {
+    var s = document.querySelector('.sidebar'), o = document.getElementById('sidebar-overlay');
+    if (s) s.classList.remove('drawer-open');
+    if (o) o.classList.remove('visible');
+    document.body.style.overflow = '';
+  };
+}
+</script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

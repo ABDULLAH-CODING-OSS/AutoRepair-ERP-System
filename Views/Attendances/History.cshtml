@@ -1,0 +1,77 @@
+@model IEnumerable<AutoRepairERD.Models.Attendance>
+@{
+    ViewData["Title"] = "My Attendance History";
+    ViewData["ActiveNav"] = "att-history";
+    var employee = ViewBag.Employee as AutoRepairERD.Models.Employee;
+    var m = (int)ViewBag.Month;
+    var y = (int)ViewBag.Year;
+    var present = (int)ViewBag.PresentCount;
+    var absent  = (int)ViewBag.AbsentCount;
+    var leave   = (int)ViewBag.LeaveCount;
+    var monthName = new DateTime(y, m, 1).ToString("MMMM yyyy");
+}
+
+@section TopbarActions {
+  <form method="get" style="display:flex;gap:8px;align-items:center">
+    <select name="month" class="form-control" style="width:130px;padding:7px 10px">
+      @for (int i = 1; i <= 12; i++)
+      {
+                <option value="@i" selected="@(i == m)">@(new DateTime(2000, i, 1).ToString("MMMM"))</option>
+      }
+    </select>
+    <input type="number" name="year" value="@y" min="2020" max="@(DateTime.Now.Year)" class="form-control" style="width:90px;padding:7px 10px">
+    <button type="submit" class="btn-gold btn-sm">Go</button>
+  </form>
+}
+
+<div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:14px">
+  <div style="width:44px;height:44px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#0d1520;flex-shrink:0">
+    @(employee?.FirstName?[0])@(employee?.LastName?[0])
+  </div>
+  <div>
+    <div style="font-weight:700;font-size:15px">@employee?.FirstName @employee?.LastName</div>
+    <div class="td-muted" style="font-size:12px">@monthName</div>
+  </div>
+</div>
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-green">
+    <div class="stat-val" data-count="@present">0</div>
+    <div class="stat-lbl">Days Present</div>
+  </div>
+  <div class="stat-card sc-red">
+    <div class="stat-val" data-count="@absent">0</div>
+    <div class="stat-lbl">Days Absent</div>
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-val" data-count="@leave">0</div>
+    <div class="stat-lbl">Days Leave / Sick</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Attendance Log — @monthName</span></div>
+  @if (!Model.Any())
+  {
+      <p class="td-muted" style="padding:20px;text-align:center">No attendance records for @monthName.</p>
+  }
+  else
+  {
+      <div class="table-wrap"><table class="erp-table">
+        <thead><tr><th>Date</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Overtime</th><th>Notes</th></tr></thead>
+        <tbody>
+          @foreach (var a in Model)
+          {
+              <tr>
+                  <td>@(a.AttendanceDate?.ToString("ddd, MMM d") ?? "—")</td>
+                  <td><span class="badge @BadgeHelper.Css(a.Status)">@a.Status</span></td>
+                  <td>@(a.CheckInTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                  <td>@(a.CheckOutTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                  <td>@(a.OvertimeHours > 0 ? $"{a.OvertimeHours:0.##}h" : "—")</td>
+                  <td class="td-muted" style="font-size:12px">@a.Notes</td>
+              </tr>
+          }
+        </tbody>
+      </table></div>
+  }
+</div>

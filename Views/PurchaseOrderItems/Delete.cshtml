@@ -5,20 +5,20 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Delete Purchase Order Item</h4>
 
         @* If the parent purchase order is received, block delete and show only that message. *@
         @if (Model.PurchaseOrder?.Status == "Received")
         {
-            <div class="alert alert-warning">This purchase order has already been received. Items can no longer be deleted.</div>
-            <div class="mb-3">
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <div style="background:var(--orange-dim);border:1px solid rgba(245,181,56,0.3);border-radius:8px;padding:12px;color:var(--orange);font-size:13px;margin-bottom:12px">This purchase order has already been received. Items can no longer be deleted.</div>
+            <div style="margin-bottom:12px">
+                <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
             </div>
         }
         else
         {
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <h5>Purchase Order Item Summary</h5>
                 <dl class="row">
                     <dt class="col-sm-3">Purchase Order</dt>
@@ -41,8 +41,8 @@
             <form asp-action="Delete" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="PoitemId" />
-                <div class="d-flex">
-                    <button type="submit" class="btn btn-danger">Delete Item</button>
+                <div style="display:flex">
+                    <button type="submit" class="btn-danger btn-sm">Delete Item</button>
                     <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
                 </div>
             </form>

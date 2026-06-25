@@ -5,9 +5,9 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Delete Alert</h4>
-        <p class="text-danger">Are you sure you want to delete this low stock alert?</p>
+        <p style="color:var(--red)">Are you sure you want to delete this low stock alert?</p>
 
         <dl class="row">
             <dt class="col-sm-3">Part</dt>
@@ -19,7 +19,7 @@
 
         <form asp-action="Delete" method="post">
             <input type="hidden" asp-for="AlertId" />
-            <button type="submit" class="btn btn-danger">Delete</button>
+            <button type="submit" class="btn-danger btn-sm">Delete</button>
             <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
         </form>
     </div>

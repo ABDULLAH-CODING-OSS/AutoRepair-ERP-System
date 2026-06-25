@@ -16,6 +16,9 @@ public partial class Supplier
     [Unicode(false)]
     public string CompanyName { get; set; } = null!;
 
+    // Alias used by views
+    public string? SupplierName => CompanyName;
+
     [StringLength(100)]
     [Unicode(false)]
     public string? ContactPerson { get; set; }
@@ -26,6 +29,7 @@ public partial class Supplier
 
     [StringLength(100)]
     [Unicode(false)]
+    [EmailAddress]
     public string? Email { get; set; }
 
     [StringLength(255)]

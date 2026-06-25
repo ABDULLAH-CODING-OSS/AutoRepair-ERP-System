@@ -1,65 +1,161 @@
-﻿@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">
-        @ViewBag.Error
-    </div>
-}
 @model AutoRepairERD.ViewModels.LoginViewModel
-
-@{
-    ViewData["Title"] = "Login";
+@{ Layout = null; ViewData["Title"] = "Login"; }
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AutoRepair ERP — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css"/><style>
+/* ── VIDEO BACKGROUND ── */
+.login-video-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
 }
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-
-            <div class="card">
-                <div class="card-header text-center">
-                    <h3>AutoRepair ERP Login</h3>
-                </div>
-
-                <div class="card-body">
-
-                    <form asp-action="Login" method="post">
-
-                        @if (Model.Roles != null && Model.Roles.Count > 0)
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">Select Role</label>
-                                <select asp-for="SelectedRoleId" class="form-select">
-                                    <option value="">-- Select role --</option>
-                                    @foreach (var r in Model.Roles)
-                                    {
-                                        <option value="@r.Item1">@r.Item2</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
-                            </div>
-                        }
-
-
-                        <div class="mb-3">
-                            <label asp-for="Username" class="form-label"></label>
-                            <input asp-for="Username" class="form-control" />
-                            <span asp-validation-for="Username" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            Login
-                        </button>
-
-                    </form>
-
-                </div>
-            </div>
-
-        </div>
-    </div>
+.login-video-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(8,14,26,0.82) 0%, rgba(8,14,26,0.55) 100%);
+  z-index: 1;
+}
+body { background: #050a14 !important; }
+.login-page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  background: transparent !important;
+}
+.login-left {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+  border-right: none !important;
+}
+.login-left::before { display: none !important; }
+.login-right {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+}
+.login-card {
+  background: rgba(13,21,38,0.82) !important;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(245,181,56,0.18) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55) !important;
+}
+@@media (max-width: 768px) {
+  .login-page   { flex-direction: column; min-height: 100vh; }
+  .login-left   { width: 100%; padding: 28px 22px 24px; min-height: unset; }
+  .login-left h1{ font-size: 24px !important; }
+  .login-right  { padding: 16px 14px 32px; flex: 1; }
+  .login-card   { max-width: 100%; padding: 24px 18px; }
+  .feature-list { display: none; }
+}
+@@media (max-width: 480px) {
+  .login-left   { padding: 22px 16px 18px; }
+  .login-left h1{ font-size: 20px !important; }
+  .login-card   { padding: 20px 14px; }
+}
+</style>
+</head><body>
+<video class="login-video-bg" autoplay muted loop playsinline preload="auto" poster="/videos/mechanic-bg-poster.jpg">
+  <source src="/videos/mechanic-bg.mp4" type="video/mp4">
+</video>
+<div class="login-video-overlay"></div>
+<div id="car-overlay"><div class="dest-label" id="dest-label">LOADING</div>
+<div id="car-svg-wrap"><svg width="300" height="110" viewBox="0 0 300 110" fill="none">
+<rect x="15" y="52" width="270" height="42" rx="6" fill="#192840"/>
+<path d="M70 52 L90 22 L220 22 L240 52 Z" fill="#142032" stroke="#254060" stroke-width="1"/>
+<path d="M98 48 L110 28 L168 28 L168 48 Z" fill="#1a3a5c" opacity="0.8"/>
+<path d="M175 48 L175 28 L212 28 L222 48 Z" fill="#1a3a5c" opacity="0.8"/>
+<ellipse cx="22" cy="68" rx="7" ry="5" fill="#f5b538"/>
+<rect x="280" y="58" width="7" height="13" rx="2" fill="#f04f4f"/>
+<circle cx="80" cy="94" r="16" fill="#0d1520" stroke="#254060" stroke-width="2"/>
+<circle cx="80" cy="94" r="4" fill="#f5b538"/>
+<circle cx="220" cy="94" r="16" fill="#0d1520" stroke="#254060" stroke-width="2"/>
+<circle cx="220" cy="94" r="4" fill="#f5b538"/>
+</svg></div>
+<div class="rev-bars"><div class="rev-bar"></div><div class="rev-bar"></div><div class="rev-bar"></div><div class="rev-bar"></div><div class="rev-bar"></div></div>
 </div>
+
+<div class="login-page">
+  <div class="login-left">
+    <div style="width:46px;height:46px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px" class="login-logo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#0d1526" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></div>
+    <h2 style="font-size:18px;color:var(--gold);margin-bottom:4px;font-family:'Syne',sans-serif">AutoRepair ERP</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:32px">Workshop Management Suite</p>
+    <h1 style="font-size:36px;font-weight:800;line-height:1.2;margin-bottom:14px;font-family:'Syne',sans-serif">Manage Your<br>Workshop <span style="color:var(--gold)">Smarter.</span></h1>
+    <p style="font-size:14px;color:var(--text2);line-height:1.8">From customer intake to final payment — everything in one powerful platform.</p>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-dot"></div>Real-time Parts Inventory &amp; Low-Stock Alerts</div>
+      <div class="feature-item"><div class="feature-dot"></div>Job Order Lifecycle: Pending → Completed</div>
+      <div class="feature-item"><div class="feature-dot"></div>Purchase Orders with Automatic Stock Receiving</div>
+      <div class="feature-item"><div class="feature-dot"></div>Role-based: Owner · Admin · Advisor · Mechanic</div>
+      <div class="feature-item"><div class="feature-dot"></div>Attendance Tracking, Payroll &amp; Audit Log</div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <h1 style="font-size:22px;font-weight:800;margin-bottom:6px;font-family:'Syne',sans-serif">Welcome Back 👋</h1>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:26px">Sign in to your AutoRepair account</p>
+
+      @if (ViewBag.Error != null)
+      {
+          <div style="background:var(--red-dim);border:1px solid rgba(240,79,79,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--red)">
+              ❌ @ViewBag.Error
+          </div>
+      }
+      @if (!ViewData.ModelState.IsValid)
+      {
+          <div style="background:var(--red-dim);border:1px solid rgba(240,79,79,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--red)">
+              <div asp-validation-summary="All"></div>
+          </div>
+      }
+
+      <form asp-action="Login" asp-controller="Auth" method="post">
+        <div class="form-group">
+            <label class="form-label" asp-for="Username">Username</label>
+            <input asp-for="Username" class="form-control" placeholder="Enter your username" autofocus />
+        </div>
+        <div class="form-group">
+            <label class="form-label" asp-for="Password">Password</label>
+            <input asp-for="Password" class="form-control" placeholder="Enter your password" />
+        </div>
+
+        @if (Model.Roles != null && Model.Roles.Count > 0)
+        {
+            <div class="form-group">
+                <label class="form-label">Login As</label>
+                <select asp-for="SelectedRoleId" class="form-control">
+                    <option value="">-- Select role --</option>
+                    @foreach (var r in Model.Roles)
+                    {
+                        <option value="@r.Item1">@r.Item2</option>
+                    }
+                </select>
+                <p style="font-size:11px;color:var(--text3);margin-top:4px;">This account has more than one role assigned — choose which one to use for this session.</p>
+            </div>
+        }
+
+        <button type="submit" class="btn-gold btn-full" style="padding:13px;font-size:15px;margin-top:6px;justify-content:center">Sign In →</button>
+      </form>
+
+      <!-- Credentials hint box -->
+      <div style="margin-top:20px;padding:14px;background:var(--card2);border-radius:10px;border:1px solid var(--border)">
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Demo Credentials</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2)">
+          <div style="display:flex;justify-content:space-between"><span>Owner</span><span style="color:var(--text3)">owner / Passw0rd!</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Admin</span><span style="color:var(--text3)">admin / Passw0rd!</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Service Advisor</span><span style="color:var(--text3)">advisor / Passw0rd!</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Mechanic</span><span style="color:var(--text3)">mechanic / Passw0rd!</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/site.js"></script>
+</body></html>

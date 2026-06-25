@@ -1,46 +1,50 @@
 @model IEnumerable<AutoRepairERD.Models.Payroll>
+@{ ViewData["Title"] = "Payrolls"; ViewData["ActiveNav"] = "payrolls"; }
 
-@{
-    ViewData["Title"] = "Index";
+@section TopbarActions {
+  <a asp-action="Generate" class="btn-gold btn-sm">⚙ Generate Payroll</a>
 }
 
-<h1>Payrolls</h1>
-
-<p>
-    <a asp-action="Generate" class="btn btn-primary">Generate Payroll</a>
-</p>
-
-<table class="table table-striped table-responsive">
-    <thead>
-        <tr>
-            <th>Payroll Number</th>
-            <th>Employee Code</th>
-            <th>Employee Name</th>
-            <th>Period</th>
-            <th class="text-end">Gross</th>
-            <th class="text-end">Net</th>
-            <th>Status</th>
-            <th>Payment Date</th>
-            <th></th>
-        </tr>
-    </thead>
+<div class="card">
+  <div class="card-header"><span class="card-title">Payroll Records (@Model.Count())</span></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Payroll #</th><th>Employee</th><th>Period</th><th>Present Days</th><th>Net Salary</th><th>Status</th><th></th></tr></thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>@item.PayrollNumber</td>
-            <td>@(item.Employee?.EmployeeCode ?? "")</td>
-            <td>@(item.Employee != null ? (item.Employee.FirstName + " " + (item.Employee.LastName ?? "")).Trim() : "Unknown")</td>
-            <td>@(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(item.PayrollMonth ?? 0) + " " + (item.PayrollYear?.ToString() ?? ""))</td>
-            <td class="text-end">@String.Format("{0:C}", item.GrossSalary)</td>
-            <td class="text-end">@String.Format("{0:C}", item.NetSalary)</td>
-            <td>@item.PayrollStatus</td>
-            <td>@(item.PaymentDate.HasValue ? item.PaymentDate.Value.ToString("d") : "")</td>
-            <td>
-                <a asp-action="Edit" asp-route-payrollid="@item.PayrollId">Edit</a> |
-                <a asp-action="Details" asp-route-payrollid="@item.PayrollId">Details</a> |
-                <a asp-action="Delete" asp-route-payrollid="@item.PayrollId">Cancel</a>
-            </td>
-        </tr>
+      @if (!Model.Any()) { <tr><td colspan="7" class="td-muted" style="text-align:center;padding:24px">No payroll records yet. Use ⚙ Generate Payroll to create one.</td></tr> }
+      @foreach (var p in Model)
+      {
+          @* <tr onclick="carTransition('/Payrolls/Details/@p.PayrollId','PAYROLL DETAIL')"> *@
+              <tr onclick="carTransition('/Payrolls/Details?payrollid=@p.PayrollId','PAYROLL DETAIL')">
+            <td class="td-gold">@p.PayrollNumber</td>
+            <td>@p.Employee?.FirstName @p.Employee?.LastName</td>
+            <td>@(new System.Globalization.CultureInfo("en-US").DateTimeFormat.GetAbbreviatedMonthName(p.PayrollMonth ?? 1)) @p.PayrollYear</td>
+            <td>@p.TotalPresentDays / @p.TotalWorkingDays days</td>
+            <td><strong>PKR @(p.NetSalary?.ToString("N0") ?? "—")</strong></td>
+            <td><span class="badge @BadgeHelper.Css(p.PayrollStatus)">@(p.PayrollStatus ?? "Generated")</span></td>
+            <td style="white-space:nowrap">
+              <a asp-action="Details" asp-route-payrollid="@p.PayrollId" class="btn-outline btn-sm">View</a>
+              @* <a asp-action="MarkPaid" asp-route-payrollid="@p.PayrollId" class="btn-gold btn-sm" style="@(p.PayrollStatus == "Paid" ? "display:none" : "")">Mark Paid</a> *@
+              @if (p.PayrollStatus != "Paid")
+{
+    <form asp-action="MarkPaid"
+          asp-route-payrollid="@p.PayrollId"
+          method="post"
+          style="display:inline;"
+          onclick="event.stopPropagation();">
+
+        @Html.AntiForgeryToken()
+
+        <button type="submit"
+                class="btn-gold btn-sm"
+                onclick="event.stopPropagation();">
+            Mark Paid
+        </button>
+
+    </form>
 }
+            </td>
+          </tr>
+      }
     </tbody>
-</table>
+  </table></div>
+</div>

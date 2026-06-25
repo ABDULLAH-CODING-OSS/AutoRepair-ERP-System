@@ -1,71 +1,54 @@
 @model IEnumerable<AutoRepairERD.Models.SalaryAdjustment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Salary Adjustments";
 }
 
-<h1>Index</h1>
+@section TopbarActions {
+  @if (ViewBag.PayrollId != null && ViewBag.PayrollId > 0)
+  {
+    <a asp-controller="Payrolls" asp-action="Details" asp-route-payrollid="@ViewBag.PayrollId" class="btn-outline btn-sm">← Back to Payroll</a>
+  }
+  <a asp-action="Create" asp-route-payrollId="@(ViewBag.PayrollId ?? 0)" class="btn-gold btn-sm">+ Add Adjustment</a>
+  @if (ViewBag.PayrollId == null || ViewBag.PayrollId == 0)
+  {
+    <a asp-action="Index" class="btn-outline btn-sm">All Adjustments</a>
+  }
+}
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-</p>
-<div class="mb-3">
-    <form method="get" class="row g-2">
-        <div class="col-auto">
-            <input type="text" name="q" placeholder="Search" class="form-control" />
-        </div>
-        <div class="col-auto">
-            <select name="type" class="form-control">
-                <option value="">All Types</option>
-                <option>Bonus</option>
-                <option>Allowance</option>
-                <option>Deduction</option>
-                <option>Penalty</option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <select name="status" class="form-control">
-                <option value="">Any Status</option>
-                <option>Active</option>
-                <option>Cancelled</option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-secondary">Filter</button>
-        </div>
-    </form>
-</div>
-<table class="table">
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Salary Adjustments (@Model.Count())</span>
+    @if (ViewBag.PayrollLabel != null) { <span style="margin-left:12px" class="td-muted">@ViewBag.PayrollLabel</span> }
+  </div>
+  <div class="table-wrap"><table class="erp-table">
     <thead>
         <tr>
-            <th>Adjustment Type</th>
+            <th>Payroll</th>
+            <th>Type</th>
             <th>Amount</th>
             <th>Reason</th>
-            <th>Employee Code</th>
-            <th>Employee Name</th>
-            <th>Payroll Number</th>
-            <th>Payroll Period</th>
-            <th>Status</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
+@if (!Model.Any())
+{
+    <tr><td colspan="5" class="td-muted" style="text-align:center;padding:20px">No salary adjustments found.</td></tr>
+}
 @foreach (var item in Model) {
         <tr>
-            <td>@item.AdjustmentType</td>
-            <td>@String.Format("{0:C}", item.Amount ?? 0m)</td>
-            <td>@item.Reason</td>
-            <td>@(item?.Payroll?.Employee?.EmployeeCode ?? "")</td>
-            <td>@(item?.Payroll?.Employee != null ? (item.Payroll.Employee.FirstName + " " + (item.Payroll.Employee.LastName ?? "")).Trim() : "")</td>
-            <td>@(item?.Payroll?.PayrollNumber ?? "")</td>
-            <td>@(item?.Payroll?.PayrollMonth != null ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(item.Payroll.PayrollMonth ?? 0) + " " + (item?.Payroll?.PayrollYear?.ToString() ?? "") : "")</td>
-            <td>@(item.IsActive == false || item.AdjustmentStatus == "Cancelled" ? "Cancelled" : (item.AdjustmentStatus ?? "Active"))</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AdjustmentId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AdjustmentId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AdjustmentId">Delete</a>
+            <td class="td-muted">@(item.Payroll != null ? item.Payroll.PayrollNumber : item.PayrollId.ToString())</td>
+            <td class="td-gold">@item.AdjustmentType</td>
+            <td>PKR @((item.Amount ?? 0m).ToString("N2"))</td>
+            <td class="td-muted">@item.Reason</td>
+            <td style="white-space:nowrap">
+                <a asp-action="Edit" asp-route-adjustmentid="@item.AdjustmentId" class="btn-outline btn-sm">Edit</a>
+                <a asp-action="Details" asp-route-adjustmentid="@item.AdjustmentId" class="btn-outline btn-sm">View</a>
+                <a asp-action="Delete" asp-route-adjustmentid="@item.AdjustmentId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
             </td>
         </tr>
 }
     </tbody>
-</table>
+  </table></div>
+</div>

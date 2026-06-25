@@ -229,34 +229,63 @@ namespace AutoRepairERD.Services
             var jobBonus = completedJobsCount * 100m;
 
             // Aggregate salary adjustments linked to this payroll
-            var adjustments = await _context.SalaryAdjustments
-                .Where(sa => sa.PayrollId == existingPayroll.PayrollId && (sa.IsActive == null || sa.IsActive == true) && (sa.AdjustmentStatus == null || sa.AdjustmentStatus != "Cancelled"))
-                .ToListAsync();
+            var adjustments = await _context.SalaryAdjustments.Where(sa => sa.PayrollId == existingPayroll.PayrollId).ToListAsync();
+            //var salaryAdjustmentsTotal = adjustments.Sum(a => a.Amount ?? 0m);
+            decimal bonus = 0m;
+            decimal allowance = 0m;
+            decimal deduction = 0m;
+            decimal penalty = 0m;
 
-            // Separate adjustments by type and apply ERP rules:
-            // Bonus and Allowance increase salary, Deduction and Penalty decrease salary
-            var bonusTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Bonus", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
-            var allowanceTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Allowance", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
-            var deductionTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Deduction", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
-            var penaltyTotal = adjustments.Where(a => string.Equals(a.AdjustmentType, "Penalty", StringComparison.OrdinalIgnoreCase)).Sum(a => a.Amount ?? 0m);
+            foreach (var adjustment in adjustments)
+            {
+                var amount = adjustment.Amount ?? 0m;
 
-            var salaryAdjustmentsTotal = bonusTotal + allowanceTotal - deductionTotal - penaltyTotal;
+                switch (adjustment.AdjustmentType?.Trim())
+                {
+                    case "Bonus":
+                        bonus += amount;
+                        break;
 
+                    case "Allowance":
+                        allowance += amount;
+                        break;
+
+                    case "Deduction":
+                        deduction += amount;
+                        break;
+
+                    case "Penalty":
+                        penalty += amount;
+                        break;
+                }
+            }
             var basicSalary = employee.BasicSalary ?? 0m;
             var dailyRate = requiredWorkingDays > 0 ? decimal.Divide(basicSalary, requiredWorkingDays) : 0m;
             var attendanceDeduction = dailyRate * totalAbsentDays;
 
-            // Gross salary: base + job bonus + positive adjustments + overtime
-            var grossSalary = basicSalary + jobBonus + bonusTotal + allowanceTotal + overtimePay;
-            var netSalary = grossSalary - attendanceDeduction - deductionTotal - penaltyTotal;
+            //var grossSalary = basicSalary + jobBonus + salaryAdjustmentsTotal + overtimePay;
+            //var netSalary = grossSalary - attendanceDeduction;
+            var grossSalary =
+    basicSalary
+    + overtimePay
+    + jobBonus
+    + bonus
+    + allowance;
 
+            var netSalary =
+                grossSalary
+                - attendanceDeduction
+                - deduction
+                - penalty;
             if (netSalary < 0) return new PayrollCalculationResult { Success = false, Error = "Calculated net salary is negative. Please review adjustments." };
 
             existingPayroll.TotalWorkingDays = requiredWorkingDays;
             existingPayroll.TotalPresentDays = presentCount;
             existingPayroll.OvertimeHours = overtimeHours;
-            existingPayroll.BonusAmount = jobBonus;
-            existingPayroll.DeductionAmount = attendanceDeduction;
+            //existingPayroll.BonusAmount = jobBonus;
+            //existingPayroll.DeductionAmount = attendanceDeduction;
+            existingPayroll.BonusAmount = jobBonus + bonus + allowance;
+            existingPayroll.DeductionAmount = attendanceDeduction + deduction + penalty;
             existingPayroll.GrossSalary = grossSalary;
             existingPayroll.NetSalary = netSalary;
 

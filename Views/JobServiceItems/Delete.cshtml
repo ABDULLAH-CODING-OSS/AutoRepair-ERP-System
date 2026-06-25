@@ -8,15 +8,15 @@
     <div class="card-header bg-warning text-dark">
         <h5 class="mb-0">Confirm Delete</h5>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
         <p>Are you sure you want to delete the following service item?</p>
-        <div class="row">
-            <div class="col-md-8">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Job:</strong> @(Model?.JobOrder?.JobNumber ?? Model?.JobOrderId.ToString())</p>
                 <p><strong>Service:</strong> @(Model?.Service?.ServiceName ?? "-")</p>
                 <p><strong>Mechanic:</strong> @(Model?.Mechanic != null ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-")</p>
             </div>
-            <div class="col-md-4 text-end">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Hours:</strong> @(Model?.HoursWorked?.ToString() ?? "-")</p>
                 <p><strong>Price:</strong> @((Model != null && Model.ServicePrice.HasValue) ? Model.ServicePrice.Value.ToString("C") : "-")</p>
             </div>
@@ -25,7 +25,7 @@
     <div class="card-footer">
         <form asp-action="Delete" method="post" class="d-inline">
             <input type="hidden" asp-for="JobServiceItemId" />
-            <button type="submit" class="btn btn-danger">Delete</button>
+            <button type="submit" class="btn-danger btn-sm">Delete</button>
         </form>
         <a class="btn btn-secondary ms-2" asp-action="Index">Cancel</a>
     </div>

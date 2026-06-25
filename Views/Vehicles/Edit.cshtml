@@ -1,113 +1,39 @@
 @model AutoRepairERD.Models.Vehicle
+@{ ViewData["Title"] = "Edit Vehicle"; ViewData["ActiveNav"] = "vehicles"; }
 
-@{
-    ViewData["Title"] = "Edit";
-}
+@section TopbarActions { <a asp-action="Details" asp-route-id="@Model.VehicleId" class="btn-outline btn-sm">← Back</a> }
 
-<h1>Edit</h1>
-
-<h4>Vehicle</h4>
-<hr />
-<div class="container py-4">
-  <div class="card">
-    <div class="card-header">
-      <h2>Edit Vehicle</h2>
+<div class="card" style="max-width:640px">
+  <div class="card-header"><span class="card-title">Edit — @Model.Make @Model.Model (@Model.LicensePlate)</span></div>
+  <form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="VehicleId" />
+    <input type="hidden" asp-for="CreatedByUserId" />
+    <div asp-validation-summary="ModelOnly" style="color:var(--red);font-size:13px;margin-bottom:10px"></div>
+    <div class="form-group">
+      <label class="form-label">Owner</label>
+      <input type="hidden" asp-for="CustomerId" />
+      <input class="form-control" type="text" value="@((Model.Customer != null) ? (Model.Customer.FirstName + (string.IsNullOrEmpty(Model.Customer.LastName) ? "" : " " + Model.Customer.LastName) + " (" + Model.Customer.Phone + ")") : "Unknown")" readonly />
     </div>
-    <div class="card-body">
-      <form asp-action="Edit" asp-route-id="@Model.VehicleId" method="post">
-        @* <div asp-validation-summary="All" class="text-danger mb-3"></div> *@
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        @* @if (TempData["VehicleEditErrors"] != null)
-        {
-            <div class="alert alert-warning">@TempData["VehicleEditErrors"]</div>
-        } *@
-
-        <input type="hidden" asp-for="VehicleId" />
-
-        <!-- Customer owner is read-only on Edit: preserve CustomerId hidden field and display customer name as plain text -->
-                <div class="mb-3">
-                    <label class="form-label">Vehicle Owner</label>
-
-                    <input type="text"
-                           class="form-control"
-                           value="@(Model.Customer != null ? $"{Model.Customer.FirstName} {Model.Customer.LastName}" : "Owner Information Unavailable")"
-                           readonly />
-                </div>
-
-                <input type="hidden" asp-for="CustomerId" />
-     
-        @* <div class="mb-3">
-          <label class="form-label">Customer</label>
-          <p class="form-control-plaintext">@((Model?.Customer != null) ? $"{Model.Customer.FirstName} {Model.Customer.LastName}".Trim() : (Model?.CustomerId.ToString() ?? ""))</p>
-          <div class="text-danger"><span asp-validation-for="CustomerId"></span></div>
-        </div> *@
-
-        <div class="mb-3">
-          <label asp-for="LicensePlate" class="form-label"></label>
-          <input asp-for="LicensePlate" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="LicensePlate"></span></div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="Vin" class="form-label"></label>
-          <input asp-for="Vin" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="Vin"></span></div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label asp-for="Make" class="form-label"></label>
-            <input asp-for="Make" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Make"></span></div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label asp-for="Model" class="form-label"></label>
-            <input asp-for="Model" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Model"></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4 mb-3">
-            <label asp-for="ManufacturingYear" class="form-label"></label>
-            <input asp-for="ManufacturingYear" type="number" min="1886" max="2100" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="ManufacturingYear"></span></div>
-          </div>
-          <div class="col-md-4 mb-3">
-            <label asp-for="Color" class="form-label"></label>
-            <input asp-for="Color" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Color"></span></div>
-          </div>
-          <div class="col-md-4 mb-3">
-            <label asp-for="Mileage" class="form-label"></label>
-            <input asp-for="Mileage" type="number" min="0" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Mileage"></span></div>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="EngineNumber" class="form-label"></label>
-          <input asp-for="EngineNumber" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="EngineNumber"></span></div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="Notes" class="form-label"></label>
-          <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
-          <div class="text-danger"><span asp-validation-for="Notes"></span></div>
-        </div>
-
-        <!-- Removed navigation/collection fields: CreatedByUserId, CreatedByUser, JobOrders. These are relationship properties and are managed separately. -->
-
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-        </div>
-      </form>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="LicensePlate" class="form-label"></label><input asp-for="LicensePlate" class="form-control" /></div>
+      <div class="form-group"><label asp-for="Vin" class="form-label"></label><input asp-for="Vin" class="form-control" /></div>
     </div>
-  </div>
+    <div class="form-row-3">
+      <div class="form-group"><label asp-for="Make" class="form-label"></label><input asp-for="Make" class="form-control" /></div>
+      <div class="form-group"><label asp-for="Model" class="form-label"></label><input asp-for="Model" class="form-control" /></div>
+      <div class="form-group"><label asp-for="ManufacturingYear" class="form-label"></label><input asp-for="ManufacturingYear" class="form-control" type="number" /></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="Color" class="form-label"></label><input asp-for="Color" class="form-control" /></div>
+      <div class="form-group"><label asp-for="Mileage" class="form-label"></label><input asp-for="Mileage" class="form-control" type="number" /></div>
+    </div>
+    <div class="form-group"><label asp-for="EngineNumber" class="form-label"></label><input asp-for="EngineNumber" class="form-control" /></div>
+    <div class="form-group"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="2"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button type="submit" class="btn-gold">Save Changes</button>
+      <a asp-action="Details" asp-route-id="@Model.VehicleId" class="btn-outline btn-sm">Cancel</a>
+    </div>
+  </form>
 </div>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

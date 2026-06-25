@@ -1,72 +1,158 @@
 @model AutoRepairERD.Models.AuditLog
 
 @{
-    ViewData["Title"] = "Audit Details";
-
-    string FormatKeyValueRows(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw)) return "N/A";
-        // Expect format: key1=val1;key2=val2;...
-        var parts = raw.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        var sb = new System.Text.StringBuilder();
-        foreach (var p in parts)
-        {
-            var kv = p.Split('=', 2);
-            var k = kv.Length > 0 ? kv[0] : "";
-            var v = kv.Length > 1 ? kv[1] : "";
-            sb.Append($"<div><strong>{System.Net.WebUtility.HtmlEncode(k)}</strong>: {System.Net.WebUtility.HtmlEncode(v)}</div>");
-        }
-        return sb.ToString();
-    }
+    ViewData["Title"] = "Audit Log Details";
+    ViewData["ActiveNav"] = "audit";
 }
 
-<h1>Audit Details</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Audit Information</h5>
-                <p><strong>Action:</strong> @(Model?.ActionType ?? "N/A")</p>
-                <p><strong>Module:</strong> @(Model?.TableName ?? "N/A")</p>
-                <p><strong>Record ID:</strong> @(Model?.RecordId?.ToString() ?? "N/A")</p>
-                <p><strong>Date/Time:</strong> @(Model?.ActionDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</p>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">User Information</h5>
-                <p><strong>User:</strong> @(Model?.User?.Username ?? "System")</p>
-                <p><strong>Role:</strong> @(Model?.User != null ? (Model.User.UserRoles?.FirstOrDefault()?.Role?.RoleName ?? "System") : "System")</p>
-            </div>
-        </div>
+<div class="card">
+    <div class="card-header">
+        <span class="card-title"><i class="fa fa-file-alt"></i> Audit Log Details</span>
     </div>
 
-    <div class="col-md-6">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Change Information</h5>
-                <div>
-                    <h6>Old Values</h6>
-                    @Html.Raw(FormatKeyValueRows(Model?.OldValues))
+    <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 6px;">
+        <!-- User Information Section -->
+        <div>
+            <div style="background: var(--card2); padding: 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--gold);">
+                <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    <label class="form-label" style="margin-bottom: 0; color: var(--gold);"><i class="fa fa-user-circle"></i> User Information</label>
                 </div>
-                <div class="mt-3">
-                    <h6>New Values</h6>
-                    @Html.Raw(FormatKeyValueRows(Model?.NewValues))
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">User ID:</span>
+                    <span style="color: var(--text); font-weight: 600;">@Model.UserId</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Username:</span>
+                    <span style="color: var(--text); font-weight: 600;">@(Model.User?.Username ?? "System")</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.User?.FullName))
+                {
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                        <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Full Name:</span>
+                        <span style="color: var(--text);">@Model.User.FullName</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Ipaddress))
+                {
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                        <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">IP Address:</span>
+                        <span style="color: var(--text); font-family: monospace; font-size: 0.9rem;">@Model.Ipaddress</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Action Information Section -->
+        <div>
+            <div style="background: var(--card2); padding: 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--gold);">
+                <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    <label class="form-label" style="margin-bottom: 0; color: var(--gold);"><i class="fa fa-tasks"></i> Action Summary</label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Table:</span>
+                    <span style="color: var(--text);">@Model.TableName</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Record ID:</span>
+                    <span style="color: var(--text); font-weight: 600;">#@Model.RecordId</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Action Type:</span>
+                    <span>
+                        @{
+                            string badgeStyle = Model.ActionType switch
+                            {
+                                "Create" => "color: var(--green); background: var(--green-dim); border: 1px solid rgba(46, 212, 122, 0.3);",
+                                "Update" => "color: var(--gold); background: rgba(245, 181, 56, 0.12); border: 1px solid rgba(245, 181, 56, 0.3);",
+                                "Delete" => "color: var(--red); background: var(--red-dim); border: 1px solid rgba(240, 79, 79, 0.3);",
+                                "Deactivate" => "color: var(--red); background: var(--red-dim); border: 1px solid rgba(240, 79, 79, 0.3);",
+                                "Activate" => "color: var(--green); background: var(--green-dim); border: 1px solid rgba(46, 212, 122, 0.3);",
+                                "Payment Received" => "color: var(--blue); background: var(--blue-dim); border: 1px solid rgba(64, 144, 245, 0.3);",
+                                "Cancelled" => "color: var(--orange); background: var(--orange-dim); border: 1px solid rgba(245, 133, 58, 0.3);",
+                                _ => "color: var(--text2); background: transparent; border: 1px solid var(--border);"
+                            };
+                            string iconClass = Model.ActionType switch
+                            {
+                                "Create" => "fa-plus-circle",
+                                "Update" => "fa-edit",
+                                "Delete" => "fa-trash",
+                                "Deactivate" => "fa-ban",
+                                "Activate" => "fa-check-circle",
+                                "Payment Received" => "fa-money-bill",
+                                "Cancelled" => "fa-times-circle",
+                                _ => "fa-cog"
+                            };
+                        }
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); @badgeStyle font-size: 0.85rem; font-weight: 600;">
+                            <i class="fa @iconClass"></i> @Model.ActionType
+                        </span>
+                    </span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                    <span style="font-weight: 600; color: var(--text2); min-width: 120px; font-size: 0.9rem;">Timestamp:</span>
+                    <div>
+                        <div style="color: var(--text); font-weight: 600;">@(Model.ActionDate?.ToString("MMM dd, yyyy") ?? "N/A")</div>
+                        <div style="color: var(--text2); font-size: 0.85rem;">@(Model.ActionDate?.ToString("HH:mm:ss") ?? "")</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Technical Information</h5>
-                <p><strong>IP Address:</strong> <small class="text-muted">@(Model?.Ipaddress ?? "N/A")</small></p>
+        <!-- Change Details Section -->
+        @if (!string.IsNullOrEmpty(Model.OldValues) || !string.IsNullOrEmpty(Model.NewValues))
+        {
+            <div>
+                <div style="background: var(--card2); padding: 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--gold); margin-top: 8px;">
+                    <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                        <label class="form-label" style="margin-bottom: 0; color: var(--gold);"><i class="fa fa-exchange-alt"></i> Change Details</label>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: @(string.IsNullOrEmpty(Model.OldValues) || string.IsNullOrEmpty(Model.NewValues) ? "1fr" : "1fr 1fr"); gap: 16px;">
+                        @if (!string.IsNullOrEmpty(Model.OldValues))
+                        {
+                            <div style="border-radius: var(--radius-sm); padding: 14px; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--red);">
+                                <h6 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; color: var(--text); display: flex; align-items: center; gap: 8px; margin: 0 0 10px 0;">
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; color: var(--red); background: var(--red-dim); border: 1px solid rgba(240, 79, 79, 0.3); font-size: 0.75rem;">
+                                        <i class="fa fa-arrow-left"></i> Before
+                                    </span>
+                                </h6>
+                                <pre style="background: var(--bg); padding: 10px; border-radius: 4px; font-size: 0.8rem; color: var(--text); border: 1px solid var(--border); word-wrap: break-word; white-space: pre-wrap; margin: 0; max-height: 250px; overflow-y: auto; font-family: 'Courier New', monospace;">@Model.OldValues</pre>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.NewValues))
+                        {
+                            <div style="border-radius: var(--radius-sm); padding: 14px; background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--green);">
+                                <h6 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; color: var(--text); display: flex; align-items: center; gap: 8px; margin: 0 0 10px 0;">
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; color: var(--green); background: var(--green-dim); border: 1px solid rgba(46, 212, 122, 0.3); font-size: 0.75rem;">
+                                        <i class="fa fa-arrow-right"></i> After
+                                    </span>
+                                </h6>
+                                <pre style="background: var(--bg); padding: 10px; border-radius: 4px; font-size: 0.8rem; color: var(--text); border: 1px solid var(--border); word-wrap: break-word; white-space: pre-wrap; margin: 0; max-height: 250px; overflow-y: auto; font-family: 'Courier New', monospace;">@Model.NewValues</pre>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <div style="background: var(--blue-dim); border: 1px solid rgba(64, 144, 245, 0.3); padding: 12px 14px; border-radius: var(--radius-sm); color: var(--text);">
+                <i class="fa fa-info-circle" style="color: var(--blue); margin-right: 8px;"></i>
+                <strong>No change details recorded</strong> for this action.
+            </div>
+        }
     </div>
 </div>
 
-<div class="mt-3">
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-    </div>
+<div style="margin-top: 20px;">
+    <a asp-action="Index" class="btn-outline btn-sm"><i class="fa fa-arrow-left"></i> Back to Audit Logs</a>
+</div>

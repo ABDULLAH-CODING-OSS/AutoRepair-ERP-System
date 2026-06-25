@@ -39,6 +39,11 @@ public partial class Attendance
     [Display(Name = "Status")]
     public string? Status { get; set; }
 
+    [StringLength(500)]
+    [Unicode(false)]
+    [Display(Name = "Notes")]
+    public string? Notes { get; set; }
+
     [ForeignKey("EmployeeId")]
     [InverseProperty("Attendances")]
     public virtual Employee Employee { get; set; } = null!;

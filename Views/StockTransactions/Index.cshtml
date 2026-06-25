@@ -1,87 +1,27 @@
 @model IEnumerable<AutoRepairERD.Models.StockTransaction>
+@{ ViewData["Title"] = "Stock Transactions"; ViewData["ActiveNav"] = "stock-transactions"; }
 
-@{
-    ViewData["Title"] = "Stock Transactions";
-}
+@section TopbarActions { <a asp-action="Create" class="btn-gold btn-sm">+ New Transaction</a> }
 
 <div class="card">
-    <div class="card-body">
-        <div class="d-flex justify-content-between mb-3">
-            <h4 class="card-title">Stock Transactions</h4>
-            <a class="btn btn-primary" asp-action="Create">New Transaction</a>
-        </div>
-
-        <form method="get" class="row g-2 mb-3">
-            <div class="col-md-4">
-                <input type="text" name="searchPart" value="@ViewBag.SearchPart" class="form-control" placeholder="Search by part name..." />
-            </div>
-            <div class="col-md-3">
-                <select name="filterType" class="form-select">
-                    @foreach (var t in (string[])ViewBag.TransactionTypes ?? new string[]{})
-                    {
-                    var selected = (t == (string)ViewBag.SelectedFilterType) ? "selected" : null;
-                    <option value="@t" selected="@selected">@(string.IsNullOrEmpty(t)?"All":t)</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-secondary">Filter</button>
-            </div>
-        </form>
-
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Part</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
-                        <th>Remarks</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@(item.TransactionDate?.ToString("dd-MMM-yyyy"))</td>
-                        <td>@item.Part?.PartName</td>
-                        <td>
-                            @switch(item.TransactionType)
-                            {
-                                case "Stock In":
-                                    <span class="badge bg-success">Stock In</span>
-                                    break;
-                                case "Stock Out":
-                                    <span class="badge bg-danger">Stock Out</span>
-                                    break;
-                                default:
-                                    <span class="badge bg-warning">Adjustment</span>
-                                    break;
-                            }
-                        </td>
-                        <td>@item.Quantity</td>
-                        <td>@item.Remarks</td>
-                        <td>
-                            <a asp-action="Edit" asp-route-transactionid="@item.TransactionId" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <a asp-action="Details" asp-route-transactionid="@item.TransactionId" class="btn btn-sm btn-outline-secondary">Details</a>
-                            @{
-                                var isSystem = !string.IsNullOrWhiteSpace(item.ReferenceNumber) && (item.ReferenceNumber.StartsWith("PO-") || item.ReferenceNumber.StartsWith("JOB-"));
-                            }
-                            @if (!isSystem)
-                            {
-                                <a asp-action="Delete" asp-route-transactionid="@item.TransactionId" class="btn btn-sm btn-outline-danger">Delete</a>
-                            }
-                            else
-                            {
-                                <button type="button" class="btn btn-sm btn-outline-danger disabled" aria-disabled="true" title="System-generated transactions cannot be deleted">Delete</button>
-                            }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
+  <div class="card-header"><span class="card-title">Stock Transactions (@Model.Count())</span></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Date</th><th>Part</th><th>Type</th><th>Qty</th><th>Before</th><th>After</th><th>Reference</th><th>Remarks</th></tr></thead>
+    <tbody>
+      @if (!Model.Any()) { <tr><td colspan="8" class="td-muted" style="text-align:center;padding:24px">No stock transactions recorded.</td></tr> }
+      @foreach (var t in Model)
+      {
+          <tr>
+            <td class="td-muted">@(t.TransactionDate?.ToString("MMM d, yyyy"))</td>
+            <td class="td-gold">@t.Part?.PartName</td>
+            <td><span class="badge @BadgeHelper.Css(t.TransactionType)">@t.TransactionType</span></td>
+            <td><strong>@t.Quantity</strong></td>
+            <td>@t.PreviousStock</td>
+            <td>@t.NewStock</td>
+            <td class="td-muted" style="font-size:12px">@t.ReferenceNumber</td>
+            <td class="td-muted" style="font-size:12px">@t.Remarks</td>
+          </tr>
+      }
+    </tbody>
+  </table></div>
 </div>

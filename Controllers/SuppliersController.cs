@@ -10,11 +10,13 @@ public class SuppliersController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notificationService;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public SuppliersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
+    public SuppliersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notificationService = notificationService;
+        _auditService = auditService;
     }
 
     // GET: SUPPLIERS
@@ -56,8 +58,29 @@ public class SuppliersController : Controller
     {
         if (ModelState.IsValid)
         {
+            // Email required + format + uniqueness check
+            if (string.IsNullOrWhiteSpace(supplier.Email))
+            {
+                ModelState.AddModelError("Email", "Email is required.");
+                return View(supplier);
+            }
+            if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(supplier.Email))
+            {
+                ModelState.AddModelError("Email", "Invalid email format.");
+                return View(supplier);
+            }
+            if (await _context.Suppliers.AnyAsync(s => s.Email == supplier.Email))
+            {
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(supplier);
+            }
+
             _context.Add(supplier);
             await _context.SaveChangesAsync();
+
+            // Audit log
+            await _auditService.LogCreateAsync("Suppliers", supplier.SupplierId, supplier.CompanyName);
+
             // Batch 3: NEW SUPPLIER CREATED - notify Inventory Manager and Admin
             try
             {
@@ -69,24 +92,6 @@ public class SuppliersController : Controller
                     await _notificationService.CreateForRoleAsync(invRole.RoleId, "Inventory", title, message);
                 if (adminRole != null)
                     await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
-            }
-            catch { }
-            // Audit: Supplier Created (best-effort)
-            try
-            {
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Suppliers",
-                    RecordId = supplier.SupplierId,
-                    ActionType = "Supplier Created",
-                    OldValues = null,
-                    NewValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
             }
             catch { }
             return RedirectToAction(nameof(Index));
@@ -124,29 +129,30 @@ public class SuppliersController : Controller
 
         if (ModelState.IsValid)
         {
-            try
+            // Email required + format + uniqueness check excluding current supplier
+            if (string.IsNullOrWhiteSpace(supplier.Email))
             {
-                var existing = await _context.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == supplier.SupplierId);
+                ModelState.AddModelError("Email", "Email is required.");
+                return View(supplier);
+            }
+            if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(supplier.Email))
+            {
+                ModelState.AddModelError("Email", "Invalid email format.");
+                return View(supplier);
+            }
+            if (await _context.Suppliers.AnyAsync(s => s.Email == supplier.Email && s.SupplierId != supplier.SupplierId))
+            {
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(supplier);
+            }
+
+try
+            {
                 _context.Update(supplier);
                 await _context.SaveChangesAsync();
-                // Audit: Supplier Updated (best-effort)
-                try
-                {
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Suppliers",
-                        RecordId = supplier.SupplierId,
-                        ActionType = "Supplier Updated",
-                        OldValues = existing != null ? $"Supplier={existing.CompanyName};Contact={existing.ContactPerson};Phone={existing.Phone}" : null,
-                        NewValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Suppliers", supplier.SupplierId, null, supplier.CompanyName);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -190,28 +196,17 @@ public class SuppliersController : Controller
         var supplier = await _context.Suppliers.FindAsync(id);
         if (supplier != null)
         {
+            var supplierName = supplier.CompanyName;
             _context.Suppliers.Remove(supplier);
-        }
+            await _context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
-        // Audit: Supplier Deleted (best-effort)
-        try
+            // Audit log
+            await _auditService.LogDeleteAsync("Suppliers", (int)id, supplierName);
+        }
+        else
         {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Suppliers",
-                RecordId = supplier.SupplierId,
-                ActionType = "Supplier Deleted",
-                OldValues = $"Supplier={supplier.CompanyName};Contact={supplier.ContactPerson};Phone={supplier.Phone}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
             await _context.SaveChangesAsync();
         }
-        catch { }
 
         return RedirectToAction(nameof(Index));
     }

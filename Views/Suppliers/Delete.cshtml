@@ -4,13 +4,13 @@
     ViewData["Title"] = "Delete Supplier";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Delete Supplier</h2>
     </div>
-    <div class="card-body">
-      <p class="text-danger">Are you sure you want to delete this supplier?</p>
+    <div style="padding:4px 0">
+      <p style="color:var(--red)">Are you sure you want to delete this supplier?</p>
 
       <dl class="row mb-3">
         <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CompanyName)</dt>
@@ -33,7 +33,7 @@
 
       <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="SupplierId" />
-        <button type="submit" class="btn btn-danger">Delete</button>
+        <button type="submit" class="btn-danger btn-sm">Delete</button>
         <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
       </form>
     </div>

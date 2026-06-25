@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h5 class="card-title">Deactivate Account</h5>
         <p>Are you sure you want to deactivate this account?</p>
         <dl class="row">
@@ -24,8 +24,8 @@
 
         <form asp-action="DeactivateConfirmed" method="post">
             <input type="hidden" name="id" value="@Model.UserId" />
-            <button type="submit" class="btn btn-danger">Deactivate</button>
-            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn-danger btn-sm">Deactivate</button>
+            <a asp-action="Index" class="btn-outline btn-sm">Cancel</a>
         </form>
     </div>
 </div>

@@ -1,64 +1,32 @@
 @model AutoRepairERD.Models.Customer
-
 @{
-    ViewData["Title"] = "Create Customer";
+    ViewData["Title"] = "Add Customer";
+    ViewData["ActiveNav"] = "customers";
 }
 
-<div class="container py-4">
-  <div class="card">
-    <div class="card-header">
-      <h2>Create Customer</h2>
+@section TopbarActions {
+    <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
+}
+
+<div class="card" style="max-width:640px">
+  <div class="card-header"><span class="card-title">New Customer</span></div>
+  <form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="td-muted" style="font-size:13px;color:var(--red);margin-bottom:10px"></div>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="FirstName" class="form-label"></label><input asp-for="FirstName" class="form-control" placeholder="First name" /><span asp-validation-for="FirstName" class="td-muted" style="color:var(--red);font-size:12px"></span></div>
+      <div class="form-group"><label asp-for="LastName" class="form-label"></label><input asp-for="LastName" class="form-control" placeholder="Last name" /><span asp-validation-for="LastName" class="td-muted" style="color:var(--red);font-size:12px"></span></div>
     </div>
-    <div class="card-body">
-      <form asp-action="Create" method="post">
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label asp-for="FirstName" class="form-label"></label><span class="text-danger">*</span>
-            <input asp-for="FirstName" class="form-control" placeholder="Given name (required)" />
-            <div class="text-danger"><span asp-validation-for="FirstName"></span></div>
-          </div>
-          <div class="col-md-6">
-            <label asp-for="LastName" class="form-label"></label>
-            <input asp-for="LastName" class="form-control" placeholder="Family name (optional)" />
-            <div class="text-danger"><span asp-validation-for="LastName"></span></div>
-          </div>
-        </div>
-
-        <div class="row g-3 mt-2">
-          <div class="col-md-4">
-            <label asp-for="Phone" class="form-label"></label><span class="text-danger">*</span>
-            <input asp-for="Phone" class="form-control" type="tel" placeholder="e.g. +1-555-555-5555" />
-            <div class="text-danger"><span asp-validation-for="Phone"></span></div>
-          </div>
-          <div class="col-md-8">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" type="email" placeholder="name@example.com" />
-            <div class="text-danger"><span asp-validation-for="Email"></span></div>
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <label asp-for="Address" class="form-label"></label>
-          <textarea asp-for="Address" class="form-control" rows="2" placeholder="Street address, apartment, suite, unit..."></textarea>
-          <div class="text-danger"><span asp-validation-for="Address"></span></div>
-        </div>
-
-        <div class="mt-3">
-          <label asp-for="City" class="form-label"></label>
-          <input asp-for="City" class="form-control" placeholder="City or locality" />
-          <div class="text-danger"><span asp-validation-for="City"></span></div>
-        </div>
-
-        <div class="mt-4 d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Create</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-        </div>
-      </form>
-
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" type="tel" placeholder="+92 300 1234567" /><span asp-validation-for="Phone" class="td-muted" style="color:var(--red);font-size:12px"></span></div>
+      <div class="form-group"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" type="email" placeholder="customer@email.com" /><span asp-validation-for="Email" class="td-muted" style="color:var(--red);font-size:12px"></span></div>
     </div>
-  </div>
+    <div class="form-group"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" placeholder="City" /></div>
+    <div class="form-group"><label asp-for="Address" class="form-label"></label><textarea asp-for="Address" class="form-control" rows="2" placeholder="Street address..."></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button type="submit" class="btn-gold">Save Customer</button>
+      <a asp-action="Index" class="btn-outline btn-sm">Cancel</a>
+    </div>
+  </form>
 </div>
 
-@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

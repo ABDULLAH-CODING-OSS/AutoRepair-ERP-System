@@ -6,38 +6,38 @@
 
 @if (ViewBag.ErrorMessage != null)
 {
-    <div class="alert alert-danger">@Html.Raw(ViewBag.ErrorMessage)</div>
+    <div style="background:var(--red-dim);border:1px solid rgba(240,79,79,0.3);border-radius:8px;padding:12px;color:var(--red);font-size:13px;margin-bottom:12px">@Html.Raw(ViewBag.ErrorMessage)</div>
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h5 class="card-title">Create Job Order</h5>
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="CustomerId" class="form-label">Customer <span class="text-danger">*</span></label>
-                    <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.Customers">
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+                <div style="flex:1;min-width:240px">
+                    <label asp-for="CustomerId" class="form-label">Customer <span style="color:var(--red)">*</span></label>
+                    <select asp-for="CustomerId" class="form-control" asp-items="ViewBag.Customers">
                         <option value="">-- Select Customer --</option>
                     </select>
-                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    <span asp-validation-for="CustomerId" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-6">
-                    <label asp-for="VehicleId" class="form-label">Vehicle <span class="text-danger">*</span></label>
-                    @* <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles">
+                <div style="flex:1;min-width:240px">
+                    <label asp-for="VehicleId" class="form-label">Vehicle <span style="color:var(--red)">*</span></label>
+                    @* <select asp-for="VehicleId" class="form-control" asp-items="ViewBag.Vehicles">
                         <option value="">-- Select Vehicle --</option>
                     </select> *@
                     <select asp-for="VehicleId"
-                            class="form-select"
+                            class="form-control"
                             asp-items="ViewBag.Vehicles">
                         <option value="">-- Select Customer First --</option>
                     </select>
-                    <span asp-validation-for="VehicleId" class="text-danger"></span>
+                    <span asp-validation-for="VehicleId" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-6">
+                <div style="flex:1;min-width:240px">
                     <label asp-for="AdvisorId" class="form-label">Service Advisor</label>
                     @if (ViewBag.DefaultAdvisorId != null)
                     {
@@ -55,24 +55,24 @@
                     }
                     else
                     {
-                        <select asp-for="AdvisorId" class="form-select" asp-items="ViewBag.Advisors">
+                        <select asp-for="AdvisorId" class="form-control" asp-items="ViewBag.Advisors">
                             <option value="">-- Select Advisor --</option>
                         </select>
                     }
-                    <span asp-validation-for="AdvisorId" class="text-danger"></span>
+                    <span asp-validation-for="AdvisorId" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-6">
+                <div style="flex:1;min-width:240px">
                     <label asp-for="MechanicId" class="form-label">Mechanic</label>
-                    <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics">
+                    <select id="MechanicId" asp-for="MechanicId" class="form-control" asp-items="ViewBag.Mechanics">
                         <option value="">-- Select Mechanic --</option>
                     </select>
-                    <span asp-validation-for="MechanicId" class="text-danger"></span>
+                    <span asp-validation-for="MechanicId" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-4">
+                <div style="flex:1;min-width:240px">
                     <label class="form-label">Priority</label>
-                    <select name="Priority" class="form-select">
+                    <select name="Priority" class="form-control">
                         <option value="">Normal</option>
                         <option value="High">High</option>
                         <option value="Medium">Medium</option>
@@ -82,57 +82,57 @@
             @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>
                 <input asp-for="CreatedByUserId" class="form-control" />
-                <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
+                <span asp-validation-for="CreatedByUserId" style="color:var(--red)"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="JobNumber" class="control-label"></label>
                 <input asp-for="JobNumber" class="form-control" />
-                <span asp-validation-for="JobNumber" class="text-danger"></span>
+                <span asp-validation-for="JobNumber" style="color:var(--red)"></span>
             </div> *@
 
-                <div class="col-12">
-                    <label asp-for="ComplaintDescription" class="form-label">Complaint <span class="text-danger">*</span></label>
+                <div style="flex:1;min-width:200px">
+                    <label asp-for="ComplaintDescription" class="form-label">Complaint <span style="color:var(--red)">*</span></label>
                     <input asp-for="ComplaintDescription" class="form-control" placeholder="Describe the customer's complaint" />
-                    <span asp-validation-for="ComplaintDescription" class="text-danger"></span>
+                    <span asp-validation-for="ComplaintDescription" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-12">
+                <div style="flex:1;min-width:200px">
                     <label asp-for="DiagnosisNotes" class="form-label">Diagnosis Notes</label>
                     <input asp-for="DiagnosisNotes" class="form-control" placeholder="Optional diagnostic notes" />
-                    <span asp-validation-for="DiagnosisNotes" class="text-danger"></span>
+                    <span asp-validation-for="DiagnosisNotes" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-4">
+                <div style="flex:1;min-width:240px">
                     <label asp-for="StartDate" class="form-label">Start Date</label>
                     <input asp-for="StartDate" type="date" class="form-control" />
-                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                    <span asp-validation-for="StartDate" style="color:var(--red)"></span>
                 </div>
 
-                <div class="col-md-4">
+                <div style="flex:1;min-width:240px">
                     <label asp-for="EstimatedCompletionDate" class="form-label">Estimated Completion</label>
                     <input asp-for="EstimatedCompletionDate" type="date" class="form-control" />
-                    <span asp-validation-for="EstimatedCompletionDate" class="text-danger"></span>
+                    <span asp-validation-for="EstimatedCompletionDate" style="color:var(--red)"></span>
                 </div>
 
                 @* CompletionDate removed from Create form - set automatically when job completed *@
 
-                <div class="col-md-6">
+                <div style="flex:1;min-width:240px">
                     <label asp-for="EstimatedCost" class="form-label">Estimated Cost</label>
                     <input asp-for="EstimatedCost" type="number" step="0.01" class="form-control" placeholder="0.00" />
-                    <span asp-validation-for="EstimatedCost" class="text-danger"></span>
+                    <span asp-validation-for="EstimatedCost" style="color:var(--red)"></span>
                 </div>
             </div>
 
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary">Create</button>
+            <div style="margin-top:12px">
+                <button type="submit" class="btn-gold btn-sm">Create</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
-<div class="mt-3">
+<div style="margin-top:12px">
     <a asp-action="Index" class="btn btn-link">Back to List</a>
 </div>
 @section Scripts
@@ -149,6 +149,24 @@
 
             const vehicleDropdown =
                 document.getElementById("VehicleId");
+
+            const mechanicDropdown = document.getElementById("MechanicId");
+
+            // Populate mechanics via AJAX so newly added mechanics appear without code changes
+            fetch('/Employees/GetMechanics')
+                .then(r => r.json())
+                .then(list => {
+                    mechanicDropdown.innerHTML = '<option value="">-- Select Mechanic --</option>';
+                    list.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.employeeId;
+                        opt.text = m.text;
+                        mechanicDropdown.appendChild(opt);
+                    });
+                })
+                .catch(err => {
+                    console.error('Failed to load mechanics', err);
+                });
 
             customerDropdown.addEventListener("change", function () {
 

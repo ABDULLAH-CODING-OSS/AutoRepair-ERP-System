@@ -1,0 +1,60 @@
+@model AutoRepairERD.Models.ViewModels.PartsReportViewModel
+@{
+    ViewData["Title"] = "Parts Consumption Report";
+    ViewData["ActiveNav"] = "rep-parts";
+}
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-blue">
+    <div class="stat-icon">🔩</div>
+    <div class="stat-val" data-count="@Model.Rows.Count">0</div>
+    <div class="stat-lbl">Distinct Parts Used</div>
+  </div>
+  <div class="stat-card sc-gold">
+    <div class="stat-icon">📦</div>
+    <div class="stat-val" data-count="@Model.Rows.Sum(r => r.TotalQty)">0</div>
+    <div class="stat-lbl">Total Units Consumed</div>
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-icon">💸</div>
+    <div class="stat-val" data-count="@((double)Model.Rows.Sum(r => r.TotalRevenue))" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Parts Revenue</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Parts Consumption Breakdown</span><span class="td-muted" style="font-size:12px">All time, ranked by usage</span></div>
+  @if (!Model.Rows.Any())
+  {
+      <p class="td-muted" style="padding:20px;text-align:center">No parts have been used in any job orders yet.</p>
+  }
+  else
+  {
+      <div class="table-wrap"><table class="erp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Part Name</th>
+            <th>Part Number</th>
+            <th>Jobs Used In</th>
+            <th>Total Qty</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          @{ int rank = 1; }
+          @foreach (var r in Model.Rows.OrderByDescending(x => x.TotalQty))
+          {
+              <tr onclick="carTransition('/Parts','PARTS INVENTORY')">
+                <td class="td-muted">@(rank++)</td>
+                <td class="td-gold">@r.PartName</td>
+                <td class="td-muted">@r.PartNumber</td>
+                <td>@r.JobCount</td>
+                <td><strong>@r.TotalQty</strong></td>
+                <td>PKR @r.TotalRevenue.ToString("N0")</td>
+              </tr>
+          }
+        </tbody>
+      </table></div>
+  }
+</div>

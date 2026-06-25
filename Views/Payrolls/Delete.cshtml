@@ -9,7 +9,7 @@
 <h3>Are you sure you want to cancel this payroll? This will remove the payroll record so it can be regenerated.</h3>
 <div>
     <div class="card">
-        <div class="card-body">
+        <div style="padding:4px 0">
             <h5 class="card-title">Payroll</h5>
             <dl class="row mb-0">
                 <dt class="col-sm-3">Employee</dt>
@@ -30,10 +30,10 @@
         </div>
     </div>
 
-    <form asp-action="Delete" method="post" class="mt-3">
+    <form asp-action="Delete" method="post" style="margin-top:12px">
         @Html.AntiForgeryToken()
         <input type="hidden" name="payrollid" value="@Model.PayrollId" />
-        <input type="submit" value="Cancel Payroll" class="btn btn-danger" /> |
+        <input type="submit" value="Cancel Payroll" class="btn-danger btn-sm" /> |
         <a asp-action="Index" class="btn btn-link">Back to List</a>
     </form>
 </div>

@@ -41,7 +41,7 @@ public partial class User
     [Unicode(false)]
     public string? Phone { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }

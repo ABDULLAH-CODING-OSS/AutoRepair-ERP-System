@@ -1,0 +1,52 @@
+@model AutoRepairERD.ViewModels.NotificationBellViewModel
+@using System.Linq
+
+<div class="notif-bell-wrap">
+    <button type="button" class="notif-bell-btn" onclick="toggleNotifDropdown(event)" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="notif-bell-count">@(Model.UnreadCount > 9 ? "9+" : Model.UnreadCount.ToString())</span>
+        }
+    </button>
+    <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-dropdown-header">Notifications @(Model.UnreadCount > 0 ? $"({Model.UnreadCount} unread)" : "")</div>
+        @if (Model.Latest != null && Model.Latest.Any())
+        {
+            foreach (var n in Model.Latest)
+            {
+                <a class="notif-item" href="/Notifications/Details/@n.NotificationId">
+                    <div class="notif-item-title">@n.Title</div>
+                    <div class="notif-item-msg">@n.Message</div>
+                    <div class="notif-item-time">@(n.CreatedAt?.ToString("MMM d, h:mm tt") ?? "")</div>
+                </a>
+            }
+        }
+        else
+        {
+            <div class="notif-empty">No notifications yet</div>
+        }
+        <div class="notif-dropdown-footer">
+            <a href="/Notifications">View all notifications</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleNotifDropdown(e) {
+    e.stopPropagation();
+    var dd = document.getElementById('notifDropdown');
+    if (!dd) return;
+    var willOpen = !dd.classList.contains('open');
+    dd.classList.toggle('open', willOpen);
+    if (willOpen) {
+        var closeOnce = function(ev) {
+            if (!dd.contains(ev.target)) {
+                dd.classList.remove('open');
+                document.removeEventListener('click', closeOnce);
+            }
+        };
+        setTimeout(function () { document.addEventListener('click', closeOnce); }, 0);
+    }
+}
+</script>

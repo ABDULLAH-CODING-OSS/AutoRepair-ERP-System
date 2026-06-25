@@ -1,31 +1,45 @@
 @model AutoRepairERD.Models.JobPartItem
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Job Part Item";
 }
 
-<h1>Delete</h1>
+<div class="card">
+  <div class="card-header">
+    <h4>Delete Job Part Item</h4>
+  </div>
+  <div style="padding:16px">
+    <p style="color:var(--red);margin-bottom:16px"><strong>⚠ Are you sure you want to delete this part from the job?</strong></p>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>AutoRepairERD.Models.JobPartItem</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.JobOrderId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.JobOrderId)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartId)
-        </dd>
-    </dl>
+    <div style="background:var(--card2);padding:12px;border-radius:4px;margin-bottom:16px">
+      <div style="display:grid;gap:12px">
+        <div>
+          <span style="color:var(--text3);font-size:12px">Part Information</span>
+          <div style="font-weight:bold;margin-top:4px">@Html.DisplayFor(model => model.Part.PartName)</div>
+        </div>
+        <div>
+          <span style="color:var(--text3);font-size:12px">Quantity</span>
+          <div style="font-weight:bold;margin-top:4px">@Html.DisplayFor(model => model.Quantity)</div>
+        </div>
+        <div>
+          <span style="color:var(--text3);font-size:12px">Unit Price</span>
+          <div style="font-weight:bold;margin-top:4px">@String.Format("{0:C}", Model.UnitPrice)</div>
+        </div>
+        <div>
+          <span style="color:var(--text3);font-size:12px">Total Price</span>
+          <div style="font-weight:bold;margin-top:4px;color:var(--gold)">@String.Format("{0:C}", Model.TotalPrice)</div>
+        </div>
+      </div>
+    </div>
+
+    <form asp-action="Delete">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="id" value="@Model.JobPartItemId" />
+      <button type="submit" class="btn-outline btn-sm" style="color:var(--red);background:var(--red-dim)">Confirm Delete</button>
+      <a asp-controller="JobOrders" asp-action="Details" asp-route-id="@Model.JobOrderId" class="btn-outline btn-sm ms-2">Cancel</a>
+    </form>
+  </div>
+</div>
     <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Quantity)
@@ -68,7 +82,7 @@
     </dl>
     <form asp-action="Delete">
         <input type="hidden" asp-for="JobPartItemId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <input type="submit" value="Delete" class="btn-danger btn-sm" /> |
         <a asp-action="Index">Back to List</a>
     </form>
 </div>

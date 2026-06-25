@@ -1,0 +1,89 @@
+@model IEnumerable<AutoRepairERD.Models.Attendance>
+@{
+    ViewData["Title"] = "Attendance Management";
+    ViewData["ActiveNav"] = "att-mgmt";
+    var selectedDate = (DateOnly)ViewBag.SelectedDate;
+    var selectedStatus = ViewBag.SelectedStatus as string;
+    var unmarked = ViewBag.UnmarkedEmployees as List<AutoRepairERD.Models.Employee> ?? new();
+}
+
+@section TopbarActions {
+    <button class="btn-gold btn-sm" onclick="carTransition('/Attendances/Create','MARK ATTENDANCE')">+ Mark Attendance</button>
+}
+
+<!-- Date + status filter -->
+<form method="get" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:20px">
+    <input type="date" name="date" value="@((DateOnly)ViewBag.SelectedDate).ToString("yyyy-MM-dd")" class="form-control" style="width:160px;padding:7px 10px">
+    <select name="status" class="form-control" style="width:150px;padding:7px 10px">
+        <option value="">All Statuses</option>
+        @foreach (var s in new[]{"Present","Absent","Late","On Leave","Sick"})
+        {
+            <option value="@s" selected="@(selectedStatus == s)">@s</option>
+        }
+    </select>
+    <button type="submit" class="btn-gold btn-sm">Filter</button>
+    <a href="/Attendances/Management" class="btn-outline btn-sm">Reset</a>
+</form>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+  <div class="card-header">
+      <span class="card-title">Attendance Schedule — @(((DateOnly)ViewBag.SelectedDate).ToString("dddd, MMMM d, yyyy"))</span>
+      <span class="td-muted" style="font-size:12px">@Model.Count() marked</span>
+  </div>
+    @if (!Model.Any())
+    {
+        <p class="td-muted" style="padding:20px;text-align:center">No attendance records for this date.</p>
+    }
+    else
+    {
+        <div class="table-wrap"><table class="erp-table">
+          <thead><tr><th>Employee</th><th>Status</th><th>Check-In Time</th><th>Check-Out Time</th><th>Overtime Hours</th><th></th></tr></thead>
+          <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td class="td-gold">@a.Employee?.FirstName @a.Employee?.LastName</td>
+                    <td><span class="badge @BadgeHelper.Css(a.Status)">@a.Status</span></td>
+                    <td>@(a.CheckInTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                    <td>@(a.CheckOutTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                    <td>@(a.OvertimeHours > 0 ? a.OvertimeHours!.Value.ToString("0.##") : "—")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@a.AttendanceId" class="btn-outline btn-sm">Edit</a>
+                        <a asp-action="Details" asp-route-id="@a.AttendanceId" class="btn-outline btn-sm">View</a>
+                        <a asp-action="Delete" asp-route-id="@a.AttendanceId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
+                    </td>
+                </tr>
+            }
+          </tbody>
+        </table></div>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+        <span class="card-title" style="color:var(--orange)">⚠ Not Yet Marked</span>
+        <span class="td-muted" style="font-size:12px">@unmarked.Count employees</span>
+    </div>
+    @if (!unmarked.Any())
+    {
+        <p class="td-muted" style="padding:20px;text-align:center">All active employees have been marked. ✅</p>
+    }
+    else
+    {
+        <div class="table-wrap"><table class="erp-table">
+          <thead><tr><th>Employee</th><th>Designation</th><th></th></tr></thead>
+          <tbody>
+            @foreach (var e in unmarked)
+            {
+                <tr>
+                    <td class="td-gold">@e.FirstName @e.LastName</td>
+                    <td class="td-muted">@e.Designation</td>
+                    <td><a href="/Attendances/Create?employeeId=@e.EmployeeId" class="btn-gold btn-sm">Mark</a></td>
+                </tr>
+            }
+          </tbody>
+        </table></div>
+    }
+  </div>
+</div>

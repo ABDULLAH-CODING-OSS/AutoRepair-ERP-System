@@ -9,17 +9,26 @@ public class CustomersController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notificationService;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public CustomersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
+    public CustomersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notificationService = notificationService;
+        _auditService = auditService;
     }
 
     // GET: CUSTOMERS
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(string q)
     {
-        return View(await _context.Customers.ToListAsync());
+        var query = _context.Customers.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(c => (c.FirstName ?? "").Contains(q) || (c.LastName ?? "").Contains(q) || (c.Phone ?? "").Contains(q) || (c.Email ?? "").Contains(q));
+            ViewBag.SearchQuery = q;
+        }
+        var list = await query.ToListAsync();
+        return View(list);
     }
 
     // GET: CUSTOMERS/Details/5
@@ -57,6 +66,28 @@ public class CustomersController : Controller
     {
         if (ModelState.IsValid)
         {
+            // Server-side validation: required + format + uniqueness
+            if (string.IsNullOrWhiteSpace(customer.Email))
+            {
+                ModelState.AddModelError("Email", "Email is required.");
+                return View(customer);
+            }
+            if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(customer.Email))
+            {
+                ModelState.AddModelError("Email", "Invalid email format.");
+                return View(customer);
+            }
+            if (await _context.Customers.AnyAsync(c => c.Email == customer.Email))
+            {
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(customer);
+            }
+            if (!string.IsNullOrWhiteSpace(customer.Phone) && await _context.Customers.AnyAsync(c => c.Phone == customer.Phone))
+            {
+                ModelState.AddModelError("Phone", "Phone number already exists.");
+                return View(customer);
+            }
+
             customer.CreatedByUserId =
                 HttpContext.Session.GetInt32("UserID");
 
@@ -65,37 +96,24 @@ public class CustomersController : Controller
             _context.Add(customer);
             await _context.SaveChangesAsync();
 
-            // Batch 3: NEW CUSTOMER CREATED - notify Admin
-            try
-            {
-                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
-                if (adminRole != null)
-                {
-                    var title = "New Customer";
-                    var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
-                    var message = $"New customer {name} has been registered.";
-                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Customer", title, message);
-                }
-            }
-            catch { }
+            // Audit log
+            await _auditService.LogCreateAsync("Customers", customer.CustomerId, $"{customer.FirstName} {customer.LastName}");
 
-            // Audit: Customer Created (best-effort)
+            // Notify relevant roles: Admin, Owner, Service Advisor
             try
             {
-                var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
-                var audit = new AuditLog
+                var roleNames = new[] { "Admin", "Owner", "Service Advisor" };
+                foreach (var rn in roleNames)
                 {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Customers",
-                    RecordId = customer.CustomerId,
-                    ActionType = "Customer Created",
-                    OldValues = null,
-                    NewValues = $"Customer={name};Phone={customer.Phone};Email={customer.Email}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
+                    var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == rn);
+                    if (role != null)
+                    {
+                        var title = "New Customer";
+                        var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
+                        var message = $"New customer {name} has been registered.";
+                        await _notificationService.CreateForRoleAsync(role.RoleId, "Customer", title, message);
+                    }
+                }
             }
             catch { }
 
@@ -135,31 +153,35 @@ public class CustomersController : Controller
 
         if (ModelState.IsValid)
         {
+            // Server-side validation for email + uniqueness checks excluding current record
+            if (string.IsNullOrWhiteSpace(customer.Email))
+            {
+                ModelState.AddModelError("Email", "Email is required.");
+                return View(customer);
+            }
+            if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(customer.Email))
+            {
+                ModelState.AddModelError("Email", "Invalid email format.");
+                return View(customer);
+            }
+            if (await _context.Customers.AnyAsync(c => c.Email == customer.Email && c.CustomerId != customer.CustomerId))
+            {
+                ModelState.AddModelError("Email", "Email already exists.");
+                return View(customer);
+            }
+            if (!string.IsNullOrWhiteSpace(customer.Phone) && await _context.Customers.AnyAsync(c => c.Phone == customer.Phone && c.CustomerId != customer.CustomerId))
+            {
+                ModelState.AddModelError("Phone", "Phone number already exists.");
+                return View(customer);
+            }
+
             try
             {
-                var existing = await _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
                 _context.Update(customer);
                 await _context.SaveChangesAsync();
-                // Audit: Customer Updated (best-effort)
-                try
-                {
-                    var oldName = existing != null ? existing.FirstName + (string.IsNullOrEmpty(existing.LastName)?"":" "+existing.LastName) : null;
-                    var newName = customer.FirstName + (string.IsNullOrEmpty(customer.LastName)?"":" "+customer.LastName);
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Customers",
-                        RecordId = customer.CustomerId,
-                        ActionType = "Customer Updated",
-                        OldValues = existing != null ? $"Customer={oldName};Phone={existing.Phone};Email={existing.Email}" : null,
-                        NewValues = $"Customer={newName};Phone={customer.Phone};Email={customer.Email}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Customers", customer.CustomerId, null, $"{customer.FirstName} {customer.LastName}");
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -200,34 +222,40 @@ public class CustomersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var customer = await _context.Customers.FindAsync(id);
-        if (customer != null)
+        var customer = await _context.Customers
+            .Include(c => c.Vehicles)
+            .Include(c => c.JobOrders)
+            .FirstOrDefaultAsync(c => c.CustomerId == id);
+        if (customer == null)
         {
-            _context.Customers.Remove(customer);
+            return NotFound();
         }
 
-        await _context.SaveChangesAsync();
-        // Audit: Customer Deleted (best-effort)
+        // Prevent deletion if related records exist
+        var hasVehicles = customer.Vehicles != null && customer.Vehicles.Any();
+        var hasJobs = customer.JobOrders != null && customer.JobOrders.Any();
+        if (hasVehicles || hasJobs)
+        {
+            ModelState.AddModelError(string.Empty, "Cannot delete this customer because related vehicles or job orders exist. Please remove related records first or deactivate the customer.");
+            return View(customer);
+        }
+
         try
         {
-            var name = customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName);
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Customers",
-                RecordId = customer.CustomerId,
-                ActionType = "Customer Deleted",
-                OldValues = $"Customer={name};Phone={customer.Phone};Email={customer.Email}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
+            var customerName = $"{customer.FirstName} {customer.LastName}";
+            _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
-        }
-        catch { }
 
-        return RedirectToAction(nameof(Index));
+            // Audit log
+            await _auditService.LogDeleteAsync("Customers", (int)id, customerName);
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Unable to delete customer due to database constraints. Please remove related records first.");
+            return View(customer);
+        }
     }
 
     private bool CustomerExists(int? id)

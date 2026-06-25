@@ -12,8 +12,25 @@ namespace AutoRepairERD.Controllers
         //}
         public IActionResult Index()
         {
+            var userId = HttpContext.Session.GetInt32("UserID");
+            var roleName = HttpContext.Session.GetString("RoleName");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            switch (roleName)
+            {
+                case "Owner":
+                    return RedirectToAction("Owner", "Dashboard");
+                case "Admin":
+                    return RedirectToAction("Admin", "Dashboard");
+            }
+
             ViewBag.Username = HttpContext.Session.GetString("Username");
-            ViewBag.RoleName = HttpContext.Session.GetString("RoleName");
+            ViewBag.RoleName = roleName;
+            ViewData["Title"] = "Home";
 
             return View();
         }

@@ -4,60 +4,68 @@
     ViewData["Title"] = "Edit Attendance";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header"><h2>Edit Attendance</h2></div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       @{ var employees = (SelectList)(ViewData["EmployeeId"] ?? new SelectList(Enumerable.Empty<SelectListItem>())); }
       <form asp-action="Edit" method="post">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
         <input type="hidden" asp-for="AttendanceId" />
 
-        <div class="row g-3">
-          <div class="col-md-6">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
             <label class="form-label">Employee</label>
             <input type="hidden" asp-for="EmployeeId" />
-            <input class="form-control" value="@Model.Employee?.EmployeeCode - @Model.Employee?.FirstName @Model.Employee?.LastName" readonly />
-            <div class="text-danger"><span asp-validation-for="EmployeeId"></span></div>
+            <input class="form-control" value="@((Model.Employee != null) ? (Model.Employee.EmployeeCode + " - " + Model.Employee.FirstName + " " + Model.Employee.LastName) : "")" readonly />
+            <div style="color:var(--red)"><span asp-validation-for="EmployeeId"></span></div>
           </div>
-          <div class="col-md-6">
+          <div style="flex:1;min-width:240px">
             <label asp-for="AttendanceDate" class="form-label"></label>
             <input asp-for="AttendanceDate" type="date" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="AttendanceDate"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="AttendanceDate"></span></div>
           </div>
         </div>
 
         <div class="row g-3 mt-3">
-          <div class="col-md-6">
+          <div style="flex:1;min-width:240px">
             <label asp-for="CheckInTime" class="form-label"></label>
             <input asp-for="CheckInTime" type="time" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="CheckInTime"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="CheckInTime"></span></div>
           </div>
-          <div class="col-md-6">
+          <div style="flex:1;min-width:240px">
             <label asp-for="CheckOutTime" class="form-label"></label>
             <input asp-for="CheckOutTime" type="time" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="CheckOutTime"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="CheckOutTime"></span></div>
           </div>
         </div>
 
         <div class="row g-3 mt-3">
-          <div class="col-md-4">
+          <div style="flex:1;min-width:240px">
             <label asp-for="OvertimeHours" class="form-label"></label>
             <input asp-for="OvertimeHours" type="number" step="0.1" class="form-control" readonly />
-            <div class="text-danger"><span asp-validation-for="OvertimeHours"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="OvertimeHours"></span></div>
           </div>
-          <div class="col-md-8">
+          <div style="flex:1;min-width:240px">
             <label asp-for="Status" class="form-label"></label>
             @{ var statuses = (SelectList)(ViewData["StatusList"] ?? new SelectList(Enumerable.Empty<string>())); }
-            <select asp-for="Status" class="form-select" asp-items="@statuses">
+            <select asp-for="Status" class="form-control" asp-items="@statuses">
               <option value="">-- Select Status --</option>
             </select>
-            <div class="text-danger"><span asp-validation-for="Status"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="Status"></span></div>
           </div>
         </div>
 
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary">Save</button>
+        <div class="row g-3 mt-3">
+          <div style="flex:1;min-width:480px">
+            <label asp-for="Notes" class="form-label">Notes (optional)</label>
+            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            <div style="color:var(--red)"><span asp-validation-for="Notes"></span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <button type="submit" class="btn-gold btn-sm">Save</button>
           <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
         </div>
       </form>

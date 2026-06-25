@@ -8,34 +8,34 @@
 
 <h4>PurchaseOrder</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
         <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" style="color:var(--red)"></div>
 
             <div class="form-group">
                 @* <label asp-for="SupplierId" class="control-label"></label>
                 <input asp-for="SupplierId" class="form-control" />
-                <span asp-validation-for="SupplierId" class="text-danger"></span> *@
+                <span asp-validation-for="SupplierId" style="color:var(--red)"></span> *@
                 <label class="control-label">Supplier</label>
                 <select asp-for="SupplierId"
                         class="form-control"
                         asp-items="ViewBag.Suppliers">
                     <option value="">-- Select Supplier --</option>
                 </select>
-                <span asp-validation-for="SupplierId" class="text-danger"></span>
+                <span asp-validation-for="SupplierId" style="color:var(--red)"></span>
             </div>
 
             @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>
                 <input asp-for="CreatedByUserId" class="form-control" />
-                <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
+                <span asp-validation-for="CreatedByUserId" style="color:var(--red)"></span>
             </div> *@
 
           @*   <div class="form-group">
                 <label asp-for="OrderDate" class="control-label"></label>
                 <input asp-for="OrderDate" class="form-control" />
-                <span asp-validation-for="OrderDate" class="text-danger"></span>
+                <span asp-validation-for="OrderDate" style="color:var(--red)"></span>
             </div> *@
 
             <div class="form-group">
@@ -45,14 +45,14 @@
                 <input asp-for="ExpectedDeliveryDate"
                        type="date"
                        class="form-control" />
-                <span asp-validation-for="ExpectedDeliveryDate" class="text-danger"></span>
+                <span asp-validation-for="ExpectedDeliveryDate" style="color:var(--red)"></span>
 
             </div>
 
             @* <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
                 <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
+                <span asp-validation-for="Status" style="color:var(--red)"></span>
             </div> *@
 
             @* TotalAmount is system-calculated and not editable here *@
@@ -60,22 +60,22 @@
             @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>
                 <input asp-for="CreatedByUser" class="form-control" />
-                <span asp-validation-for="CreatedByUser" class="text-danger"></span>
+                <span asp-validation-for="CreatedByUser" style="color:var(--red)"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="PurchaseOrderItems" class="control-label"></label>
                 <input asp-for="PurchaseOrderItems" class="form-control" />
-                <span asp-validation-for="PurchaseOrderItems" class="text-danger"></span>
+                <span asp-validation-for="PurchaseOrderItems" style="color:var(--red)"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Supplier" class="control-label"></label>
                 <input asp-for="Supplier" class="form-control" />
-                <span asp-validation-for="Supplier" class="text-danger"></span>
+                <span asp-validation-for="Supplier" style="color:var(--red)"></span>
             </div> *@
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn-gold btn-sm" />
             </div>
         </form>
     </div>

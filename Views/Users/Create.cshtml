@@ -5,64 +5,64 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h5 class="card-title">Create User</h5>
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
-            <div class="mb-3">
-                <label asp-for="Username" class="form-label">Username <span class="text-danger">*</span></label>
+            <div style="margin-bottom:12px">
+                <label asp-for="Username" class="form-label">Username <span style="color:var(--red)">*</span></label>
                 <input asp-for="Username" class="form-control" placeholder="Enter username" />
-                <span asp-validation-for="Username" class="text-danger"></span>
+                <span asp-validation-for="Username" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Email" class="form-label">Email</label>
                 <input asp-for="Email" class="form-control" placeholder="user@example.com" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <span asp-validation-for="Email" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="PasswordHash" class="form-label">Password <span class="text-danger">*</span></label>
+            <div style="margin-bottom:12px">
+                <label asp-for="PasswordHash" class="form-label">Password <span style="color:var(--red)">*</span></label>
                 <input asp-for="PasswordHash" class="form-control" placeholder="Enter password" />
-                <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                <span asp-validation-for="PasswordHash" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="FullName" class="form-label">Full Name</label>
                 <input asp-for="FullName" class="form-control" placeholder="Employee full name" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+                <span asp-validation-for="FullName" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Phone" class="form-label">Phone</label>
                 <input asp-for="Phone" class="form-control" placeholder="03XXXXXXXXX" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
+                <span asp-validation-for="Phone" style="color:var(--red)"></span>
             </div>
 
             <div class="mb-3 form-check">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label asp-for="IsActive" class="form-check-label">Active</label>
-                <span asp-validation-for="IsActive" class="text-danger"></span>
+                <input asp-for="IsActive" style="accent-color:var(--gold)" />
+                <label asp-for="IsActive" class="form-label">Active</label>
+                <span asp-validation-for="IsActive" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Employee</label>
-                <select name="selectedEmployeeId" class="form-select" asp-items="ViewBag.EmployeeList">
+                <select name="selectedEmployeeId" class="form-control" asp-items="ViewBag.EmployeeList">
                     <option value="">-- Select Employee (optional) --</option>
                 </select>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Assign Role</label>
-                <select name="selectedRoleId" class="form-select" asp-items="ViewBag.RoleList">
+                <select name="selectedRoleId" class="form-control" asp-items="ViewBag.RoleList">
                     <option value="">-- Select Role (optional) --</option>
                 </select>
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Create</button>
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="submit" class="btn-gold btn-sm">Create</button>
+                <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
             </div>
         </form>
     </div>

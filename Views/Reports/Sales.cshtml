@@ -1,0 +1,85 @@
+@model AutoRepairERD.Models.ViewModels.SalesReportViewModel
+@{
+    ViewData["Title"] = "Sales Report";
+    ViewData["ActiveNav"] = "rep-sales";
+    var maxVal = Model.DailyTrend.Any() ? Model.DailyTrend.Max(p => p.Value) : 0m;
+}
+
+@section TopbarActions {
+  <form method="get" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input type="date" name="from" value="@(Model.From?.ToString("yyyy-MM-dd") ?? "")" class="form-control" style="width:150px;padding:7px 10px">
+    <input type="date" name="to"   value="@(Model.To?.ToString("yyyy-MM-dd") ?? "")"   class="form-control" style="width:150px;padding:7px 10px">
+    <button type="submit" class="btn-gold btn-sm">Filter</button>
+  </form>
+}
+
+<div class="stats-grid stats-4" style="margin-bottom:20px">
+  <div class="stat-card sc-gold">
+    <div class="stat-icon">💰</div>
+    <div class="stat-val" data-count="@((double)Model.TotalSales)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Total Sales</div>
+  </div>
+  <div class="stat-card sc-green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-val" data-count="@((double)Model.TotalPaid)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Total Collected</div>
+  </div>
+  <div class="stat-card sc-red">
+    <div class="stat-icon">⏳</div>
+    <div class="stat-val" data-count="@((double)Model.TotalOutstanding)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Outstanding</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon">🧾</div>
+    <div class="stat-val" data-count="@Model.InvoiceCount">0</div>
+    <div class="stat-lbl">Invoices</div>
+  </div>
+</div>
+
+@if (Model.DailyTrend.Any())
+{
+    <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><span class="card-title">Daily Revenue Trend</span></div>
+        <div class="chart-bars">
+            @foreach (var p in Model.DailyTrend)
+            {
+                var pct = maxVal > 0 ? Math.Round((double)(p.Value / maxVal) * 100, 1) : 0;
+                <div class="cbar-wrap">
+                    <div class="cbar-val">@(p.Value >= 1000 ? $"{p.Value/1000:0.#}k" : p.Value.ToString("0"))</div>
+                    <div class="cbar" data-height="@(pct)%" style="background:var(--gold);height:5%"></div>
+                    <div class="cbar-lbl">@p.Label</div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Summary</span>
+        <span class="td-muted" style="font-size:12px">
+            @(Model.From?.ToString("MMM d, yyyy") ?? "All time") — @(Model.To?.ToString("MMM d, yyyy") ?? "today")
+        </span>
+    </div>
+    @if (Model.InvoiceCount == 0)
+    {
+        <p class="td-muted" style="padding:20px 0;text-align:center;">No invoices in this date range.</p>
+    }
+    else
+    {
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding-top:8px">
+            <div style="background:var(--card2);border-radius:8px;padding:14px">
+                <p style="font-size:11px;color:var(--text2);margin-bottom:4px">Avg Invoice Value</p>
+                <p style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif">PKR @((Model.TotalSales / Model.InvoiceCount).ToString("N0"))</p>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:14px">
+                <p style="font-size:11px;color:var(--text2);margin-bottom:4px">Collection Rate</p>
+                <p style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif">@(Model.TotalSales > 0 ? Math.Round((Model.TotalPaid / Model.TotalSales) * 100, 1) : 0)%</p>
+            </div>
+            <div style="background:var(--card2);border-radius:8px;padding:14px">
+                <p style="font-size:11px;color:var(--text2);margin-bottom:4px">Total Invoices</p>
+                <p style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif">@Model.InvoiceCount</p>
+            </div>
+        </div>
+    }
+</div>

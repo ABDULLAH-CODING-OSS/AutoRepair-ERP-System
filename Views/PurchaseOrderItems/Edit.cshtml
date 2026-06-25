@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Edit Item</h4>
 
         <form asp-action="Edit" asp-route-id="@Model.PoitemId" method="post">
@@ -13,40 +13,40 @@
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
             @if (ViewBag.Locked != null && (bool)ViewBag.Locked)
             {
-                <div class="alert alert-warning">This purchase order has been received and items cannot be modified.</div>
+                <div style="background:var(--orange-dim);border:1px solid rgba(245,181,56,0.3);border-radius:8px;padding:12px;color:var(--orange);font-size:13px;margin-bottom:12px">This purchase order has been received and items cannot be modified.</div>
             }
             <input type="hidden" asp-for="PoitemId" />
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Purchase Order</label>
-                <select asp-for="PurchaseOrderId" class="form-select" asp-items="ViewBag.PurchaseOrders"></select>
-                <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                <select asp-for="PurchaseOrderId" class="form-control" asp-items="ViewBag.PurchaseOrders"></select>
+                <span asp-validation-for="PurchaseOrderId" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Part</label>
-                <select asp-for="PartId" class="form-select" asp-items="ViewBag.Parts"></select>
-                <span asp-validation-for="PartId" class="text-danger"></span>
+                <select asp-for="PartId" class="form-control" asp-items="ViewBag.Parts"></select>
+                <span asp-validation-for="PartId" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Quantity" class="form-label"></label>
                 <input asp-for="Quantity" class="form-control" />
-                <span asp-validation-for="Quantity" class="text-danger"></span>
+                <span asp-validation-for="Quantity" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Unit Cost</label>
                 <input class="form-control" value="@String.Format("{0:C}", Model.UnitCost ?? 0m)" readonly />
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Line Total</label>
                 <input class="form-control" value="@String.Format("{0:C}", Model.TotalCost ?? 0m)" readonly />
             </div>
 
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary" @(ViewBag.Locked != null && (bool)ViewBag.Locked ? "disabled" : "")>Save</button>
+            <div style="margin-bottom:12px">
+                <button type="submit" class="btn-gold btn-sm" @(ViewBag.Locked != null && (bool)ViewBag.Locked ? "disabled" : "")>Save</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

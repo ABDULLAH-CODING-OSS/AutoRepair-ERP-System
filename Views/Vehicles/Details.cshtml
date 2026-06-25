@@ -1,53 +1,138 @@
 @model AutoRepairERD.Models.Vehicle
+@{ ViewData["Title"] = Model.Make + " " + Model.Model; ViewData["ActiveNav"] = "vehicles"; }
 
-@{
-    ViewData["Title"] = "Vehicle Details";
+@section TopbarActions {
+  <a asp-action="Edit" asp-route-id="@Model.VehicleId" class="btn-gold btn-sm">Edit</a>
+  <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
 }
 
-<div class="container py-4">
+<div class="grid-2" style="margin-bottom:20px">
   <div class="card">
-    <div class="card-header">
-      <h2>Vehicle Details</h2>
+    <div class="card-header"><span class="card-title">Vehicle Info</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">
+      <div><label class="form-label">License Plate</label><p style="font-size:16px;font-weight:700;color:var(--gold)">@Model.LicensePlate</p></div>
+      <div><label class="form-label">Make / Model</label><p style="font-size:14px">@Model.Make @Model.Model @Model.ManufacturingYear</p></div>
+      <div><label class="form-label">Color</label><p style="font-size:14px">@(Model.Color ?? "—")</p></div>
+      <div><label class="form-label">Mileage</label><p style="font-size:14px">@(Model.Mileage.HasValue ? $"{Model.Mileage:N0} km" : "—")</p></div>
+      <div><label class="form-label">VIN</label><p style="font-size:13px;color:var(--text2)">@(Model.Vin ?? "—")</p></div>
+      <div><label class="form-label">Engine #</label><p style="font-size:13px;color:var(--text2)">@(Model.EngineNumber ?? "—")</p></div>
+      @if (!string.IsNullOrEmpty(Model.Notes)) { <div><label class="form-label">Notes</label><p style="font-size:13px;color:var(--text2)">@Model.Notes</p></div> }
     </div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-sm-3">Owner</dt>
-        <dd class="col-sm-9">@((Model?.Customer != null) ? (Model.Customer.FirstName + " " + (Model.Customer.LastName ?? "")).Trim() : (Model?.CustomerId.ToString() ?? ""))</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.LicensePlate)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.LicensePlate)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Vin)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Vin)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Make)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Make)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Model)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Model)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ManufacturingYear)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.ManufacturingYear)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Color)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Color)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Mileage)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Mileage)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.EngineNumber)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.EngineNumber)</dd>
-
-        <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Notes)</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Notes)</dd>
-      </dl>
-
-      <!-- Navigation/collection displays removed: Customer, CreatedByUser, JobOrders are relationship properties and are not shown here. -->
-
-      <div class="mt-3">
-        <a asp-action="Edit" asp-route-id="@Model?.VehicleId" class="btn btn-primary">Edit</a>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
-      </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Owner</span><a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="btn-outline btn-sm">View Customer</a></div>
+    <div style="padding-top:6px">
+      <p style="font-size:15px;font-weight:700">@Model.Customer?.FirstName @Model.Customer?.LastName</p>
+      <p style="font-size:13px;color:var(--text2)">@Model.Customer?.Phone</p>
+      <p style="font-size:13px;color:var(--text2)">@Model.Customer?.Email</p>
+      <p style="font-size:13px;color:var(--text2)">@Model.Customer?.City</p>
     </div>
   </div>
 </div>
+
+<!-- Job Order History -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header"><span class="card-title">Job Order History</span></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Job #</th><th>Status</th><th>Complaint</th><th>Final Cost</th><th>Date</th></tr></thead>
+    <tbody>
+      @if (Model?.JobOrders == null || !Model.JobOrders.Any()) 
+      { 
+        <tr><td colspan="5" class="td-muted" style="text-align:center;padding:20px">No job orders for this vehicle.</td></tr> 
+      }
+      @if (Model?.JobOrders != null)
+      {
+        @foreach (var j in Model.JobOrders.OrderByDescending(x => x.CreatedAt))
+        {
+            <tr onclick="carTransition('/JobOrders/Details/@j.JobOrderId','JOB DETAIL')">
+              <td class="td-gold">@j.JobNumber</td>
+              <td><span class="badge @BadgeHelper.Css(j.Status)">@j.Status</span></td>
+              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">@j.ComplaintDescription</td>
+              <td>PKR @((j.FinalCost ?? j.EstimatedCost ?? 0).ToString("N0"))</td>
+              <td class="td-muted">@(j.CreatedAt?.ToString("MMM d, yyyy"))</td>
+            </tr>
+        }
+      }
+    </tbody>
+  </table></div>
+</div>
+
+<!-- Services Performed -->
+@if (Model.JobOrders.Any(j => j.JobServiceItems.Any()))
+{
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Services Performed</span></div>
+      <div class="table-wrap"><table class="erp-table">
+        <thead><tr><th>Job #</th><th>Service</th><th>Rate</th><th>Date</th></tr></thead>
+        <tbody>
+          @foreach (var job in Model.JobOrders.Where(j => j.JobServiceItems.Any()).OrderByDescending(x => x.CreatedAt))
+          {
+              @foreach (var svc in job.JobServiceItems)
+              {
+                  <tr>
+                    <td class="td-gold">@job.JobNumber</td>
+                    <td>@svc.Service?.ServiceName</td>
+                      <td>PKR @((svc.ServicePrice ?? svc.HourlyRate ?? 0m).ToString("N0"))</td>
+                      <td class="td-muted">@(job.CreatedAt.HasValue ? job.CreatedAt.Value.ToString("MMM d, yyyy") : "-")</td>
+                  </tr>
+              }
+          }
+        </tbody>
+      </table></div>
+    </div>
+}
+
+<!-- Parts Used -->
+@if (Model.JobOrders.Any(j => j.JobPartItems.Any()))
+{
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Parts Used</span></div>
+      <div class="table-wrap"><table class="erp-table">
+        <thead><tr><th>Job #</th><th>Part</th><th>Quantity</th><th>Unit Price</th><th>Date</th></tr></thead>
+        <tbody>
+          @foreach (var job in Model.JobOrders.Where(j => j.JobPartItems.Any()).OrderByDescending(x => x.CreatedAt))
+          {
+              @foreach (var part in job.JobPartItems)
+              {
+                  <tr>
+                    <td class="td-gold">@job.JobNumber</td>
+                    <td>@part.Part?.PartName</td>
+                    <td>@part.Quantity</td>
+                    <td>PKR @((part.UnitPrice ?? 0m).ToString("N0"))</td>
+                    <td class="td-muted">@(job.CreatedAt.HasValue ? job.CreatedAt.Value.ToString("MMM d, yyyy") : "-")</td>
+                  </tr>
+              }
+          }
+        </tbody>
+      </table></div>
+    </div>
+}
+
+<!-- Invoice History -->
+@if (Model.JobOrders.Any(j => j.Invoices.Any()))
+{
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Invoice History</span></div>
+      <div class="table-wrap"><table class="erp-table">
+        <thead><tr><th>Invoice #</th><th>Job #</th><th>Total</th><th>Paid</th><th>Remaining</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          @foreach (var job in Model.JobOrders.Where(j => j.Invoices.Any()).OrderByDescending(x => x.CreatedAt))
+          {
+              @foreach (var inv in job.Invoices.OrderByDescending(x => x.InvoiceDate))
+              {
+                  <tr onclick="carTransition('/Invoices/Details/@inv.InvoiceId','INVOICE DETAIL')">
+                    <td class="td-gold">@inv.InvoiceNumber</td>
+                    <td>@job.JobNumber</td>
+                    <td>PKR @inv.GrandTotal.ToString("N0")</td>
+                    <td>PKR @inv.AmountPaid.ToString("N0")</td>
+                    <td>PKR @inv.RemainingBalance.ToString("N0")</td>
+                    <td><span class="badge @BadgeHelper.Css(inv.PaymentStatus)">@(inv.PaymentStatus ?? "Unpaid")</span></td>
+                    <td class="td-muted">@(inv.InvoiceDate.HasValue ? inv.InvoiceDate.Value.ToString("MMM d, yyyy") : "-")</td>
+                  </tr>
+              }
+          }
+        </tbody>
+      </table></div>
+    </div>
+}
+

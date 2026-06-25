@@ -5,87 +5,87 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Register Employee</h4>
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
             <h6>Login Information</h6>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Username" class="form-label"></label>
                 <input asp-for="Username" class="form-control" />
-                <span asp-validation-for="Username" class="text-danger"></span>
+                <span asp-validation-for="Username" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Password" class="form-label"></label>
                 <input asp-for="Password" type="password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <span asp-validation-for="Password" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Email" class="form-label"></label>
                 <input asp-for="Email" type="email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <span asp-validation-for="Email" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Role</label>
-                <select asp-for="RoleId" asp-items="ViewBag.Roles" class="form-select">
+                <select asp-for="RoleId" asp-items="ViewBag.Roles" class="form-control">
                     <option value="">-- Select Role --</option>
                 </select>
-                <span asp-validation-for="RoleId" class="text-danger"></span>
+                <span asp-validation-for="RoleId" style="color:var(--red)"></span>
             </div>
 
             <hr />
             <h6>Employee Information</h6>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="FirstName" class="form-label"></label>
                 <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
+                <span asp-validation-for="FirstName" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="LastName" class="form-label"></label>
                 <input asp-for="LastName" class="form-control" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
+                <span asp-validation-for="LastName" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Cnic" class="form-label"></label>
                 <input asp-for="Cnic" class="form-control" placeholder="12345-1234567-1" />
-                <span asp-validation-for="Cnic" class="text-danger"></span>
+                <span asp-validation-for="Cnic" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Phone" class="form-label"></label>
                 <input asp-for="Phone" class="form-control" placeholder="03XXXXXXXXX" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
+                <span asp-validation-for="Phone" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Address" class="form-label"></label>
                 <input asp-for="Address" class="form-control" />
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Designation" class="form-label"></label>
                 <input asp-for="Designation" class="form-control" />
             </div>
 
             <h6>Salary Information</h6>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="BasicSalary" class="form-label"></label>
                 <input asp-for="BasicSalary" class="form-control" />
-                <span asp-validation-for="BasicSalary" class="text-danger"></span>
+                <span asp-validation-for="BasicSalary" style="color:var(--red)"></span>
             </div>
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="HourlyRate" class="form-label"></label>
                 <input asp-for="HourlyRate" class="form-control" />
-                <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                <span asp-validation-for="HourlyRate" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="HireDate" class="form-label"></label>
                 <input asp-for="HireDate" type="date" class="form-control" />
-                <span asp-validation-for="HireDate" class="text-danger"></span>
+                <span asp-validation-for="HireDate" style="color:var(--red)"></span>
             </div>
 
-            <div class="d-flex">
-                <button type="submit" class="btn btn-primary">Create Employee</button>
+            <div style="display:flex">
+                <button type="submit" class="btn-gold btn-sm">Create Employee</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

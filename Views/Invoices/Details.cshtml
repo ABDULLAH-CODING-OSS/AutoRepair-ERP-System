@@ -1,35 +1,90 @@
 @model AutoRepairERD.Models.Invoice
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Invoice " + Model.InvoiceNumber;
+    ViewData["ActiveNav"] = "invoices";
+    var partsTotal    = ViewBag.PartsTotal    as decimal? ?? 0m;
+    var servicesTotal = ViewBag.ServicesTotal as decimal? ?? 0m;
 }
 
-<div class="card">
-    <div class="card-header">
-        <h4>Invoice @Model?.InvoiceNumber</h4>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Job Number:</strong> @(Model?.JobOrder?.JobNumber ?? "-")</p>
-                <p><strong>Customer:</strong> @(Model?.JobOrder?.Customer != null ? Model.JobOrder.Customer.FirstName + " " + Model.JobOrder.Customer.LastName : "-")</p>
-                <p><strong>Vehicle:</strong> @(Model?.JobOrder?.Vehicle != null ? Model.JobOrder.Vehicle.Make + " " + Model.JobOrder.Vehicle.Model + " - " + Model.JobOrder.Vehicle.LicensePlate : "-")</p>
-                <p><strong>Invoice Date:</strong> @((Model != null && Model.InvoiceDate.HasValue) ? Model.InvoiceDate.Value.ToString("g") : "-")</p>
-                <p><strong>Status:</strong> @(Model?.InvoiceStatus ?? "-")</p>
-                <p><strong>Payment Status:</strong> @(Model?.PaymentStatus ?? "-")</p>
-            </div>
-            <div class="col-md-6 text-end">
-                <p><strong>Parts Total:</strong> @(ViewBag.PartsTotal != null ? ((decimal)ViewBag.PartsTotal).ToString("C") : "-")</p>
-                <p><strong>Services Total:</strong> @(ViewBag.ServicesTotal != null ? ((decimal)ViewBag.ServicesTotal).ToString("C") : "-")</p>
-                <p><strong>Subtotal:</strong> @(Model.SubTotal.HasValue ? Model.SubTotal.Value.ToString("C") : "-")</p>
-                <p><strong>Tax:</strong> @(Model.TaxAmount.HasValue ? Model.TaxAmount.Value.ToString("C") : "-")</p>
-                <p><strong>Discount:</strong> @(Model.DiscountAmount.HasValue ? Model.DiscountAmount.Value.ToString("C") : "-")</p>
-                <h5><strong>Grand Total:</strong> @Model.GrandTotal.ToString("C")</h5>
-            </div>
-        </div>
-    </div>
-    <div class="card-footer">
-        <a asp-action="Edit" asp-route-id="@Model?.InvoiceId" class="btn btn-primary">Edit</a>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
-    </div>
+@section TopbarActions {
+  <a asp-action="Edit" asp-route-id="@Model.InvoiceId" class="btn-outline btn-sm">Edit</a>
+  @if (Model.PaymentStatus != "Paid")
+  {
+    <a asp-action="Delete" asp-route-id="@Model.InvoiceId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
+  }
+  <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
+}
+
+<!-- Invoice hero banner -->
+<div style="background:linear-gradient(135deg,#0d1a2e,#142032);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px">
+  <div>
+    <p style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">INVOICE</p>
+    <h2 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--gold)">@Model.InvoiceNumber</h2>
+    <p style="font-size:13px;color:var(--text2)">Issued: @(Model.InvoiceDate?.ToString("MMMM d, yyyy"))</p>
+  </div>
+  <div style="text-align:right">
+    <p style="font-size:11px;color:var(--text3);margin-bottom:6px">AMOUNT DUE</p>
+    <p style="font-size:32px;font-weight:800;font-family:'Syne',sans-serif;color:var(--gold)">PKR @Model.GrandTotal.ToString("N0")</p>
+    <span class="badge @BadgeHelper.Css(Model.PaymentStatus)" style="font-size:13px;padding:7px 14px">@(Model.PaymentStatus ?? "Unpaid")</span>
+  </div>
 </div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Job Order</span><a asp-controller="JobOrders" asp-action="Details" asp-route-id="@Model.JobOrderId" class="btn-outline btn-sm">View Job</a></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px">
+      <div><label class="form-label">Job Number</label><p class="td-gold" style="font-weight:700">@Model.JobOrder?.JobNumber</p></div>
+      <div><label class="form-label">Customer</label><p>@Model.JobOrder?.Customer?.FirstName @Model.JobOrder?.Customer?.LastName</p></div>
+      <div><label class="form-label">Vehicle</label><p>@Model.JobOrder?.Vehicle?.Make @Model.JobOrder?.Vehicle?.Model — <strong>@Model.JobOrder?.Vehicle?.LicensePlate</strong></p></div>
+      <div><label class="form-label">Job Status</label><span class="badge @BadgeHelper.Css(Model.JobOrder?.Status)">@Model.JobOrder?.Status</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Billing Summary</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px">
+        <div style="display:flex;justify-content:space-between"><span class="td-muted">Parts</span><span>PKR @partsTotal.ToString("N0")</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="td-muted">Services</span><span>PKR @servicesTotal.ToString("N0")</span></div>
+        @if (Model.TaxAmount.HasValue && Model.TaxAmount > 0)
+        {
+            <div style="display:flex;justify-content:space-between"><span class="td-muted">Tax</span><span>PKR @Model.TaxAmount.Value.ToString("N0")</span></div>
+        }
+        @if (Model.DiscountAmount.HasValue && Model.DiscountAmount > 0)
+        {
+            <div style="display:flex;justify-content:space-between"><span class="td-muted">Discount</span><span style="color:var(--green)">- PKR @Model.DiscountAmount.Value.ToString("N0")</span></div>
+        }
+        @{ 
+            var totalPaid = (Model.Payments != null && Model.Payments.Any()) ? Model.Payments.Sum(p => p.AmountPaid) : 0m;
+            totalPaid = Decimal.Round(totalPaid, 2, MidpointRounding.AwayFromZero);
+            var remaining = Decimal.Round(Model.GrandTotal - totalPaid, 2, MidpointRounding.AwayFromZero);
+        }
+        <div style="display:flex;justify-content:space-between"><span class="td-muted">Paid</span><span>PKR @totalPaid.ToString("N2")</span></div>
+        <div style="display:flex;justify-content:space-between"><span class="td-muted">Remaining</span><span style="font-weight:700;color:var(--red)">PKR @remaining.ToString("N2")</span></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+          <span style="font-weight:700">Grand Total</span>
+          <span style="font-weight:800;font-size:16px;color:var(--gold)">PKR @Model.GrandTotal.ToString("N2")</span>
+        </div>
+      </div>
+  </div>
+</div>
+
+@if (Model.Payments.Any())
+{
+    <div class="card">
+      <div class="card-header"><span class="card-title">Payments Received</span><a asp-controller="Payments" asp-action="Create" asp-route-invoiceId="@Model.InvoiceId" class="btn-gold btn-sm">+ Record Payment</a></div>
+      <div class="table-wrap"><table class="erp-table">
+        <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Amount</th></tr></thead>
+        <tbody>
+          @foreach (var pay in Model.Payments)
+          {
+                        <tr><td class="td-muted">@(pay.PaymentDate?.ToString("MMM d, yyyy"))</td><td>@pay.PaymentMethod</td><td class="td-muted">@pay.TransactionReference</td><td>PKR @pay.AmountPaid.ToString("N2")</td></tr>
+          }
+        </tbody>
+      </table></div>
+    </div>
+}
+else
+{
+    <div style="text-align:center;margin-top:10px">
+      <a asp-controller="Payments" asp-action="Create" asp-route-invoiceId="@Model.InvoiceId" class="btn-gold">+ Record Payment</a>
+    </div>
+}

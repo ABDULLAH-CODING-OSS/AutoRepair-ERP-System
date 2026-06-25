@@ -9,24 +9,33 @@ public class InvoicesController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notifications;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public InvoicesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
+    public InvoicesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notifications = notifications;
+        _auditService = auditService;
     }
 
     // GET: INVOICES
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(string q)
     {
-        // include related job and customer/vehicle for display
-        var list = await _context.Invoices
+        var query = _context.Invoices
             .Include(i => i.JobOrder)
                 .ThenInclude(j => j.Customer)
             .Include(i => i.JobOrder)
                 .ThenInclude(j => j.Vehicle)
-            .ToListAsync();
+            .Include(i => i.Payments)
+            .AsQueryable();
 
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(i => (i.InvoiceNumber ?? "").Contains(q) || (i.JobOrder != null && ((i.JobOrder.JobNumber ?? "").Contains(q) || (i.JobOrder.Customer != null && ((i.JobOrder.Customer.FirstName ?? "").Contains(q) || (i.JobOrder.Customer.LastName ?? "").Contains(q))))) || (i.PaymentStatus ?? "").Contains(q));
+            ViewBag.SearchQuery = q;
+        }
+
+        var list = await query.ToListAsync();
         return View(list);
     }
 
@@ -43,6 +52,7 @@ public class InvoicesController : Controller
                 .ThenInclude(j => j.Customer)
             .Include(i => i.JobOrder)
                 .ThenInclude(j => j.Vehicle)
+            .Include(i => i.Payments)
             .FirstOrDefaultAsync(m => m.InvoiceId == id);
         if (invoice == null)
         {
@@ -65,14 +75,16 @@ public class InvoicesController : Controller
     }
 
     // GET: INVOICES/Create
-    //public IActionResult Create()
-    //{
-    //    return View();
-    //}
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        // Only show completed job orders that don't have invoices yet
+        var completedUninvoicedJobs = await _context.JobOrders
+            .Where(j => j.Status == "Completed" && !_context.Invoices.Any(i => i.JobOrderId == j.JobOrderId))
+            .OrderByDescending(j => j.JobOrderId)
+            .ToListAsync();
+
         ViewBag.JobOrders = new SelectList(
-            _context.JobOrders,
+            completedUninvoicedJobs,
             "JobOrderId",
             "JobNumber");
 
@@ -92,6 +104,22 @@ public class InvoicesController : Controller
         ModelState.Remove("InvoiceNumber");
         ModelState.Remove("CreatedByUserId");
         ModelState.Remove("InvoiceDate");
+
+        // Validate that the selected job is completed and not already invoiced
+        var job = await _context.JobOrders.FindAsync(invoice.JobOrderId);
+        if (job == null)
+        {
+            ModelState.AddModelError("JobOrderId", "Selected job order not found.");
+        }
+        else if (job.Status != "Completed")
+        {
+            ModelState.AddModelError("JobOrderId", "Only completed job orders can be invoiced.");
+        }
+        else if (await _context.Invoices.AnyAsync(i => i.JobOrderId == invoice.JobOrderId))
+        {
+            ModelState.AddModelError("JobOrderId", "An invoice already exists for this job order.");
+        }
+
         if (ModelState.IsValid)
         {
             invoice.InvoiceNumber =
@@ -126,8 +154,13 @@ public class InvoicesController : Controller
             {
                 ModelState.AddModelError("", "Invoice already exists for this Job.");
 
+                var completedUninvoicedJobs = await _context.JobOrders
+                    .Where(j => j.Status == "Completed" && !_context.Invoices.Any(i => i.JobOrderId == j.JobOrderId))
+                    .OrderByDescending(j => j.JobOrderId)
+                    .ToListAsync();
+
                 ViewBag.JobOrders = new SelectList(
-                    _context.JobOrders,
+                    completedUninvoicedJobs,
                     "JobOrderId",
                     "JobNumber",
                     invoice.JobOrderId);
@@ -136,12 +169,16 @@ public class InvoicesController : Controller
             }
             _context.Add(invoice);
             await _context.SaveChangesAsync();
+
+            // Audit log
+            await _auditService.LogCreateAsync("Invoices", invoice.InvoiceId, $"Invoice {invoice.InvoiceNumber}");
+
             // update JobOrder.FinalCost to reflect invoice grand total
-            var job = await _context.JobOrders.FindAsync(invoice.JobOrderId);
-            if (job != null)
+            var jobOrder = await _context.JobOrders.FindAsync(invoice.JobOrderId);
+            if (jobOrder != null)
             {
-                job.FinalCost = invoice.GrandTotal;
-                _context.Update(job);
+                jobOrder.FinalCost = invoice.GrandTotal;
+                _context.Update(jobOrder);
                 await _context.SaveChangesAsync();
             }
 
@@ -174,30 +211,6 @@ public class InvoicesController : Controller
                         await _notifications.CreateForRoleAsync(adminRole.RoleId, "Invoices", title, message, HttpContext.Session.GetInt32("UserID"));
                     }
                 }
-            }
-            catch { }
-            // Audit: Invoice Generated (best-effort)
-            try
-            {
-                var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
-                var customer = jobRef?.Customer;
-                var vehicle = jobRef?.Vehicle;
-                var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
-                var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
-
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Invoices",
-                    RecordId = invoice.InvoiceId,
-                    ActionType = "Invoice Generated",
-                    OldValues = null,
-                    NewValues = $"InvoiceNumber={invoice.InvoiceNumber};JobNumber={invoice.JobOrderId};Customer={custName};Vehicle={vehicleDesc};Amount={invoice.GrandTotal}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
             }
             catch { }
             return RedirectToAction(nameof(Index));
@@ -349,9 +362,22 @@ public class InvoicesController : Controller
                     + (invoice.TaxAmount ?? 0)
                     - (invoice.DiscountAmount ?? 0);
 
+                // Recompute payment status based on existing payments so status and remaining balance are accurate after edits
+                var totalPaidRaw = _context.Payments.Where(p => p.InvoiceId == invoice.InvoiceId).Sum(p => (decimal?)p.AmountPaid) ?? 0m;
+                var totalPaid = Decimal.Round(totalPaidRaw, 2, MidpointRounding.AwayFromZero);
+                var grand = Decimal.Round(invoice.GrandTotal, 2, MidpointRounding.AwayFromZero);
+                if (totalPaid <= 0m) invoice.PaymentStatus = "Unpaid";
+                else if (totalPaid < grand) invoice.PaymentStatus = "Partially Paid";
+                else invoice.PaymentStatus = "Paid";
+
                 _context.Update(invoice);
 
                 await _context.SaveChangesAsync();
+
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Invoices", invoice.InvoiceId, null, $"Invoice {invoice.InvoiceNumber}");
+
                 // update JobOrder.FinalCost after invoice edit
                 var job = await _context.JobOrders.FindAsync(invoice.JobOrderId);
                 if (job != null)
@@ -360,30 +386,6 @@ public class InvoicesController : Controller
                     _context.Update(job);
                     await _context.SaveChangesAsync();
                 }
-                // Audit: Invoice Updated (best-effort)
-                try
-                {
-                    var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
-                    var customer = jobRef?.Customer;
-                    var vehicle = jobRef?.Vehicle;
-                    var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
-                    var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
-
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Invoices",
-                        RecordId = invoice.InvoiceId,
-                        ActionType = "Invoice Updated",
-                        OldValues = $"InvoiceNumber={existingInvoice.InvoiceNumber};Amount={existingInvoice.GrandTotal}",
-                        NewValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={invoice.GrandTotal};Customer={custName};Vehicle={vehicleDesc}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -435,34 +437,26 @@ public class InvoicesController : Controller
         var invoice = await _context.Invoices.FindAsync(id);
         if (invoice != null)
         {
-            _context.Invoices.Remove(invoice);
-        }
-
-        await _context.SaveChangesAsync();
-        // Audit: Invoice Deleted (best-effort)
-        try
-        {
-            var jobRef = await _context.JobOrders.Include(j => j.Customer).Include(j => j.Vehicle).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
-            var customer = jobRef?.Customer;
-            var vehicle = jobRef?.Vehicle;
-            var custName = customer != null ? customer.FirstName + " " + customer.LastName : "";
-            var vehicleDesc = vehicle != null ? vehicle.Make + " " + vehicle.Model + " - " + vehicle.LicensePlate : "";
-
-            var audit = new AuditLog
+            // Check if invoice is paid - don't allow deletion
+            if (invoice.PaymentStatus == "Paid")
             {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Invoices",
-                RecordId = invoice.InvoiceId,
-                ActionType = "Invoice Deleted",
-                OldValues = $"InvoiceNumber={invoice.InvoiceNumber};JobNumber={invoice.JobOrderId};Customer={custName};Vehicle={vehicleDesc};Amount={invoice.GrandTotal}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
+                TempData["Toast"] = "Paid invoices cannot be deleted.";
+                TempData["ToastType"] = "danger";
+                return RedirectToAction(nameof(Details), new { id = id });
+            }
+
+            var invoiceNum = invoice.InvoiceNumber;
+            _context.Invoices.Remove(invoice);
+            await _context.SaveChangesAsync();
+
+            // Audit log
+            await _auditService.LogDeleteAsync("Invoices", (int)id, $"Invoice {invoiceNum}");
+        }
+        else
+        {
             await _context.SaveChangesAsync();
         }
-        catch { }
+
         return RedirectToAction(nameof(Index));
     }
 

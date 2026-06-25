@@ -1,0 +1,94 @@
+@model AutoRepairERD.Models.Attendance?
+@{
+    ViewData["Title"] = "Mark My Attendance";
+    ViewData["ActiveNav"] = "mark-att";
+    var employee = ViewBag.Employee as AutoRepairERD.Models.Employee;
+    var history  = ViewBag.RecentHistory as List<AutoRepairERD.Models.Attendance> ?? new();
+    var today    = DateOnly.FromDateTime(DateTime.Now);
+    bool checkedIn  = Model?.CheckInTime != null;
+    bool checkedOut = Model?.CheckOutTime != null;
+}
+
+<div style="max-width:620px;margin:0 auto">
+  <!-- Employee chip -->
+  <div class="card" style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <div style="width:48px;height:48px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#0d1520;flex-shrink:0">
+      @(employee?.FirstName?[0])@(employee?.LastName?[0])
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:15px">@employee?.FirstName @employee?.LastName</div>
+      <div class="td-muted" style="font-size:12px">@employee?.Designation &nbsp;·&nbsp; @employee?.EmployeeCode</div>
+    </div>
+    <div style="margin-left:auto;font-size:13px;color:var(--text2)">@today.ToString("dddd, MMM d yyyy")</div>
+  </div>
+
+  <!-- Status / action card -->
+  <div class="card" style="margin-bottom:20px;text-align:center;padding:32px 24px">
+    @if (checkedOut)
+    {
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;margin-bottom:6px">Shift Complete!</h2>
+        <p class="td-muted" style="font-size:13px;margin-bottom:14px">
+            Checked in at <strong style="color:var(--text)">@Model!.CheckInTime!.Value.ToString(@"h\:mm tt")</strong>,
+            checked out at <strong style="color:var(--text)">@Model.CheckOutTime!.Value.ToString(@"h\:mm tt")</strong>.
+            @if (Model.OvertimeHours > 0)
+            {
+                <span>Overtime: <strong style="color:var(--gold)">@(Model.OvertimeHours?.ToString("0.##") ?? "0") hours</strong>.</span>
+            }
+        </p>
+        <span class="badge badge-present">Present</span>
+    }
+    else if (checkedIn)
+    {
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-dim);display:flex;align-items:center;justify-content:circle;margin:0 auto 14px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:auto"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;margin-bottom:6px">Currently On Shift</h2>
+        <p class="td-muted" style="font-size:13px;margin-bottom:20px">
+            Checked in at <strong style="color:var(--text)">@Model!.CheckInTime!.Value.ToString(@"h\:mm tt")</strong>.
+            Ready to clock out?
+        </p>
+        <form method="post" action="/Attendances/CheckOut">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-gold" style="padding:12px 32px">Check Out</button>
+        </form>
+    }
+    else
+    {
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;border:1px solid var(--border)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:20px;margin-bottom:6px">Not Checked In Yet</h2>
+        <p class="td-muted" style="font-size:13px;margin-bottom:20px">Tap the button to log your arrival time.</p>
+        <form method="post" action="/Attendances/CheckIn">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-gold" style="padding:12px 32px">Check In Now</button>
+        </form>
+    }
+  </div>
+
+  <!-- Recent 7-day history -->
+  @if (history.Any())
+  {
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent History</span><a href="/Attendances/History" class="btn-outline btn-sm">Full History</a></div>
+        <div class="table-wrap"><table class="erp-table">
+          <thead><tr><th>Date</th><th>Status</th><th>Check In</th><th>Check Out</th><th>OT</th></tr></thead>
+          <tbody>
+            @foreach (var h in history)
+            {
+                <tr>
+                    <td>@(h.AttendanceDate?.ToString("ddd, MMM d") ?? "—")</td>
+                    <td><span class="badge @BadgeHelper.Css(h.Status)">@h.Status</span></td>
+                    <td>@(h.CheckInTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                    <td>@(h.CheckOutTime?.ToString(@"h\:mm tt") ?? "—")</td>
+                    <td class="td-muted">@(h.OvertimeHours > 0 ? $"{h.OvertimeHours:0.##}h" : "—")</td>
+                </tr>
+            }
+          </tbody>
+        </table></div>
+      </div>
+  }
+</div>

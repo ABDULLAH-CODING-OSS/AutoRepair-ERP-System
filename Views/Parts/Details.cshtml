@@ -1,55 +1,30 @@
 @model AutoRepairERD.Models.Part
+@{ ViewData["Title"] = Model.PartName; ViewData["ActiveNav"] = "parts"; }
 
-@{
-    ViewData["Title"] = "Part Details";
+@section TopbarActions {
+  <a asp-action="Edit" asp-route-id="@Model.PartId" class="btn-gold btn-sm">Edit</a>
+  <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
 }
 
-<div class="container py-4">
+<div class="grid-2">
   <div class="card">
-    <div class="card-header"><h2>Part Details</h2></div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-sm-3">Category</dt>
-        <dd class="col-sm-9">@(Model.Category?.CategoryName ?? Model.CategoryId.ToString())</dd>
-
-        <dt class="col-sm-3">Supplier</dt>
-                <dd class="col-sm-9">@(Model.Supplier?.CompanyName ?? Model.SupplierId.ToString())</dd>
-
-        <dt class="col-sm-3">SKU</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Sku)</dd>
-
-        <dt class="col-sm-3">Name</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.PartName)</dd>
-
-        <dt class="col-sm-3">Description</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Description)</dd>
-
-        <dt class="col-sm-3">Cost Price</dt>
-        <dd class="col-sm-9">@String.Format("{0:C}", Model.CostPrice)</dd>
-
-        <dt class="col-sm-3">Sale Price</dt>
-        <dd class="col-sm-9">@String.Format("{0:C}", Model.SalePrice)</dd>
-
-        <dt class="col-sm-3">Current Stock</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.CurrentStock)</dd>
-
-        <dt class="col-sm-3">Reorder Level</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.ReorderLevel)</dd>
-
-        <dt class="col-sm-3">Unit</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.Unit)</dd>
-
-        <dt class="col-sm-3">Rack Location</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.RackLocation)</dd>
-
-        <dt class="col-sm-3">Active</dt>
-        <dd class="col-sm-9">@Html.DisplayFor(m => m.IsActive)</dd>
-      </dl>
-
-      <div class="mt-3">
-        <a asp-action="Edit" asp-route-id="@Model?.PartId" class="btn btn-primary">Edit</a>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
-      </div>
+    <div class="card-header"><span class="card-title">Part Info</span><span class="badge @BadgeHelper.Css(Model.IsActive)">@BadgeHelper.Text(Model.IsActive)</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">
+      <div><label class="form-label">Part Name</label><p style="font-size:15px;font-weight:700">@Model.PartName</p></div>
+      <div><label class="form-label">SKU</label><p style="font-size:13px;color:var(--text2)">@(Model.Sku ?? "—")</p></div>
+      <div><label class="form-label">Category</label><p>@(Model.Category?.CategoryName ?? "—")</p></div>
+      <div><label class="form-label">Supplier</label><p>@(Model.Supplier?.SupplierName ?? "—")</p></div>
+      <div><label class="form-label">Description</label><p style="font-size:13px;color:var(--text2)">@(Model.Description ?? "—")</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Stock &amp; Pricing</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">
+      <div><label class="form-label">Current Stock</label><p style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:@((Model.CurrentStock <= Model.ReorderLevel) ? "var(--red)" : "var(--green)")">@Model.CurrentStock @Model.Unit</p></div>
+      <div><label class="form-label">Reorder Level</label><p>@(Model.ReorderLevel ?? 0) @Model.Unit</p></div>
+      <div><label class="form-label">Rack Location</label><p>@(Model.RackLocation ?? "—")</p></div>
+      <div><label class="form-label">Cost Price</label><p>PKR @Model.CostPrice.ToString("N2")</p></div>
+      <div><label class="form-label">Sale Price</label><p style="font-weight:600;color:var(--gold)">PKR @Model.SalePrice.ToString("N2")</p></div>
     </div>
   </div>
 </div>

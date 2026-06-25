@@ -10,19 +10,26 @@ public class VehiclesController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notificationService;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public VehiclesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
+    public VehiclesController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notificationService = notificationService;
+        _auditService = auditService;
     }
 
     // GET: VEHICLES
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(string q)
     {
-        return View(await _context.Vehicles
-            .Include(v => v.Customer)
-            .ToListAsync());
+        var query = _context.Vehicles.Include(v => v.Customer).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(v => (v.LicensePlate ?? "").Contains(q) || (v.Vin ?? "").Contains(q) || (v.Make ?? "").Contains(q) || (v.Model ?? "").Contains(q) || (v.Customer != null && ((v.Customer.FirstName ?? "").Contains(q) || (v.Customer.LastName ?? "").Contains(q))));
+            ViewBag.SearchQuery = q;
+        }
+        var list = await query.ToListAsync();
+        return View(list);
     }
 
     // GET: VEHICLES/Details/5
@@ -35,6 +42,16 @@ public class VehiclesController : Controller
 
         var vehicle = await _context.Vehicles
             .Include(v => v.Customer)
+            .Include(v => v.JobOrders.OrderByDescending(j => j.CreatedAt))
+                .ThenInclude(j => j.Invoices)
+                    .ThenInclude(i => i.Payments)
+            .Include(v => v.JobOrders)
+                .ThenInclude(j => j.JobServiceItems)
+                    .ThenInclude(s => s.Service)
+            .Include(v => v.JobOrders)
+                .ThenInclude(j => j.JobPartItems)
+                    .ThenInclude(p => p.Part)
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.VehicleId == id);
         if (vehicle == null)
         {
@@ -134,6 +151,10 @@ public class VehiclesController : Controller
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Audit log
+                await _auditService.LogCreateAsync("Vehicles", vehicle.VehicleId, $"{vehicle.LicensePlate} - {vehicle.Make} {vehicle.Model}");
+
                 // Batch 3: NEW VEHICLE REGISTERED - notify Admin and Service Advisor
                 try
                 {
@@ -147,27 +168,6 @@ public class VehiclesController : Controller
                         await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Vehicle", title, message);
                     if (saRole != null)
                         await _notificationService.CreateForRoleAsync(saRole.RoleId, "Vehicle", title, message);
-                }
-                catch { }
-
-                // Audit: Vehicle Created (best-effort)
-                try
-                {
-                    var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
-                    var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Vehicles",
-                        RecordId = vehicle.VehicleId,
-                        ActionType = "Vehicle Created",
-                        OldValues = null,
-                        NewValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
                 }
                 catch { }
 
@@ -351,29 +351,12 @@ public class VehiclesController : Controller
         {
             try
             {
-                var original = await _context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.VehicleId == vehicle.VehicleId);
                 _context.Update(vehicle);
                 await _context.SaveChangesAsync();
-                // Audit: Vehicle Updated (best-effort)
-                try
-                {
-                    var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
-                    var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Vehicles",
-                        RecordId = vehicle.VehicleId,
-                        ActionType = "Vehicle Updated",
-                        OldValues = original != null ? $"Vehicle={original.LicensePlate};VIN={original.Vin};Customer={( (await _context.Customers.FindAsync(original.CustomerId))?.FirstName ?? "") }" : null,
-                        NewValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Vehicles", vehicle.VehicleId, null, $"{vehicle.LicensePlate} - {vehicle.Make} {vehicle.Model}");
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException)
@@ -457,30 +440,17 @@ public class VehiclesController : Controller
         var vehicle = await _context.Vehicles.FindAsync(id);
         if (vehicle != null)
         {
+            var vehicleInfo = $"{vehicle.LicensePlate} - {vehicle.Make} {vehicle.Model}";
             _context.Vehicles.Remove(vehicle);
-        }
+            await _context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
-        // Audit: Vehicle Deleted (best-effort)
-        try
+            // Audit log
+            await _auditService.LogDeleteAsync("Vehicles", (int)id, vehicleInfo);
+        }
+        else
         {
-            var customer = await _context.Customers.FindAsync(vehicle.CustomerId);
-            var custName = customer != null ? (customer.FirstName + (string.IsNullOrEmpty(customer.LastName) ? "" : " " + customer.LastName)) : "";
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Vehicles",
-                RecordId = vehicle.VehicleId,
-                ActionType = "Vehicle Deleted",
-                OldValues = $"Vehicle={vehicle.LicensePlate};VIN={vehicle.Vin};Customer={custName};Make={vehicle.Make};Model={vehicle.Model}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
             await _context.SaveChangesAsync();
         }
-        catch { }
 
         return RedirectToAction(nameof(Index));
     }

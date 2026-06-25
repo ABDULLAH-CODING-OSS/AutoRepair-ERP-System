@@ -1,12 +1,63 @@
-﻿<h3>Welcome @ViewBag.Username</h3>
-
-<h4>Role: @ViewBag.RoleName</h4>
-<hr />
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Welcome";
+    ViewData["ActiveNav"] = "";
+    var role = ViewBag.RoleName as string ?? "";
+    var error = TempData["Error"] as string;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-hero" style="background:linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); border:1px solid var(--border);">
+    <div class="page-hero-content" style="background:none;">
+        <div>
+            <div class="hero-title">Welcome, @ViewBag.Username 👋</div>
+            <div class="hero-sub">You're signed in as <strong style="color:var(--gold)">@role</strong>.</div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="card" style="border-color:var(--red);background:var(--red-dim);margin-bottom:20px;padding:14px 18px;color:var(--red);font-size:13px;">@error</div>
+}
+
+<div class="stats-grid stats-3">
+    @if (role == "Service Advisor")
+    {
+        <a href="/Dashboard/Advisor" class="card" style="text-decoration:none;">
+            <div class="card-title">My Dashboard</div>
+            <p style="color:var(--text2);font-size:13px;margin-top:6px;">View your job orders, customers and pending invoices.</p>
+        </a>
+    }
+    @if (role == "Mechanic")
+    {
+        <a href="/Dashboard/Mechanic" class="card" style="text-decoration:none;">
+            <div class="card-title">My Dashboard</div>
+            <p style="color:var(--text2);font-size:13px;margin-top:6px;">View your assigned jobs and today's attendance.</p>
+        </a>
+    }
+    <a href="/JobOrders" class="card" style="text-decoration:none;">
+        <div class="card-title">Job Orders</div>
+        <p style="color:var(--text2);font-size:13px;margin-top:6px;">Track every repair job from intake to completion.</p>
+    </a>
+    <a href="/Attendances/Mark" class="card" style="text-decoration:none;">
+        <div class="card-title">Mark My Attendance</div>
+        <p style="color:var(--text2);font-size:13px;margin-top:6px;">Check in and out for today's shift.</p>
+    </a>
+    @if (role == "Inventory Manager")
+    {
+        <a href="/Parts" class="card" style="text-decoration:none;">
+            <div class="card-title">Parts Inventory</div>
+            <p style="color:var(--text2);font-size:13px;margin-top:6px;">Manage stock levels, suppliers and purchase orders.</p>
+        </a>
+    }
+    @if (role == "Receptionist")
+    {
+        <a href="/Customers" class="card" style="text-decoration:none;">
+            <div class="card-title">Customers</div>
+            <p style="color:var(--text2);font-size:13px;margin-top:6px;">Look up customer records and vehicle history.</p>
+        </a>
+    }
+    <a href="/Notifications" class="card" style="text-decoration:none;">
+        <div class="card-title">Notifications</div>
+        <p style="color:var(--text2);font-size:13px;margin-top:6px;">Catch up on the latest workshop alerts.</p>
+    </a>
 </div>

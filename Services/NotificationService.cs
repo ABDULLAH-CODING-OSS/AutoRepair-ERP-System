@@ -49,15 +49,25 @@ namespace AutoRepairERD.Services
             // Create per-user notifications for each user in the role
             var userIds = await _context.UserRoles.Where(ur => ur.RoleId == roleId).Select(ur => ur.UserId).ToListAsync();
             Notification? created = null;
+            var now = DateTime.Now;
             foreach (var uid in userIds)
             {
+                // Duplicate suppression: do not create identical notification for the same user within last 24 hours
+                var exists = await _context.Notifications.AnyAsync(n => n.UserId == uid
+                                                                        && n.NotificationType == type
+                                                                        && n.Title == title
+                                                                        && n.Message == message
+                                                                        && n.CreatedAt != null
+                                                                        && n.CreatedAt >= now.AddHours(-24));
+                if (exists) continue;
+
                 var n = new Notification
                 {
                     UserId = uid,
                     NotificationType = type,
                     Title = title,
                     Message = message,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = now,
                     IsRead = false
                 };
                 _context.Notifications.Add(n);

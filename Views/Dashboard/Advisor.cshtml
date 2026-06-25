@@ -1,0 +1,94 @@
+@model AutoRepairERD.Models.ViewModels.AdvisorDashboardViewModel
+@{
+    ViewData["Title"] = "Advisor Dashboard";
+    ViewData["ActiveNav"] = "advisor-dash";
+}
+
+@if (ViewData["UserRole"]?.ToString() is "Owner" or "Admin")
+{
+    <div style="background:linear-gradient(90deg,#002a22,#003a2e);border:1px solid var(--green);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span style="font-size:13px;color:var(--green)">👁 Preview Mode — Viewing as <strong>Service Advisor (@Model.AdvisorName)</strong></span>
+        <button class="btn-gold btn-sm" onclick="history.back()">← Back</button>
+    </div>
+}
+
+@section TopbarActions {
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-gold btn-sm" onclick="carTransition('/JobOrders/Create','CREATE JOB ORDER')">+ New Job Order</button>
+  </div>
+}
+
+<div style="margin-bottom:10px"><p style="font-size:13px;color:var(--text2)">@DateTime.Now.ToString("dddd, dd MMM yyyy") — @Model.AdvisorName</p></div>
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-orange">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.MyOpenJobs">0</div>
+    <div class="stat-lbl">My Open Jobs</div>
+  </div>
+  <div class="stat-card sc-green">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
+    <div class="stat-val" data-count="@Model.MyCompletedJobsThisMonth">0</div>
+    <div class="stat-lbl">Completed This Month</div>
+  </div>
+  <div class="stat-card sc-red" style="cursor:pointer" onclick="carTransition('/Invoices','INVOICES')">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle></svg></span></div>
+    <div class="stat-val" data-count="@Model.PendingInvoices">0</div>
+    <div class="stat-lbl">Pending Invoices</div>
+    <div class="stat-change dn">Click to view</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">My Recent Job Orders</span><button class="btn-outline btn-sm" onclick="carTransition('/JobOrders','JOB ORDERS')">View All</button></div>
+    <div class="table-wrap"><table class="erp-table">
+      <thead><tr><th>Job #</th><th>Customer</th><th>Vehicle</th><th>Status</th></tr></thead>
+      <tbody>
+        @if (!Model.MyRecentJobs.Any())
+        {
+            <tr><td colspan="4" class="td-muted" style="text-align:center;padding:20px;">No jobs assigned yet.</td></tr>
+        }
+        @foreach (var j in Model.MyRecentJobs)
+        {
+            <tr onclick="carTransition('/JobOrders/Details/@j.JobOrderId','JOB DETAIL')">
+                <td class="td-gold">@j.JobNumber</td>
+                <td>@j.Customer?.FirstName @j.Customer?.LastName</td>
+                <td>@j.Vehicle?.Make @j.Vehicle?.Model</td>
+                <td><span class="badge @BadgeHelper.Css(j.Status)">@j.Status</span></td>
+            </tr>
+        }
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Recent Customers</span><button class="btn-outline btn-sm" onclick="carTransition('/Customers','CUSTOMERS')">View All</button></div>
+    <div class="table-wrap"><table class="erp-table">
+      <thead><tr><th>Name</th><th>Phone</th><th>City</th></tr></thead>
+      <tbody>
+        @if (!Model.RecentCustomers.Any())
+        {
+            <tr><td colspan="3" class="td-muted" style="text-align:center;padding:20px;">No customers yet.</td></tr>
+        }
+        @foreach (var c in Model.RecentCustomers)
+        {
+            <tr onclick="carTransition('/Customers/Details/@c.CustomerId','CUSTOMER DETAIL')">
+                <td class="td-gold">@c.FirstName @c.LastName</td>
+                <td>@c.Phone</td>
+                <td class="td-muted">@c.City</td>
+            </tr>
+        }
+      </tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Customers/Create','NEW CUSTOMER')"><span style="font-size:20px">👤</span><span style="font-size:12px">New Customer</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/JobOrders/Create','NEW JOB ORDER')"><span style="font-size:20px">📋</span><span style="font-size:12px">New Job Order</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Invoices','INVOICES')"><span style="font-size:20px">🧾</span><span style="font-size:12px">Invoices</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Attendances/Mark','MARK ATTENDANCE')"><span style="font-size:20px">⏱</span><span style="font-size:12px">Mark Attendance</span></button>
+    </div>
+</div>

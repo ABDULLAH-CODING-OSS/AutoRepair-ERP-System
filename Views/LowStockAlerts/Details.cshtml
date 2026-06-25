@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Alert Details</h4>
         <dl class="row">
             <dt class="col-sm-3">Part</dt>
@@ -30,7 +30,7 @@
             <dd class="col-sm-9">@Model.Status</dd>
         </dl>
 
-        <a asp-action="Edit" asp-route-alertid="@Model.AlertId" class="btn btn-primary">Edit</a>
+        <a asp-action="Edit" asp-route-alertid="@Model.AlertId" class="btn-gold btn-sm">Edit</a>
         <a asp-action="Index" class="btn btn-secondary ms-1">Back</a>
     </div>
 </div>

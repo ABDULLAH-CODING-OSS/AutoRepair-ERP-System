@@ -25,7 +25,7 @@ public partial class Service
     [Column(TypeName = "decimal(18, 2)")]
     public decimal? FixedPrice { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     [InverseProperty("Service")]
     public virtual ICollection<JobServiceItem> JobServiceItems { get; set; } = new List<JobServiceItem>();

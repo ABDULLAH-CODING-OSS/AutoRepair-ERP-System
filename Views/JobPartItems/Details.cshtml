@@ -8,21 +8,21 @@
     <div class="card-header">
         <h5 class="mb-0">Part Item</h5>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
+    <div style="padding:4px 0">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Job:</strong> @(Model?.JobOrder?.JobNumber ?? Model?.JobOrderId.ToString())</p>
                 <p><strong>Part:</strong> @(Model?.Part?.PartName ?? "-")</p>
                 <p><strong>Quantity:</strong> @Model?.Quantity</p>
             </div>
-            <div class="col-md-6 text-end">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Unit Price:</strong> @((Model != null && Model.UnitPrice.HasValue) ? Model.UnitPrice.Value.ToString("C") : "-")</p>
                 <p><strong>Total Price:</strong> @((Model != null && Model.TotalPrice.HasValue) ? Model.TotalPrice.Value.ToString("C") : "-")</p>
             </div>
         </div>
     </div>
     <div class="card-footer">
-        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model?.JobPartItemId">Edit</a>
+        <a class="btn-gold btn-sm" asp-action="Edit" asp-route-id="@Model?.JobPartItemId">Edit</a>
         <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
     </div>
 </div>

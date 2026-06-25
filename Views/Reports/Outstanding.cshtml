@@ -1,0 +1,68 @@
+@model AutoRepairERD.Models.ViewModels.OutstandingReportViewModel
+@{
+    ViewData["Title"] = "Outstanding Balances";
+    ViewData["ActiveNav"] = "rep-out";
+}
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-red">
+    <div class="stat-icon">⏳</div>
+    <div class="stat-val" data-count="@((double)Model.TotalOutstanding)" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Total Outstanding</div>
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-icon">🧾</div>
+    <div class="stat-val" data-count="@Model.Rows.Count">0</div>
+    <div class="stat-lbl">Unpaid Invoices</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon">👥</div>
+    <div class="stat-val" data-count="@Model.Rows.Select(r => r.CustomerId).Distinct().Count()">0</div>
+    <div class="stat-lbl">Customers with Balance</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Outstanding Invoices</span></div>
+  @if (!Model.Rows.Any())
+  {
+      <p class="td-muted" style="padding:24px;text-align:center;font-size:13px">🎉 All invoices are paid! No outstanding balances.</p>
+  }
+  else
+  {
+      <div class="table-wrap"><table class="erp-table">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Customer</th>
+            <th>Invoice Date</th>
+            <th>Grand Total</th>
+            <th>Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var r in Model.Rows.OrderByDescending(x => x.Balance))
+          {
+              <tr onclick="carTransition('/Invoices/Details/@r.InvoiceId','INVOICE DETAIL')">
+                <td class="td-gold">@r.InvoiceNumber</td>
+                <td>@r.CustomerName</td>
+                <td class="td-muted">@(r.InvoiceDate?.ToString("MMM d, yyyy") ?? "—")</td>
+                <td>PKR @r.GrandTotal.ToString("N0")</td>
+                <td>PKR @r.AmountPaid.ToString("N0")</td>
+                <td><strong style="color:var(--red)">PKR @r.Balance.ToString("N0")</strong></td>
+                <td><span class="badge @BadgeHelper.Css(r.PaymentStatus)">@r.PaymentStatus</span></td>
+              </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--card2)">
+            <td colspan="5" style="font-weight:700;font-size:13px;">Total Outstanding</td>
+            <td style="font-weight:700;color:var(--red)">PKR @Model.TotalOutstanding.ToString("N0")</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table></div>
+  }
+</div>

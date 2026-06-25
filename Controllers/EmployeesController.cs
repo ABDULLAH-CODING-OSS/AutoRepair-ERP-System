@@ -14,11 +14,27 @@ public class EmployeesController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly NotificationService _notificationService;
+    private readonly AuditService _auditService;
 
-    public EmployeesController(ApplicationDbContext context, NotificationService notificationService)
+    public EmployeesController(ApplicationDbContext context, NotificationService notificationService, AuditService auditService)
     {
         _context = context;
         _notificationService = notificationService;
+        _auditService = auditService;
+        _notificationService = notificationService;
+    }
+
+    // GET: EMPLOYEES/GetMechanics - returns active mechanics as JSON for AJAX dropdowns
+    [HttpGet]
+    [RoleAuthorize("Admin","Owner","Service Advisor","Receptionist","Mechanic")]
+    public JsonResult GetMechanics()
+    {
+        var list = _context.Employees
+            .Where(e => e.Designation == "Mechanic" && e.IsActive == true)
+            .OrderBy(e => e.FirstName).ThenBy(e => e.LastName)
+            .Select(e => new { employeeId = e.EmployeeId, text = e.FirstName + " " + e.LastName + (string.IsNullOrEmpty(e.Phone) ? "" : " (" + e.Phone + ")") })
+            .ToList();
+        return Json(list);
     }
 
     // GET: EMPLOYEES
@@ -185,6 +201,33 @@ public class EmployeesController : Controller
             return View(model);
         }
 
+        // CNIC uniqueness check (employees)
+        if (!string.IsNullOrWhiteSpace(model.Cnic) && _context.Employees.Any(e => e.Cnic == model.Cnic))
+        {
+            ModelState.AddModelError("Cnic", "CNIC already exists.");
+            ViewBag.Roles = new SelectList(
+                _context.Roles,
+                "RoleId",
+                "RoleName");
+            return View(model);
+        }
+
+        // Phone uniqueness: check both Employees and Users
+        if (!string.IsNullOrWhiteSpace(model.Phone))
+        {
+            var phoneExistsInEmployees = _context.Employees.Any(e => e.Phone == model.Phone);
+            var phoneExistsInUsers = _context.Users.Any(u => u.Phone == model.Phone);
+            if (phoneExistsInEmployees || phoneExistsInUsers)
+            {
+                ModelState.AddModelError("Phone", "Phone number already exists.");
+                ViewBag.Roles = new SelectList(
+                    _context.Roles,
+                    "RoleId",
+                    "RoleName");
+                return View(model);
+            }
+        }
+
         using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
@@ -235,6 +278,9 @@ public class EmployeesController : Controller
 
             await transaction.CommitAsync();
 
+            // Audit log
+            await _auditService.LogCreateAsync("Employees", employee.EmployeeId, $"{employee.FirstName} {employee.LastName}");
+
             // Batch 2: NEW EMPLOYEE CREATED notification
             try
             {
@@ -251,28 +297,6 @@ public class EmployeesController : Controller
             catch
             {
                 // Swallow notification exceptions so employee creation is not blocked
-            }
-
-            // Audit: Employee Created
-            try
-            {
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Employees",
-                    RecordId = employee.EmployeeId,
-                    ActionType = "Employee Created",
-                    OldValues = null,
-                    NewValues = $"EmployeeCode={employee.EmployeeCode};EmployeeName={employee.FirstName} {employee.LastName};Position={employee.Designation}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch
-            {
-                // Do not block employee creation on audit failure
             }
 
             return RedirectToAction(nameof(Index));
@@ -375,19 +399,30 @@ public class EmployeesController : Controller
             if (existing == null)
                 return NotFound();
 
-            // Update allowed fields (do not overwrite UserId)
-            // Validate EmployeeCode uniqueness if provided
-            if (!string.IsNullOrWhiteSpace(employee.EmployeeCode))
+            // Validate CNIC uniqueness if provided
+            if (!string.IsNullOrWhiteSpace(employee.Cnic) && employee.Cnic != existing.Cnic)
             {
-                var exists = _context.Employees.Any(e => e.EmployeeCode == employee.EmployeeCode && e.EmployeeId != employee.EmployeeId);
+                var exists = _context.Employees.Any(e => e.Cnic == employee.Cnic && e.EmployeeId != employee.EmployeeId);
                 if (exists)
                 {
-                    ModelState.AddModelError("EmployeeCode", "Employee Code already exists.");
+                    ModelState.AddModelError("Cnic", "This CNIC is already registered.");
                     return View(employee);
                 }
             }
 
-            existing.EmployeeCode = employee.EmployeeCode;
+            // Validate Phone uniqueness if provided
+            if (!string.IsNullOrWhiteSpace(employee.Phone) && employee.Phone != existing.Phone)
+            {
+                var exists = _context.Employees.Any(e => e.Phone == employee.Phone && e.EmployeeId != employee.EmployeeId);
+                if (exists)
+                {
+                    ModelState.AddModelError("Phone", "This phone number is already registered.");
+                    return View(employee);
+                }
+            }
+
+            // Update allowed fields (do not overwrite UserId or EmployeeCode)
+            // EmployeeCode is read-only and should not be modified
             existing.FirstName = employee.FirstName;
             existing.LastName = employee.LastName;
             existing.Cnic = employee.Cnic;
@@ -414,6 +449,9 @@ public class EmployeesController : Controller
 
                 _context.Update(existing);
                 await _context.SaveChangesAsync();
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Employees", employee.EmployeeId, null, $"{existing.FirstName} {existing.LastName}");
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -431,80 +469,6 @@ public class EmployeesController : Controller
         }
 
         return View(employee);
-    }
-
-    // POST: EMPLOYEES/Activate/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Activate(int? id)
-    {
-        if (id == null)
-            return NotFound();
-
-        var employee = await _context.Employees.FindAsync(id);
-        if (employee == null)
-            return NotFound();
-
-        employee.IsActive = true;
-        _context.Update(employee);
-
-        // Also activate linked user if present
-        if (employee.UserId.HasValue)
-        {
-            var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
-            if (linkedUser != null)
-            {
-                linkedUser.IsActive = true;
-                _context.Users.Update(linkedUser);
-            }
-        }
-
-        await _context.SaveChangesAsync();
-
-        // Audit: Employee Reactivated
-        try
-        {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Employees",
-                RecordId = employee.EmployeeId,
-                ActionType = "Employee Reactivated",
-                OldValues = "IsActive=False",
-                NewValues = "IsActive=True",
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch
-        {
-            // Do not block activation on audit failure
-        }
-
-        // Batch 2: EMPLOYEE ACCOUNT ACTIVATED - notify Admin and Owner about linked user activation
-        try
-        {
-            if (employee.UserId.HasValue)
-            {
-                var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
-                var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Admin");
-                var ownerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Owner");
-                var title = "Employee Account Activated";
-                var message = $"Employee account {employee.EmployeeCode} has been activated.";
-                if (adminRole != null)
-                    await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Employees", title, message);
-                if (ownerRole != null)
-                    await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
-            }
-        }
-        catch
-        {
-            // Do not block activation on notification failure
-        }
-
-        return RedirectToAction(nameof(Index));
     }
 
     // GET: EMPLOYEES/Delete/5
@@ -567,6 +531,9 @@ public class EmployeesController : Controller
 
         await _context.SaveChangesAsync();
 
+        // Audit log
+        await _auditService.LogCustomActionAsync("Employees", employee.EmployeeId, "Deactivate", $"{employee.FirstName} {employee.LastName}");
+
         // Batch 2: EMPLOYEE ACCOUNT DEACTIVATED - notify Admin and Owner about linked user deactivation
         try
         {
@@ -590,33 +557,42 @@ public class EmployeesController : Controller
 
         TempData["Toast"] = "Employee deactivated.";
         TempData["ToastType"] = "warning";
-        // Audit: Employee Deactivated
-        try
-        {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Employees",
-                RecordId = employee.EmployeeId,
-                ActionType = "Employee Deactivated",
-                OldValues = "IsActive=True",
-                NewValues = "IsActive=False",
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch
-        {
-            // Do not block deactivation on audit failure
-        }
-
         return RedirectToAction(nameof(Index));
     }
     private bool EmployeeExists(int? id)
     {
         return _context.Employees.Any(e => e.EmployeeId == id);
+    }
+
+    // POST: EMPLOYEES/Activate/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activate(int? id)
+    {
+        if (id == null) return NotFound();
+        var employee = await _context.Employees.FindAsync(id);
+        if (employee == null) return NotFound();
+
+        employee.IsActive = true;
+        _context.Employees.Update(employee);
+
+        if (employee.UserId.HasValue)
+        {
+            var linkedUser = await _context.Users.FindAsync(employee.UserId.Value);
+            if (linkedUser != null)
+            {
+                linkedUser.IsActive = true;
+                _context.Users.Update(linkedUser);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        await _auditService.LogCustomActionAsync("Employees", employee.EmployeeId, "Activate", $"{employee.FirstName} {employee.LastName}");
+
+        TempData["Toast"] = "Employee activated.";
+        TempData["ToastType"] = "success";
+        return RedirectToAction(nameof(Index));
     }
 
 }

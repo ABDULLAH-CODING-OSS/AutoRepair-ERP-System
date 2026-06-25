@@ -8,14 +8,14 @@
     <div class="card-header">
         <h5 class="mb-0">Service Item</h5>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
+    <div style="padding:4px 0">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Job:</strong> @(Model?.JobOrder?.JobNumber ?? Model?.JobOrderId.ToString())</p>
                 <p><strong>Service:</strong> @(Model?.Service?.ServiceName ?? "-")</p>
                 <p><strong>Mechanic:</strong> @(Model?.Mechanic != null ? Model.Mechanic.FirstName + " " + Model.Mechanic.LastName : "-")</p>
             </div>
-            <div class="col-md-6 text-end">
+            <div style="flex:1;min-width:240px">
                 <p><strong>Hours:</strong> @(Model?.HoursWorked?.ToString() ?? "-")</p>
                 <p><strong>Hourly Rate:</strong> @((Model != null && Model.HourlyRate.HasValue) ? Model.HourlyRate.Value.ToString("C") : "-")</p>
                 <p><strong>Service Price:</strong> @((Model != null && Model.ServicePrice.HasValue) ? Model.ServicePrice.Value.ToString("C") : "-")</p>
@@ -26,7 +26,7 @@
         <p><strong>Notes:</strong> @Model?.Notes</p>
     </div>
     <div class="card-footer">
-        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model?.JobServiceItemId">Edit</a>
+        <a class="btn-gold btn-sm" asp-action="Edit" asp-route-id="@Model?.JobServiceItemId">Edit</a>
         <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
     </div>
 </div>

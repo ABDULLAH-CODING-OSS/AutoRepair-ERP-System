@@ -1,0 +1,112 @@
+@model AutoRepairERD.Models.PurchaseOrder
+@{
+    ViewData["Title"] = "Receive Purchase Order";
+    ViewData["ActiveNav"] = "purchase-orders";
+    var isReceived  = Model.Status == "Received";
+    var isCancelled = Model.Status == "Cancelled";
+    var canReceive  = !isReceived && !isCancelled && Model.PurchaseOrderItems.Any();
+}
+
+@section TopbarActions {
+    <a asp-action="Details" asp-route-id="@Model.PurchaseOrderId" class="btn-outline btn-sm">← Back to PO Details</a>
+}
+
+<!-- PO Header -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <span class="card-title">PO #@Model.PurchaseOrderId</span>
+    <span class="badge @BadgeHelper.Css(Model.Status)">@Model.Status</span>
+  </div>
+  <div class="form-row-3" style="margin-top:10px">
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Supplier</label>
+      <p style="font-size:14px;font-weight:600">@Model.Supplier?.SupplierName</p>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Order Date</label>
+      <p style="font-size:14px">@(Model.OrderDate?.ToString("MMM d, yyyy") ?? "—")</p>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Expected Delivery</label>
+      <p style="font-size:14px">@(Model.ExpectedDeliveryDate?.ToString("MMM d, yyyy") ?? "—")</p>
+    </div>
+  </div>
+</div>
+
+<!-- Line Items -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <span class="card-title">Line Items (@Model.PurchaseOrderItems.Count)</span>
+    <span class="td-muted" style="font-size:12px">Total: PKR @(Model.TotalAmount?.ToString("N0") ?? "—")</span>
+  </div>
+  @if (!Model.PurchaseOrderItems.Any())
+  {
+      <p class="td-muted" style="padding:20px;text-align:center">No items on this purchase order.</p>
+  }
+  else
+  {
+      <div class="table-wrap"><table class="erp-table">
+        <thead>
+          <tr>
+            <th>Part</th>
+            <th>Part Number</th>
+            <th>Current Stock</th>
+            <th>Ordered Qty</th>
+            <th>Unit Cost</th>
+            <th>Line Total</th>
+            <th>Stock After Receive</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var item in Model.PurchaseOrderItems)
+          {
+              var current = item.Part?.CurrentStock ?? 0;
+              var after   = current + (item.Quantity ?? 0);
+              <tr>
+                  <td class="td-gold">@item.Part?.PartName</td>
+                  <td class="td-muted">@item.Part?.PartNumber</td>
+                  <td>@current</td>
+                  <td><strong>+@item.Quantity</strong></td>
+                  <td>PKR @(item.UnitCost?.ToString("N2") ?? "—")</td>
+                  <td>PKR @(item.TotalCost?.ToString("N0") ?? "—")</td>
+                  <td><strong style="color:var(--green)">@after</strong></td>
+              </tr>
+          }
+        </tbody>
+      </table></div>
+  }
+</div>
+
+@if (isReceived)
+{
+    <div class="card" style="border-color:var(--green);background:var(--green-dim);padding:16px 20px;text-align:center">
+        <p style="color:var(--green);font-weight:600;font-size:14px">✅ This purchase order has already been received. Stock has been updated.</p>
+    </div>
+}
+else if (isCancelled)
+{
+    <div class="card" style="border-color:var(--red);background:var(--red-dim);padding:16px 20px;text-align:center">
+        <p style="color:var(--red);font-weight:600;font-size:14px">❌ This purchase order was cancelled and cannot be received.</p>
+    </div>
+}
+else if (!Model.PurchaseOrderItems.Any())
+{
+    <div class="card" style="border-color:var(--orange);background:var(--orange-dim);padding:16px 20px;text-align:center">
+        <p style="color:var(--orange);font-weight:600;font-size:14px">⚠ No items on this PO — add items before receiving.</p>
+    </div>
+}
+else
+{
+    <div class="card" style="padding:20px;text-align:center">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Confirming receipt will add all ordered quantities to stock and mark this PO as <strong style="color:var(--green)">Received</strong>.
+          This action cannot be undone.
+      </p>
+      <form method="post" asp-action="Receive" asp-route-id="@Model.PurchaseOrderId">
+          @Html.AntiForgeryToken()
+          <button type="submit" class="btn-gold" style="padding:12px 36px;font-size:15px">
+              Confirm Receipt &amp; Update Stock
+          </button>
+      </form>
+    </div>
+}

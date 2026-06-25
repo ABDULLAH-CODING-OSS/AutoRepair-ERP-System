@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Transaction Details</h4>
         <dl class="row">
             <dt class="col-sm-3">Date</dt>
@@ -24,8 +24,8 @@
             <dd class="col-sm-9">@Model.Remarks</dd>
         </dl>
 
-        <a asp-action="Edit" asp-route-transactionid="@Model?.TransactionId" class="btn btn-primary">Edit</a>
-        <a asp-action="Index" class="btn btn-secondary">Back</a>
+        <a asp-action="Edit" asp-route-transactionid="@Model?.TransactionId" class="btn-gold btn-sm">Edit</a>
+        <a asp-action="Index" class="btn-outline btn-sm">Back</a>
         @{
             var isSystem = !string.IsNullOrWhiteSpace(Model?.ReferenceNumber) && (Model.ReferenceNumber.StartsWith("PO-") || Model.ReferenceNumber.StartsWith("JOB-"));
         }

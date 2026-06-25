@@ -57,6 +57,20 @@ public partial class Invoice
     [Unicode(false)]
     public string? PaymentStatus { get; set; }
 
+    [NotMapped]
+    [Display(Name = "Amount Paid")]
+    public decimal AmountPaid
+    {
+        get => Payments?.Sum(p => p.AmountPaid) ?? 0m;
+    }
+
+    [NotMapped]
+    [Display(Name = "Remaining Balance")]
+    public decimal RemainingBalance
+    {
+        get => GrandTotal - AmountPaid;
+    }
+
     [ForeignKey("CreatedByUserId")]
     [InverseProperty("Invoices")]
     public virtual User? CreatedByUser { get; set; }

@@ -1,70 +1,111 @@
 @model AutoRepairERD.Models.SalaryAdjustment
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Salary Adjustment";
 }
 
-<h1>Create</h1>
+@section TopbarActions {
+  @if (ViewBag.PayrollId != null && ViewBag.PayrollId > 0)
+  {
+    <a asp-controller="Payrolls" asp-action="Details" asp-route-payrollid="@ViewBag.PayrollId" class="btn-outline btn-sm">← Back to Payroll</a>
+  }
+  else
+  {
+    <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
+  }
+}
 
-<h4>SalaryAdjustment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="card">
+  <div class="card-header"><span class="card-title">Create Salary Adjustment</span></div>
+  <div style="padding:16px">
+    <form asp-action="Create">
+      <div asp-validation-summary="All" style="color:var(--red);margin-bottom:12px"></div>
 
-            @if (TempData["SalaryAdjustDebug"] != null)
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+          <div class="form-group">
+            <label class="form-label">Employee Payroll</label>
+            @if (ViewBag.PayrollId != null && ViewBag.PayrollId > 0)
             {
-                <div class="alert alert-info">
-                    <pre>@TempData["SalaryAdjustDebug"]</pre>
-                </div>
+              <input class="form-control" value="@(ViewBag.PayrollLabel ?? (Model.PayrollId != 0 ? Model.PayrollId.ToString() : ""))" disabled />
+              <input type="hidden" asp-for="PayrollId" />
             }
+            else
+            {
+              <select asp-for="PayrollId" class="form-control" required>
+                <option value="0">-- Select Employee Payroll --</option>
+                @if (ViewBag.Payrolls != null)
+                {
+                  @foreach (var payroll in ViewBag.Payrolls)
+                  {
+                    var label = $"{payroll.PayrollNumber} — {payroll.Employee?.FirstName} {payroll.Employee?.LastName} ({payroll.PayrollStatus})";
+                    @if (Model.PayrollId == payroll.PayrollId)
+                    {
+                      <option value="@payroll.PayrollId" selected>@label</option>
+                    }
+                    else
+                    {
+                      <option value="@payroll.PayrollId">@label</option>
+                    }
+                  }
+                }
+              </select>
+              <span asp-validation-for="PayrollId" style="color:var(--red);font-size:12px"></span>
+            }
+          </div>
 
-            <div class="form-group">
-                <label asp-for="PayrollId" class="control-label">Payroll</label>
-                <select asp-for="PayrollId" class="form-control" asp-items="@(ViewBag.Payrolls as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)">
-                    <option value="">-- Select payroll --</option>
-                </select>
-                <span asp-validation-for="PayrollId" class="text-danger"></span>
-            </div>
+          <div class="form-group">
+            <label asp-for="AdjustmentType" class="form-label">Adjustment Type</label>
+            <select asp-for="AdjustmentType" class="form-control">
+              <option value="">-- Select Adjustment Type --</option>
+              @if (ViewBag.AdjustmentTypes != null)
+              {
+                @foreach (var type in ViewBag.AdjustmentTypes)
+                {
+                  @if (Model.AdjustmentType == type)
+                  {
+                    <option value="@type" selected>@type</option>
+                  }
+                  else
+                  {
+                    <option value="@type">@type</option>
+                  }
+                }
+              }
+            </select>
+            <span asp-validation-for="AdjustmentType" style="color:var(--red);font-size:12px"></span>
+          </div>
 
-            <div class="form-group">
-                <label asp-for="AdjustmentType" class="control-label">Adjustment Type</label>
-                <select asp-for="AdjustmentType" class="form-control">
-                    <option value="">-- Select type --</option>
-                    <option>Bonus</option>
-                    <option>Allowance</option>
-                    <option>Deduction</option>
-                    <option>Penalty</option>
-                </select>
-                <span asp-validation-for="AdjustmentType" class="text-danger"></span>
-            </div>
+          <div class="form-group">
+            <label asp-for="Amount" class="form-label">Amount (PKR)</label>
+            <input asp-for="Amount" class="form-control" placeholder="0.00" />
+            <span asp-validation-for="Amount" style="color:var(--red);font-size:12px"></span>
+          </div>
 
-            <div class="form-group">
-                <label asp-for="Amount" class="control-label"></label>
-                <input asp-for="Amount" class="form-control" />
-                <span asp-validation-for="Amount" class="text-danger"></span>
-            </div>
+          <div class="form-group">
+            <label asp-for="Reason" class="form-label">Reason</label>
+            <input asp-for="Reason" class="form-control" placeholder="Brief reason for adjustment" />
+            <span asp-validation-for="Reason" style="color:var(--red);font-size:12px"></span>
+          </div>
 
-            <div class="form-group">
-                <label asp-for="Reason" class="control-label"></label>
-                <input asp-for="Reason" class="form-control" />
-                <span asp-validation-for="Reason" class="text-danger"></span>
-            </div>
-
-            <!-- Payroll navigation property should not be editable -->
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
+          <div style="margin-top:18px;display:flex;gap:8px">
+            <button type="submit" class="btn-gold btn-sm">Create Adjustment</button>
+            @if (ViewBag.PayrollId != null && ViewBag.PayrollId > 0)
+            {
+              <a asp-controller="Payrolls" asp-action="Details" asp-route-payrollid="@ViewBag.PayrollId" class="btn-outline btn-sm">Cancel</a>
+            }
+            else
+            {
+              <a asp-action="Index" class="btn-outline btn-sm">Cancel</a>
+            }
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+

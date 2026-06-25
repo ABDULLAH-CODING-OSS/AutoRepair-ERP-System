@@ -51,9 +51,9 @@ public class PurchaseOrderItemsController : Controller
     //{
     //    return View();
     //}
-    public IActionResult Create()
+    public IActionResult Create(int? purchaseOrderId)
     {
-        ViewBag.PurchaseOrders = _context.PurchaseOrders
+        var poList = _context.PurchaseOrders
             .Where(po => po.Status != "Received")
             .Select(po => new SelectListItem
             {
@@ -61,6 +61,12 @@ public class PurchaseOrderItemsController : Controller
                 Text = "PO-" + po.PurchaseOrderId
             })
             .ToList();
+        if (purchaseOrderId.HasValue)
+        {
+            var match = poList.FirstOrDefault(x => x.Value == purchaseOrderId.Value.ToString());
+            if (match != null) match.Selected = true;
+        }
+        ViewBag.PurchaseOrders = poList;
 
         ViewBag.Parts = _context.Parts
             .Select(p => new SelectListItem

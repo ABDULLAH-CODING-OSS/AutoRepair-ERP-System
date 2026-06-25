@@ -5,14 +5,14 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Edit Assignment</h4>
         <form asp-action="Edit" method="post">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="UserRoleId" />
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">User</label>
                 <div class="form-control-plaintext">
                     @if (Model?.User != null)
@@ -25,17 +25,17 @@
                     }
                 </div>
                 <input type="hidden" asp-for="UserId" />
-                <span asp-validation-for="UserId" class="text-danger"></span>
+                <span asp-validation-for="UserId" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Role</label>
-                <select asp-for="RoleId" class="form-select" asp-items="ViewBag.Roles"></select>
-                <span asp-validation-for="RoleId" class="text-danger"></span>
+                <select asp-for="RoleId" class="form-control" asp-items="ViewBag.Roles"></select>
+                <span asp-validation-for="RoleId" style="color:var(--red)"></span>
             </div>
 
-            <div class="d-flex">
-                <button type="submit" class="btn btn-primary">Save</button>
+            <div style="display:flex">
+                <button type="submit" class="btn-gold btn-sm">Save</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

@@ -25,6 +25,9 @@ public partial class Part
     [Display(Name = "Part Code")]
     public string? Sku { get; set; }
 
+    // Alias used by views
+    public string? PartNumber => Sku;
+
     [StringLength(100)]
     [Unicode(false)]
     [Required]

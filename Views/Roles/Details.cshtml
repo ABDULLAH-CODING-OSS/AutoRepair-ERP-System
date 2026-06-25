@@ -5,7 +5,7 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">@Model.RoleName</h4>
         <div class="text-muted mb-3">@Model.Description</div>
 
@@ -14,8 +14,8 @@
             <dd class="col-sm-9">@(ViewBag.AssignedCount ?? Model.UserRoles?.Count() ?? 0)</dd>
         </dl>
 
-        <div class="d-flex">
-            <a asp-action="Edit" asp-route-id="@Model.RoleId" class="btn btn-primary">Edit</a>
+        <div style="display:flex">
+            <a asp-action="Edit" asp-route-id="@Model.RoleId" class="btn-gold btn-sm">Edit</a>
             <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
         </div>
     </div>

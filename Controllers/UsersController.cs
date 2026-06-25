@@ -4,8 +4,6 @@ using AutoRepairERD.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-[RoleAuthorize("Admin")]
-
 [RoleAuthorize("Admin","Owner")]
 public class UsersController : Controller
 {
@@ -76,7 +74,7 @@ public class UsersController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, string? email, bool? isActive)
+    public async Task<IActionResult> Edit(int? id, string? email, bool isActive)
     {
         if (id == null)
         {
@@ -125,7 +123,7 @@ public class UsersController : Controller
         }
 
         // Apply updates
-        var previousIsActive = user.IsActive ?? false;
+        var previousIsActive = user.IsActive;
         user.Email = email;
         user.IsActive = isActive;
         _context.Update(user);
@@ -143,34 +141,10 @@ public class UsersController : Controller
 
         await _context.SaveChangesAsync();
 
-        // Audit: User Updated (email / active)
-        try
-        {
-            var oldVals = $"Email={user.Email};IsActive={previousIsActive}";
-            var newVals = $"Email={email};IsActive={user.IsActive}";
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Users",
-                RecordId = user.UserId,
-                ActionType = "User Updated",
-                OldValues = oldVals,
-                NewValues = newVals,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch
-        {
-            // Do not block user update on audit failure
-        }
-
         // Batch 2: EMPLOYEE ACCOUNT ACTIVATED / DEACTIVATED notifications
         try
         {
-            var newIsActive = user.IsActive ?? false;
+            var newIsActive = user.IsActive;
             if (!previousIsActive && newIsActive)
             {
                 // Activated
@@ -183,7 +157,7 @@ public class UsersController : Controller
                 if (ownerRole != null)
                     await _notificationService.CreateForRoleAsync(ownerRole.RoleId, "Employees", title, message);
             }
-            else if (previousIsActive && !(user.IsActive ?? false))
+            else if (previousIsActive && !user.IsActive)
             {
                 // Deactivated
                 var title = "Employee Account Deactivated";
@@ -198,7 +172,7 @@ public class UsersController : Controller
         }
         catch
         {
-            // Do not block user update on notification failures (best-effort)
+            // Do not block user update on notification failures
         }
 
         return RedirectToAction(nameof(Index));

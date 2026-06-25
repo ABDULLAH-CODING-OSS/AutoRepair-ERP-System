@@ -143,32 +143,9 @@ public class JobPartItemsController : Controller
                 };
 
                 _context.StockTransactions.Add(transaction);
-                // synchronize low stock alerts for this part (pass user/ip for audit enrichment)
-                AutoRepairERD.Services.LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
+                // synchronize low stock alerts for this part
+                AutoRepairERD.Services.LowStockAlertManager.SyncPart(_context, part.PartId);
                 await _context.SaveChangesAsync();
-
-                // Audit: Job Part Item Created (best-effort)
-                try
-                {
-                    var job = await _context.JobOrders.FindAsync(jobpartitem.JobOrderId);
-                    var jobNumber = job != null ? job.JobNumber : jobpartitem.JobOrderId.ToString();
-                    var partObj = await _context.Parts.FindAsync(jobpartitem.PartId);
-                    var partName = partObj != null ? partObj.PartName : "";
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "JobPartItems",
-                        RecordId = jobpartitem.JobPartItemId,
-                        ActionType = "Job Part Item Created",
-                        OldValues = null,
-                        NewValues = $"JobNumber={jobNumber};Part={partName};Quantity={jobpartitem.Quantity};UnitPrice={jobpartitem.UnitPrice};TotalPrice={jobpartitem.TotalPrice}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -209,6 +186,16 @@ public class JobPartItemsController : Controller
         {
             return NotFound();
         }
+
+        // Check if job is completed or invoiced - prevent editing
+        if (jobpartitem.JobOrder != null && 
+            (jobpartitem.JobOrder.Status == "Completed" || jobpartitem.JobOrder.Status == "Invoiced"))
+        {
+            TempData["Toast"] = "Cannot edit part items from completed or invoiced jobs.";
+            TempData["ToastType"] = "danger";
+            return RedirectToAction("Details", "JobOrders", new { id = jobpartitem.JobOrderId });
+        }
+
         // Provide select lists in case view needs them (kept minimal)
         ViewBag.JobOrders = _context.JobOrders
             .Where(j => j.Status != "Completed" && j.Status != "Cancelled")
@@ -241,7 +228,6 @@ public class JobPartItemsController : Controller
         {
             try
             {
-                var existing = await _context.JobPartItems.AsNoTracking().FirstOrDefaultAsync(j => j.JobPartItemId == jobpartitem.JobPartItemId);
                 // Ensure unit price and total price reflect current part sale price
                 var part = await _context.Parts.FindAsync(jobpartitem.PartId);
                 if (part != null)
@@ -252,36 +238,6 @@ public class JobPartItemsController : Controller
 
                 _context.Update(jobpartitem);
                 await _context.SaveChangesAsync();
-                // Audit: Job Part Item Updated (best-effort)
-                try
-                {
-                    var job = await _context.JobOrders.FindAsync(jobpartitem.JobOrderId);
-                    var jobNumber = job != null ? job.JobNumber : jobpartitem.JobOrderId.ToString();
-                    var partObj = await _context.Parts.FindAsync(jobpartitem.PartId);
-                    var partName = partObj != null ? partObj.PartName : "";
-                    string oldVals = null;
-                    if (existing != null)
-                    {
-                        var oldJob = await _context.JobOrders.FindAsync(existing.JobOrderId);
-                        var oldJobNumber = oldJob != null ? oldJob.JobNumber : existing.JobOrderId.ToString();
-                        oldVals = $"JobNumber={oldJobNumber};PartId={existing.PartId};Quantity={existing.Quantity};UnitPrice={existing.UnitPrice};TotalPrice={existing.TotalPrice}";
-                    }
-                    var newVals = $"JobNumber={jobNumber};PartId={jobpartitem.PartId};Part={partName};Quantity={jobpartitem.Quantity};UnitPrice={jobpartitem.UnitPrice};TotalPrice={jobpartitem.TotalPrice}";
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "JobPartItems",
-                        RecordId = jobpartitem.JobPartItemId,
-                        ActionType = "Job Part Item Updated",
-                        OldValues = oldVals,
-                        NewValues = newVals,
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -333,35 +289,25 @@ public class JobPartItemsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var jobpartitem = await _context.JobPartItems.FindAsync(id);
+        var jobpartitem = await _context.JobPartItems
+            .Include(j => j.JobOrder)
+            .FirstOrDefaultAsync(m => m.JobPartItemId == id);
+
         if (jobpartitem != null)
         {
+            // Check if job is completed or invoiced - prevent deletion
+            if (jobpartitem.JobOrder != null && 
+                (jobpartitem.JobOrder.Status == "Completed" || jobpartitem.JobOrder.Status == "Invoiced"))
+            {
+                TempData["Toast"] = "Cannot delete part items from completed or invoiced jobs.";
+                TempData["ToastType"] = "danger";
+                return RedirectToAction("Details", "JobOrders", new { id = jobpartitem.JobOrderId });
+            }
+
             _context.JobPartItems.Remove(jobpartitem);
         }
 
         await _context.SaveChangesAsync();
-        // Audit: Job Part Item Deleted (best-effort)
-        try
-        {
-            var job = await _context.JobOrders.FindAsync(jobpartitem.JobOrderId);
-            var jobNumber = job != null ? job.JobNumber : jobpartitem.JobOrderId.ToString();
-            var partObj = await _context.Parts.FindAsync(jobpartitem.PartId);
-            var partName = partObj != null ? partObj.PartName : "";
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "JobPartItems",
-                RecordId = jobpartitem.JobPartItemId,
-                ActionType = "Job Part Item Deleted",
-                OldValues = $"JobNumber={jobNumber};Part={partName};Quantity={jobpartitem.Quantity};UnitPrice={jobpartitem.UnitPrice};TotalPrice={jobpartitem.TotalPrice}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch { }
         return RedirectToAction(nameof(Index));
     }
 

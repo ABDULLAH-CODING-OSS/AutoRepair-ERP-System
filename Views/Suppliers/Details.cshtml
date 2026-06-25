@@ -4,12 +4,12 @@
     ViewData["Title"] = "Supplier Details";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Supplier Details</h2>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       <dl class="row">
         <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CompanyName)</dt>
         <dd class="col-sm-9">@Html.DisplayFor(m => m.CompanyName)</dd>
@@ -29,8 +29,9 @@
 
       <!-- Navigation/collection displays removed: Parts and PurchaseOrders are navigation properties and are not shown here. -->
 
-      <div class="mt-3">
-        <a asp-action="Edit" asp-route-id="@Model?.SupplierId" class="btn btn-primary">Edit</a>
+      <div style="margin-top:12px">
+        <a asp-action="Edit" asp-route-id="@Model?.SupplierId" class="btn-gold btn-sm">Edit</a>
+        <a asp-action="Delete" asp-route-id="@Model?.SupplierId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
         <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
       </div>
     </div>

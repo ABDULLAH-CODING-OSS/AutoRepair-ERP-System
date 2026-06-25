@@ -1,108 +1,47 @@
-
 @model AutoRepairERD.Models.Part
+@{ ViewData["Title"] = "Edit Part"; ViewData["ActiveNav"] = "parts";
+   var catItems = ViewBag.Categories as Microsoft.AspNetCore.Mvc.Rendering.SelectList ?? new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Enumerable.Empty<object>());
+   var supItems = ViewBag.Suppliers  as Microsoft.AspNetCore.Mvc.Rendering.SelectList ?? new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Enumerable.Empty<object>()); }
 
-@{
-    ViewData["Title"] = "Edit Part";
-}
+@section TopbarActions { <a asp-action="Details" asp-route-id="@Model.PartId" class="btn-outline btn-sm">← Back</a> }
 
-<div class="container py-4">
-  <div class="card">
-    <div class="card-header"><h2>Edit Part</h2></div>
-    <div class="card-body">
-      @{
-        var catItems = ViewBag.Categories ?? ViewData["CategoryId"] ?? new SelectList(Enumerable.Empty<SelectListItem>());
-        var supItems = ViewBag.Suppliers ?? ViewData["SupplierId"] ?? new SelectList(Enumerable.Empty<SelectListItem>());
-      }
-
-      <form asp-action="Edit" method="post">
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-        <input type="hidden" asp-for="PartId" />
-
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Category</label>
-            <select asp-for="CategoryId" class="form-select" asp-items="@catItems">
-              <option value="">-- Select Category --</option>
-            </select>
-            <div class="text-danger"><span asp-validation-for="CategoryId"></span></div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Supplier</label>
-            <select asp-for="SupplierId" class="form-select" asp-items="@supItems">
-              <option value="">-- Select Supplier --</option>
-            </select>
-            <div class="text-danger"><span asp-validation-for="SupplierId"></span></div>
-          </div>
-        </div>
-
-        <div class="row g-3 mt-2">
-          <div class="col-md-4">
-            <label asp-for="Sku" class="form-label"></label>
-            <input asp-for="Sku" class="form-control" placeholder="SKU or part code" />
-            <div class="text-danger"><span asp-validation-for="Sku"></span></div>
-          </div>
-          <div class="col-md-8">
-            <label asp-for="PartName" class="form-label"></label>
-            <input asp-for="PartName" class="form-control" placeholder="Descriptive name" />
-            <div class="text-danger"><span asp-validation-for="PartName"></span></div>
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <label asp-for="Description" class="form-label"></label>
-          <textarea asp-for="Description" class="form-control" rows="2" placeholder="Optional description or notes"></textarea>
-          <div class="text-danger"><span asp-validation-for="Description"></span></div>
-        </div>
-
-        <div class="row g-3 mt-3">
-          <div class="col-md-4">
-            <label asp-for="CostPrice" class="form-label"></label>
-            <input asp-for="CostPrice" class="form-control" type="number" step="0.01" />
-            <div class="text-danger"><span asp-validation-for="CostPrice"></span></div>
-          </div>
-          <div class="col-md-4">
-            <label asp-for="SalePrice" class="form-label"></label>
-            <input asp-for="SalePrice" class="form-control" type="number" step="0.01" />
-            <div class="text-danger"><span asp-validation-for="SalePrice"></span></div>
-          </div>
-          <div class="col-md-4">
-            <label asp-for="Unit" class="form-label"></label>
-            <input asp-for="Unit" class="form-control" placeholder="e.g. pcs" />
-            <div class="text-danger"><span asp-validation-for="Unit"></span></div>
-          </div>
-        </div>
-
-        <div class="row g-3 mt-3">
-          <div class="col-md-4">
-            <label asp-for="CurrentStock" class="form-label"></label>
-            <input asp-for="CurrentStock" class="form-control" type="number" />
-            <div class="text-danger"><span asp-validation-for="CurrentStock"></span></div>
-          </div>
-          <div class="col-md-4">
-            <label asp-for="ReorderLevel" class="form-label"></label>
-            <input asp-for="ReorderLevel" class="form-control" type="number" />
-            <div class="text-danger"><span asp-validation-for="ReorderLevel"></span></div>
-          </div>
-          <div class="col-md-4">
-            <label asp-for="RackLocation" class="form-label"></label>
-            <input asp-for="RackLocation" class="form-control" placeholder="Shelf / rack location" />
-            <div class="text-danger"><span asp-validation-for="RackLocation"></span></div>
-          </div>
-        </div>
-
-        <div class="form-check form-switch mt-3">
-          <input asp-for="IsActive" class="form-check-input" />
-          <label asp-for="IsActive" class="form-check-label"></label>
-          <div class="text-danger"><span asp-validation-for="IsActive"></span></div>
-        </div>
-
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
-        </div>
-      </form>
+<div class="card" style="max-width:680px">
+  <div class="card-header"><span class="card-title">Edit — @Model.PartName</span></div>
+  <form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="PartId" />
+    <div asp-validation-summary="ModelOnly" style="color:var(--red);font-size:13px;margin-bottom:10px"></div>
+    <div class="form-row-2">
+      <div class="form-group"><label class="form-label">Category</label><input type="hidden" asp-for="CategoryId" /><select asp-for="CategoryId" class="form-control" asp-items="catItems" disabled><option value="">-- None --</option></select><div style="color:var(--red)"><span asp-validation-for="CategoryId"></span></div></div>
+      <div class="form-group"><label class="form-label">Supplier</label><input type="hidden" asp-for="SupplierId" /><select asp-for="SupplierId" class="form-control" asp-items="supItems" disabled><option value="">-- None --</option></select><div style="color:var(--red)"><span asp-validation-for="SupplierId"></span></div></div>
     </div>
-  </div>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="Sku" class="form-label"></label><input asp-for="Sku" class="form-control" /></div>
+      <div class="form-group"><label asp-for="PartName" class="form-label"></label><input asp-for="PartName" class="form-control" /></div>
+    </div>
+    <div class="form-group"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="2"></textarea></div>
+    <div class="form-row-3">
+      <div class="form-group"><label asp-for="CostPrice" class="form-label"></label><input asp-for="CostPrice" class="form-control" type="number" step="0.01" /></div>
+      <div class="form-group"><label asp-for="SalePrice" class="form-label"></label><input asp-for="SalePrice" class="form-control" type="number" step="0.01" /></div>
+      <div class="form-group"><label asp-for="Unit" class="form-label"></label><input asp-for="Unit" class="form-control" /></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label asp-for="CurrentStock" class="form-label"></label><input asp-for="CurrentStock" class="form-control" type="number" /></div>
+      <div class="form-group"><label asp-for="ReorderLevel" class="form-label"></label><input asp-for="ReorderLevel" class="form-control" type="number" /></div>
+      <div class="form-group"><label asp-for="RackLocation" class="form-label"></label><input asp-for="RackLocation" class="form-control" /></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Active</label>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:6px">
+        <input type="hidden" name="IsActive" value="false" />
+        <input name="IsActive" type="checkbox" value="true" @(Model.IsActive == true ? "checked" : "") style="width:16px;height:16px;accent-color:var(--gold)" />
+        <span style="font-size:13px;color:var(--text2)">Part is active</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button type="submit" class="btn-gold">Save Changes</button>
+      <a asp-action="Details" asp-route-id="@Model.PartId" class="btn-outline btn-sm">Cancel</a>
+    </div>
+  </form>
 </div>
 
-@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

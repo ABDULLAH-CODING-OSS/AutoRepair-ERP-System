@@ -1,0 +1,92 @@
+@model AutoRepairERD.Models.ViewModels.MechanicDashboardViewModel
+@{
+    ViewData["Title"] = "Mechanic Portal";
+    ViewData["ActiveNav"] = "mech-dash";
+}
+
+@if (ViewData["UserRole"]?.ToString() is "Owner" or "Admin")
+{
+    <div style="background:linear-gradient(90deg,#002a22,#003a2e);border:1px solid var(--green);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span style="font-size:13px;color:var(--green)">👁 Preview Mode — Viewing as <strong>Mechanic (@Model.MechanicName)</strong></span>
+        <button class="btn-gold btn-sm" onclick="history.back()">← Back</button>
+    </div>
+}
+
+<div style="margin-bottom:10px"><p style="font-size:13px;color:var(--text2)">@DateTime.Now.ToString("dddd, dd MMM yyyy") — @Model.MechanicName</p></div>
+
+<!-- Attendance Status Banner -->
+@if (Model.CheckedInToday && Model.TodayAttendance != null)
+{
+    var att = Model.TodayAttendance;
+    if (att.CheckOutTime.HasValue)
+    {
+        <div style="background:var(--green-dim);border:1px solid rgba(82,196,132,0.35);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span style="font-size:13px;color:var(--green)">Shift complete — checked in <strong>@att.CheckInTime?.ToString(@"h\:mm tt")</strong>, checked out <strong>@att.CheckOutTime.Value.ToString(@"h\:mm tt")</strong>@(att.OvertimeHours > 0 ? $", {att.OvertimeHours:0.##}h overtime" : "").</span>
+        </div>
+    }
+    else
+    {
+        <div style="background:var(--blue-dim);border:1px solid rgba(56,159,245,0.35);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span style="font-size:13px;color:var(--blue)">Checked in at <strong>@att.CheckInTime?.ToString(@"h\:mm tt")</strong> — remember to check out!</span>
+            </div>
+            <form method="post" action="/Attendances/CheckOut" style="margin:0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-outline btn-sm" style="color:var(--blue);border-color:var(--blue)">Check Out Now</button>
+            </form>
+        </div>
+    }
+}
+else
+{
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <span style="font-size:13px;color:var(--text2)">You have not checked in today.</span>
+        <form method="post" action="/Attendances/CheckIn" style="margin:0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-gold btn-sm">Check In Now</button>
+        </form>
+    </div>
+}
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-orange">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.42A2 2 0 0 0 7 17.83V22"></path><path d="M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.42A2 2 0 0 0 17 6.17V2"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.AssignedPending">0</div>
+    <div class="stat-lbl">Pending Jobs</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.AssignedInProgress">0</div>
+    <div class="stat-lbl">In Progress</div>
+  </div>
+  <div class="stat-card sc-green">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
+    <div class="stat-val" data-count="@Model.CompletedThisMonth">0</div>
+    <div class="stat-lbl">Completed This Month</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">My Active Jobs</span><button class="btn-outline btn-sm" onclick="carTransition('/JobOrders/MyAssignedJobs','ALL MY JOBS')">View All</button></div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Job #</th><th>Customer</th><th>Vehicle</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      @if (!Model.MyJobs.Any())
+      {
+          <tr><td colspan="5" class="td-muted" style="text-align:center;padding:20px;">No active jobs. Enjoy the break! 🔧</td></tr>
+      }
+      @foreach (var j in Model.MyJobs)
+      {
+          <tr>
+              <td class="td-gold">@j.JobNumber</td>
+              <td>@j.Customer?.FirstName @j.Customer?.LastName</td>
+              <td>@j.Vehicle?.Make @j.Vehicle?.Model</td>
+              <td><span class="badge @BadgeHelper.Css(j.Status)">@j.Status</span></td>
+              <td><button class="btn-outline btn-sm" onclick="carTransition('/JobOrders/Details/@j.JobOrderId','JOB DETAIL')">View</button></td>
+          </tr>
+      }
+    </tbody>
+  </table></div>
+</div>

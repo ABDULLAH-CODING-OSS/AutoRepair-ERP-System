@@ -5,41 +5,41 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h5 class="card-title">Edit User</h5>
         <form asp-action="Edit" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
             <input type="hidden" asp-for="UserId" />
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Username</label>
                 <input class="form-control" value="@Model.Username" readonly />
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Email" class="form-label">Email</label>
                 <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <span asp-validation-for="Email" style="color:var(--red)"></span>
             </div>
 
             <div class="mb-3 form-check">
-                <input asp-for="IsActive" class="form-check-input" />
-                <label asp-for="IsActive" class="form-check-label">Active</label>
+                <input asp-for="IsActive" style="accent-color:var(--gold)" />
+                <label asp-for="IsActive" class="form-label">Active</label>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Employee</label>
                 <input class="form-control" value="@(Model.Employees != null && Model.Employees.Any() ? string.Join(", ", Model.Employees.Select(e => (e.FirstName + " " + (e.LastName ?? "")).Trim())) : "-")" readonly />
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Roles</label>
                 <input class="form-control" value="@(Model.UserRoles != null && Model.UserRoles.Any() ? string.Join(", ", Model.UserRoles.Select(ur => ur.Role?.RoleName ?? "")) : "-")" readonly />
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="submit" class="btn-gold btn-sm">Save</button>
+                <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
             </div>
         </form>
     </div>

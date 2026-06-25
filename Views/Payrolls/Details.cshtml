@@ -1,19 +1,32 @@
 @model AutoRepairERD.Models.Payroll
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Payroll Details";
 }
 
-<h1>Details</h1>
+@section TopbarActions {
+  <a asp-action="Index" class="btn-outline btn-sm">← Back to Payrolls</a>
+  <a asp-action="Edit" asp-route-payrollid="@Model?.PayrollId" class="btn-gold btn-sm">Edit</a>
+  @if (Model.PayrollStatus != "Paid")
+  {
+    <form asp-action="Delete" method="post" style="display:inline;margin-left:8px">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="payrollid" value="@Model.PayrollId" />
+      <button type="submit" class="btn-outline btn-sm" style="color:var(--red)">Cancel Payroll</button>
+    </form>
+  }
+  <a asp-controller="SalaryAdjustments" asp-action="Index" asp-route-payrollId="@Model?.PayrollId" class="btn-outline btn-sm">View Adjustments</a>
+  <a asp-controller="SalaryAdjustments" asp-action="Create" asp-route-payrollId="@Model?.PayrollId" class="btn-gold btn-sm">+ Adjust Salary</a>
+}
 
 <div>
-    <h4>Payroll</h4>
+    <h4>Payroll Details</h4>
     <hr />
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-3">
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+            <div class="card">
                 <div class="card-header">Employee Information</div>
-                <div class="card-body">
+                <div style="padding:4px 0">
                     <p><strong>Code:</strong> @(Model.Employee?.EmployeeCode ?? "")</p>
                     <p><strong>Name:</strong> @((Model.Employee != null) ? (Model.Employee.FirstName + " " + (Model.Employee.LastName ?? "")).Trim() : "Unknown")</p>
                     <p><strong>Designation:</strong> @(Model.Employee?.Designation ?? "")</p>
@@ -23,75 +36,81 @@
             </div>
             <div class="card">
                 <div class="card-header">Payroll Information</div>
-                <div class="card-body">
+                <div style="padding:4px 0">
                     <p><strong>Payroll Number:</strong> @Model.PayrollNumber</p>
                     <p><strong>Period:</strong> @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.PayrollMonth ?? 0) @Model.PayrollYear</p>
-                    <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.PayrollStatus</span></p>
+                    <p><strong>Status:</strong> <span class="badge badge-neutral">@Model.PayrollStatus</span></p>
                     <p><strong>Payment Date:</strong> @(Model.PaymentDate.HasValue ? Model.PaymentDate.Value.ToString("d") : "-")</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
-            <div class="card mb-3">
+        <div style="flex:1;min-width:240px">
+            <div class="card">
                 <div class="card-header">Attendance Summary</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-6"><strong>Total Working Days</strong><div>@Model.TotalWorkingDays</div></div>
-                        <div class="col-sm-6"><strong>Present Days</strong><div>@Model.TotalPresentDays</div></div>
+                <div style="padding:4px 0">
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px"><strong>Total Working Days</strong><div>@Model.TotalWorkingDays</div></div>
+                        <div style="flex:1;min-width:200px"><strong>Present Days</strong><div>@Model.TotalPresentDays</div></div>
                     </div>
-                    <div class="row mt-2">
-                        <div class="col-sm-6"><strong>Absent Days</strong><div>@( (Model.TotalWorkingDays ?? 0) - (Model.TotalPresentDays ?? 0) )</div></div>
-                        <div class="col-sm-6"><strong>Overtime Hours</strong><div>@Model.OvertimeHours</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-3">
-                <div class="card-header">Salary Breakdown</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-6">Basic Salary</div>
-                        <div class="col-sm-6 text-end">@String.Format("{0:C}", Model.Employee?.BasicSalary ?? 0m)</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">Job Bonus</div>
-                        <div class="col-sm-6 text-end">@String.Format("{0:C}", Model.BonusAmount)</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">Overtime Pay</div>
-                        <div class="col-sm-6 text-end">@String.Format("{0:C}", (Model.OvertimeHours ?? 0) * (Model.Employee?.HourlyRate ?? 0m))</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">Salary Adjustments</div>
-                        <div class="col-sm-6 text-end">@String.Format("{0:C}", Model.SalaryAdjustments?.Sum(sa => sa.Amount ?? 0m) ?? 0m)</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">Attendance Deductions</div>
-                        <div class="col-sm-6 text-end">@String.Format("{0:C}", Model.DeductionAmount)</div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px"><strong>Absent Days</strong><div>@( (Model.TotalWorkingDays ?? 0) - (Model.TotalPresentDays ?? 0) )</div></div>
+                        <div style="flex:1;min-width:200px"><strong>Overtime Hours</strong><div>@Model.OvertimeHours</div></div>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-body">
-                    <h4 class="text-end">Gross: <span class="badge bg-info">@String.Format("{0:C}", Model.GrossSalary)</span></h4>
-                    <h3 class="text-end">Net: <span class="badge bg-success">@String.Format("{0:C}", Model.NetSalary)</span></h3>
+                <div class="card-header">Salary Breakdown</div>
+                <div style="padding:4px 0">
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">Basic Salary</div>
+                        <div style="flex:1;min-width:200px">@String.Format("{0:C}", Model.Employee?.BasicSalary ?? 0m)</div>
+                    </div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">Job Bonus</div>
+                        <div style="flex:1;min-width:200px">@String.Format("{0:C}", Model.BonusAmount)</div>
+                    </div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">Overtime Pay</div>
+                        <div style="flex:1;min-width:200px">@String.Format("{0:C}", (Model.OvertimeHours ?? 0) * (Model.Employee?.HourlyRate ?? 0m))</div>
+                    </div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                        <div style="flex:1;min-width:200px">
+                            <strong>Salary Adjustments</strong>
+                        </div>
+                        <div style="flex:1;min-width:200px">@String.Format("{0:C}", Model.SalaryAdjustments?.Sum(sa => sa.Amount ?? 0m) ?? 0m)</div>
+                        <div style="margin-left:auto;display:flex;gap:8px">
+                            <a asp-controller="SalaryAdjustments" asp-action="Index" asp-route-payrollId="@Model.PayrollId" class="btn-outline btn-sm">View Adjustments</a>
+                            <a asp-controller="SalaryAdjustments" asp-action="Create" asp-route-payrollId="@Model.PayrollId" class="btn-gold btn-sm">+ Adjustment</a>
+                        </div>
+                    </div>
+                    @if (Model.SalaryAdjustments != null && Model.SalaryAdjustments.Any())
+                    {
+                        <div style="margin-top:12px;padding:12px;background:var(--bg2);border-radius:4px;font-size:13px">
+                            @foreach (var adj in Model.SalaryAdjustments.OrderBy(a => a.AdjustmentType))
+                            {
+                                <div style="display:flex;justify-content:space-between;padding:4px 0">
+                                    <span>@adj.AdjustmentType@(string.IsNullOrEmpty(adj.Reason) ? "" : $" ({adj.Reason})")</span>
+                                    <span style="font-weight:bold;color:@(adj.AdjustmentType == "Bonus" || adj.AdjustmentType == "Allowance" ? "var(--gold)" : "var(--red)")">
+                                        @String.Format("{0:C}", adj.Amount ?? 0m)
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">Attendance Deductions</div>
+                        <div style="flex:1;min-width:200px">@String.Format("{0:C}", Model.DeductionAmount)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="padding:4px 0">
+                    <h4 style="text-align:right">Gross: <span class="badge badge-ordered">@String.Format("{0:C}", Model.GrossSalary)</span></h4>
+                    <h3 style="text-align:right">Net: <span class="badge badge-active">@String.Format("{0:C}", Model.NetSalary)</span></h3>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div>
-    @if (Model.PayrollStatus != "Paid")
-    {
-        <text>
-            <a asp-action="Edit" asp-route-payrollid="@Model?.PayrollId">Edit</a> |
-            <form asp-action="Delete" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="payrollid" value="@Model.PayrollId" />
-                <button type="submit" class="btn btn-link p-0">Cancel</button>
-            </form>
-        </text>
-    }
-    <a asp-action="Index">Back to List</a>
 </div>

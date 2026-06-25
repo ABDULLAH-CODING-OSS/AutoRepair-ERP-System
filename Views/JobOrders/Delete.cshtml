@@ -8,7 +8,7 @@
     <div class="card-header bg-danger text-white">
         <h5 class="mb-0">Confirm Deletion</h5>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
         <p>Are you sure you want to delete the following job order?</p>
         <dl class="row">
             <dt class="col-sm-3">Job Number</dt>
@@ -189,7 +189,7 @@
         </dl>
         <form asp-action="Delete">
             <input type="hidden" asp-for="JobOrderId" />
-            <button type="submit" class="btn btn-danger">Delete</button>
+            <button type="submit" class="btn-danger btn-sm">Delete</button>
             <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
         </form>
     </div>

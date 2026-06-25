@@ -4,54 +4,54 @@
     ViewData["Title"] = "Edit Service";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Edit Service</h2>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       <form asp-action="Edit" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <input type="hidden" asp-for="ServiceId" />
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="ServiceName" class="form-label"></label>
           <input asp-for="ServiceName" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="ServiceName"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="ServiceName"></span></div>
         </div>
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="Description" class="form-label"></label>
           <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-          <div class="text-danger"><span asp-validation-for="Description"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="Description"></span></div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
             <label asp-for="StandardHours" class="form-label"></label>
             <input asp-for="StandardHours" class="form-control" step="0.01" />
-            <div class="text-danger"><span asp-validation-for="StandardHours"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="StandardHours"></span></div>
           </div>
-          <div class="col-md-6 mb-3">
+          <div style="flex:1;min-width:240px">
             <label asp-for="FixedPrice" class="form-label"></label>
             <input asp-for="FixedPrice" class="form-control" step="0.01" />
-            <div class="text-danger"><span asp-validation-for="FixedPrice"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="FixedPrice"></span></div>
           </div>
         </div>
 
         <div class="form-check mb-3">
-          <input asp-for="IsActive" class="form-check-input" />
-          <label asp-for="IsActive" class="form-check-label"></label>
-          <div class="text-danger"><span asp-validation-for="IsActive"></span></div>
+          <input asp-for="IsActive" style="accent-color:var(--gold)" />
+          <label asp-for="IsActive" class="form-label"></label>
+          <div style="color:var(--red)"><span asp-validation-for="IsActive"></span></div>
         </div>
 
         <!-- Navigation/collection fields removed from the form: JobServiceItems is a navigation property (ICollection)
              and should not be edited directly via this form. The property remains on the model and in the database. -->
 
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit" class="btn-gold btn-sm">Save</button>
+          <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
         </div>
       </form>
     </div>

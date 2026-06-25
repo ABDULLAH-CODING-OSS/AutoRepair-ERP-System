@@ -1,0 +1,178 @@
+@using Microsoft.EntityFrameworkCore
+@inject AutoRepairERD.Models.ApplicationDbContext DbContext
+@{
+    var role = ViewData["UserRole"]?.ToString() ?? "Owner";
+    var current = ViewData["ActiveNav"]?.ToString() ?? "";
+
+    var sessionUserId = Context.Session.GetInt32("UserID");
+    var unreadNotifCount = sessionUserId.HasValue
+        ? await DbContext.Notifications.CountAsync(n => n.UserId == sessionUserId.Value && n.IsRead != true)
+        : 0;
+    var activeJobOrdersCount = await DbContext.JobOrders.CountAsync(j => j.Status != "Completed" && j.Status != "Cancelled");
+}
+@functions {
+    string Active(string key, string current) => key == current ? "active" : "";
+}
+
+@* ── OWNER SIDEBAR ────────────────────────────── *@
+@if (role == "Owner")
+{
+    <div class="nav-section">Dashboard</div>
+    <a class="nav-item @Active("owner-dash", current)" onclick="carTransition('/Dashboard/Owner','OWNER DASHBOARD')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg></span></span> Owner Dashboard</a>
+
+    <div class="nav-section">Customers</div>
+    <a class="nav-item @Active("customers", current)" onclick="carTransition('/Customers','CUSTOMERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> Customer List</a>
+    <a class="nav-item @Active("vehicles", current)" onclick="carTransition('/Vehicles','VEHICLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M15 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M5 17H3v-5l2-5h12l3 5h1v5h-2"></path><path d="M7 12h12"></path></svg></span></span> Vehicles</a>
+
+    <div class="nav-section">Workshop</div>
+    <a class="nav-item @Active("parts", current)" onclick="carTransition('/Parts','PARTS INVENTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.5 2 6 13h5l-1.5 9 8.5-11h-5l1.5-9Z"></path></svg></span></span> Parts Inventory</a>
+    <a class="nav-item @Active("categories", current)" onclick="carTransition('/Categories','CATEGORIES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41 11 22l-9-9 9.41-9.41A2 2 0 0 1 12.83 3H19a2 2 0 0 1 2 2v6.17a2 2 0 0 1-.41 1.24Z"></path><circle cx="15.5" cy="8.5" r="1.5"></circle></svg></span></span> Categories</a>
+    <a class="nav-item @Active("suppliers", current)" onclick="carTransition('/Suppliers','SUPPLIERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 20h20"></path><path d="M4 20V11l5 4v-4l5 4v-4l5 4V6l-3 3V6h-2v6l-5-4v4l-5-4v9Z"></path></svg></span></span> Suppliers</a>
+    <a class="nav-item @Active("purchase-orders", current)" onclick="carTransition('/PurchaseOrders','PURCHASE ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.27 6.96 8.73 5.04 8.73-5.04"></path><path d="M12 22.08V12"></path></svg></span></span> Purchase Orders</a>
+    <a class="nav-item @Active("stock-transactions", current)" onclick="carTransition('/StockTransactions','STOCK TRANSACTIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></span></span> Stock Transactions</a>
+    <a class="nav-item @Active("low-stock", current)" onclick="carTransition('/LowStockAlerts','LOW STOCK ALERTS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></span> Low Stock Alerts</a>
+    <a class="nav-item @Active("labour", current)" onclick="carTransition('/Services','LABOUR CATALOG')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> Labour Catalog</a>
+    <a class="nav-item @Active("joborders", current)" onclick="carTransition('/JobOrders','JOB ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Job Orders @if (activeJobOrdersCount > 0) { <span class="nav-badge">@activeJobOrdersCount</span> }</a>
+
+    <div class="nav-section">Billing</div>
+    <a class="nav-item @Active("invoices", current)" onclick="carTransition('/Invoices','INVOICES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01"></path><path d="M18 12h.01"></path></svg></span></span> Invoices</a>
+
+    <div class="nav-section">HR &amp; Payroll</div>
+    <a class="nav-item @Active("employees", current)" onclick="carTransition('/Employees','EMPLOYEES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span></span> Employees</a>
+    <a class="nav-item @Active("payrolls", current)" onclick="carTransition('/Payrolls','PAYROLLS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M6 9v.01"></path><path d="M18 15v.01"></path></svg></span></span> Payrolls</a>
+    <a class="nav-item @Active("att-mgmt", current)" onclick="carTransition('/Attendances/Management','ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span></span> Attendance</a>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK MY ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark My Attendance</a>
+
+    <div class="nav-section">Reports</div>
+    <a class="nav-item @Active("rep-sales", current)" onclick="carTransition('/Reports/Sales','SALES REPORT')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"></path><rect x="7" y="13" width="3" height="5"></rect><rect x="12" y="9" width="3" height="9"></rect><rect x="17" y="6" width="3" height="12"></rect></svg></span></span> Sales Report</a>
+    <a class="nav-item @Active("rep-parts", current)" onclick="carTransition('/Reports/Parts','PARTS REPORT')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.27 6.96 8.73 5.04 8.73-5.04"></path><path d="M12 22.08V12"></path></svg></span></span> Parts Consumption</a>
+    <a class="nav-item @Active("rep-out", current)" onclick="carTransition('/Reports/Outstanding','OUTSTANDING')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.42A2 2 0 0 0 7 17.83V22"></path><path d="M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.42A2 2 0 0 0 17 6.17V2"></path></svg></span></span> Outstanding</a>
+    <a class="nav-item @Active("rep-top", current)" onclick="carTransition('/Reports/TopServices','TOP SERVICES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7Z"></path><path d="M5 19h14"></path></svg></span></span> Top Services</a>
+
+    <div class="nav-section">Admin</div>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+    <a class="nav-item @Active("roles", current)" onclick="carTransition('/Roles','ROLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg></span></span> Roles</a>
+    <a class="nav-item @Active("audit", current)" onclick="carTransition('/AuditLogs','AUDIT LOG')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></span></span> Audit Log</a>
+    <a class="nav-item @Active("users", current)" onclick="carTransition('/Users','USER MANAGEMENT')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> User Management</a>
+    <a class="nav-item @Active("settings", current)" onclick="carTransition('/Admin/Settings','SETTINGS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg></span></span> Settings</a>
+}
+
+@* ── ADMIN SIDEBAR ────────────────────────────── *@
+@if (role == "Admin")
+{
+    <div class="nav-section">My Dashboard</div>
+    <a class="nav-item @Active("admin-dash", current)" onclick="carTransition('/Dashboard/Admin','ADMIN PANEL')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7Z"></path><path d="M5 19h14"></path></svg></span></span> Admin Dashboard</a>
+
+    <div class="nav-section" style="margin-top:6px">Switch View As</div>
+    <a class="nav-item @Active("owner-dash", current)" onclick="carTransition('/Dashboard/Owner','OWNER DASHBOARD')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7Z"></path><path d="M5 19h14"></path></svg></span></span> Owner Dashboard</a>
+    <a class="nav-item @Active("advisor-dash", current)" onclick="carTransition('/Dashboard/Advisor','ADVISOR DASHBOARD')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Advisor Dashboard</a>
+    <a class="nav-item @Active("mech-dash", current)" onclick="carTransition('/Dashboard/Mechanic','MECHANIC PORTAL')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> Mechanic Portal</a>
+
+    <div class="nav-section">Customers</div>
+    <a class="nav-item @Active("customers", current)" onclick="carTransition('/Customers','CUSTOMERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> Customer List</a>
+    <a class="nav-item @Active("vehicles", current)" onclick="carTransition('/Vehicles','VEHICLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M15 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M5 17H3v-5l2-5h12l3 5h1v5h-2"></path><path d="M7 12h12"></path></svg></span></span> Vehicles</a>
+
+    <div class="nav-section">Workshop</div>
+    <a class="nav-item @Active("parts", current)" onclick="carTransition('/Parts','PARTS INVENTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.5 2 6 13h5l-1.5 9 8.5-11h-5l1.5-9Z"></path></svg></span></span> Parts Inventory</a>
+    <a class="nav-item @Active("categories", current)" onclick="carTransition('/Categories','CATEGORIES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41 11 22l-9-9 9.41-9.41A2 2 0 0 1 12.83 3H19a2 2 0 0 1 2 2v6.17a2 2 0 0 1-.41 1.24Z"></path><circle cx="15.5" cy="8.5" r="1.5"></circle></svg></span></span> Categories</a>
+    <a class="nav-item @Active("suppliers", current)" onclick="carTransition('/Suppliers','SUPPLIERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 20h20"></path><path d="M4 20V11l5 4v-4l5 4v-4l5 4V6l-3 3V6h-2v6l-5-4v4l-5-4v9Z"></path></svg></span></span> Suppliers</a>
+    <a class="nav-item @Active("purchase-orders", current)" onclick="carTransition('/PurchaseOrders','PURCHASE ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.27 6.96 8.73 5.04 8.73-5.04"></path><path d="M12 22.08V12"></path></svg></span></span> Purchase Orders</a>
+    <a class="nav-item @Active("stock-transactions", current)" onclick="carTransition('/StockTransactions','STOCK TRANSACTIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></span></span> Stock Transactions</a>
+    <a class="nav-item @Active("low-stock", current)" onclick="carTransition('/LowStockAlerts','LOW STOCK ALERTS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></span> Low Stock Alerts</a>
+    <a class="nav-item @Active("labour", current)" onclick="carTransition('/Services','LABOUR CATALOG')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> Labour Catalog</a>
+    <a class="nav-item @Active("joborders", current)" onclick="carTransition('/JobOrders','JOB ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Job Orders @if (activeJobOrdersCount > 0) { <span class="nav-badge">@activeJobOrdersCount</span> }</a>
+
+    <div class="nav-section">Billing</div>
+    <a class="nav-item @Active("invoices", current)" onclick="carTransition('/Invoices','INVOICES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01"></path><path d="M18 12h.01"></path></svg></span></span> Invoices</a>
+
+    <div class="nav-section">HR &amp; Payroll</div>
+    <a class="nav-item @Active("employees", current)" onclick="carTransition('/Employees','EMPLOYEES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span></span> Employees</a>
+    <a class="nav-item @Active("payrolls", current)" onclick="carTransition('/Payrolls','PAYROLLS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M6 9v.01"></path><path d="M18 15v.01"></path></svg></span></span> Payrolls</a>
+    <a class="nav-item @Active("att-mgmt", current)" onclick="carTransition('/Attendances/Management','ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span></span> Attendance</a>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK STAFF ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark Staff Attendance</a>
+
+    <div class="nav-section">Admin</div>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+    <a class="nav-item @Active("roles", current)" onclick="carTransition('/Roles','ROLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg></span></span> Roles</a>
+    <a class="nav-item @Active("users", current)" onclick="carTransition('/Users','USER MANAGEMENT')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> User Management</a>
+    <a class="nav-item @Active("settings", current)" onclick="carTransition('/Admin/Settings','SETTINGS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg></span></span> Settings</a>
+}
+
+@* ── SERVICE ADVISOR SIDEBAR ──────────────────── *@
+@if (role == "Service Advisor")
+{
+    <div class="nav-section">Dashboard</div>
+    <a class="nav-item @Active("advisor-dash", current)" onclick="carTransition('/Dashboard/Advisor','MY DASHBOARD')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> My Dashboard</a>
+
+    <div class="nav-section">Customers</div>
+    <a class="nav-item @Active("customers", current)" onclick="carTransition('/Customers','CUSTOMERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> Customers</a>
+    <a class="nav-item @Active("vehicles", current)" onclick="carTransition('/Vehicles','VEHICLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M15 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M5 17H3v-5l2-5h12l3 5h1v5h-2"></path><path d="M7 12h12"></path></svg></span></span> Vehicles</a>
+
+    <div class="nav-section">Workshop</div>
+    <a class="nav-item @Active("joborders", current)" onclick="carTransition('/JobOrders','JOB ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Job Orders</a>
+    <a class="nav-item @Active("parts", current)" onclick="carTransition('/Parts','PARTS INVENTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.5 2 6 13h5l-1.5 9 8.5-11h-5l1.5-9Z"></path></svg></span></span> Parts</a>
+    <a class="nav-item @Active("labour", current)" onclick="carTransition('/Services','LABOUR CATALOG')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> Labour Catalog</a>
+
+    <div class="nav-section">Billing</div>
+    <a class="nav-item @Active("invoices", current)" onclick="carTransition('/Invoices','INVOICES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M6 12h.01"></path><path d="M18 12h.01"></path></svg></span></span> Invoices</a>
+
+    <div class="nav-section">My Info</div>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK MY ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark My Attendance</a>
+    <a class="nav-item @Active("att-history", current)" onclick="carTransition('/Attendances/History','MY ATTENDANCE HISTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span></span> Attendance History</a>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+}
+
+@* ── MECHANIC SIDEBAR ────────────────────────── *@
+@if (role == "Mechanic")
+{
+    <div class="nav-section">My Portal</div>
+    <a class="nav-item @Active("mech-dash", current)" onclick="carTransition('/Dashboard/Mechanic','MECHANIC PORTAL')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> My Dashboard</a>
+    <a class="nav-item @Active("myjobs", current)" onclick="carTransition('/JobOrders/MyAssignedJobs','MY JOBS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> My Jobs</a>
+
+    <div class="nav-section">My Info</div>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK MY ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark My Attendance</a>
+    <a class="nav-item @Active("att-history", current)" onclick="carTransition('/Attendances/History','MY ATTENDANCE HISTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span></span> Attendance History</a>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+}
+
+@* ── INVENTORY MANAGER SIDEBAR ────────────────── *@
+@if (role == "Inventory Manager")
+{
+    <div class="nav-section">Workshop</div>
+    <a class="nav-item @Active("parts", current)" onclick="carTransition('/Parts','PARTS INVENTORY')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.5 2 6 13h5l-1.5 9 8.5-11h-5l1.5-9Z"></path></svg></span></span> Parts Inventory</a>
+    <a class="nav-item @Active("categories", current)" onclick="carTransition('/Categories','CATEGORIES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41 11 22l-9-9 9.41-9.41A2 2 0 0 1 12.83 3H19a2 2 0 0 1 2 2v6.17a2 2 0 0 1-.41 1.24Z"></path><circle cx="15.5" cy="8.5" r="1.5"></circle></svg></span></span> Categories</a>
+    <a class="nav-item @Active("suppliers", current)" onclick="carTransition('/Suppliers','SUPPLIERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 20h20"></path><path d="M4 20V11l5 4v-4l5 4v-4l5 4V6l-3 3V6h-2v6l-5-4v4l-5-4v9Z"></path></svg></span></span> Suppliers</a>
+    <a class="nav-item @Active("purchase-orders", current)" onclick="carTransition('/PurchaseOrders','PURCHASE ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.27 6.96 8.73 5.04 8.73-5.04"></path><path d="M12 22.08V12"></path></svg></span></span> Purchase Orders</a>
+    <a class="nav-item @Active("stock-transactions", current)" onclick="carTransition('/StockTransactions','STOCK TRANSACTIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></span></span> Stock Transactions</a>
+    <a class="nav-item @Active("low-stock", current)" onclick="carTransition('/LowStockAlerts','LOW STOCK ALERTS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></span> Low Stock Alerts</a>
+    <a class="nav-item @Active("labour", current)" onclick="carTransition('/Services','LABOUR CATALOG')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></span></span> Labour Catalog</a>
+    <a class="nav-item @Active("joborders", current)" onclick="carTransition('/JobOrders','JOB ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Job Orders @if (activeJobOrdersCount > 0) { <span class="nav-badge">@activeJobOrdersCount</span> }</a>
+
+    <div class="nav-section">My Info</div>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK MY ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark My Attendance</a>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+}
+
+@* ── RECEPTIONIST SIDEBAR ─────────────────────── *@
+@if (role == "Receptionist")
+{
+    <div class="nav-section">Customers</div>
+    <a class="nav-item @Active("customers", current)" onclick="carTransition('/Customers','CUSTOMERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></span> Customer List</a>
+    <a class="nav-item @Active("vehicles", current)" onclick="carTransition('/Vehicles','VEHICLES')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M15 17a2 2 0 1 0 4 0 2 2 0 1 0-4 0Z"></path><path d="M5 17H3v-5l2-5h12l3 5h1v5h-2"></path><path d="M7 12h12"></path></svg></span></span> Vehicles</a>
+
+    <div class="nav-section">Workshop</div>
+    <a class="nav-item @Active("joborders", current)" onclick="carTransition('/JobOrders','JOB ORDERS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path></svg></span></span> Job Orders @if (activeJobOrdersCount > 0) { <span class="nav-badge">@activeJobOrdersCount</span> }</a>
+
+    <div class="nav-section">My Info</div>
+    <a class="nav-item @Active("mark-att", current)" onclick="carTransition('/Attendances/Mark','MARK MY ATTENDANCE')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span></span> Mark My Attendance</a>
+    <a class="nav-item @Active("notifications", current)" onclick="carTransition('/Notifications','NOTIFICATIONS')"><span class="ni"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span> Notifications @if (unreadNotifCount > 0) { <span class="nav-badge">@unreadNotifCount</span> }</a>
+}
+
+<!-- THEME SWITCHER -->
+<div class="theme-switcher" style="margin-top:auto">
+  <span class="theme-label">Theme</span>
+  <div class="theme-dot theme-dot-blue active"   id="td-blue"   onclick="setTheme('blue')"   title="Dark Blue"></div>
+  <div class="theme-dot theme-dot-green"          id="td-green"  onclick="setTheme('green')"  title="Emerald"></div>
+  <div class="theme-dot theme-dot-purple"         id="td-purple" onclick="setTheme('purple')" title="Purple"></div>
+  <div class="theme-dot theme-dot-red"            id="td-red"    onclick="setTheme('red')"    title="Crimson"></div>
+</div>

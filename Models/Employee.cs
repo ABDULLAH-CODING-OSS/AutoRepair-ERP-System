@@ -63,7 +63,7 @@ public partial class Employee
     [Range(0, double.MaxValue, ErrorMessage = "Hourly Rate must be greater than or equal to zero.")]
     public decimal? HourlyRate { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     [InverseProperty("Employee")]
     public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();

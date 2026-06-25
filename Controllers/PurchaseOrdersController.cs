@@ -11,11 +11,58 @@ public class PurchaseOrdersController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notifications;
+    private readonly AutoRepairERD.Services.PurchaseOrderReceivingService _receiving;
 
-    public PurchaseOrdersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
+    public PurchaseOrdersController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications, AutoRepairERD.Services.PurchaseOrderReceivingService receiving)
     {
         _context = context;
         _notifications = notifications;
+        _receiving = receiving;
+    }
+
+    // GET: PURCHASEORDERS/Receive/5 — dedicated receiving-dock screen
+    public async Task<IActionResult> Receive(int? id)
+    {
+        if (id == null) return NotFound();
+
+        var purchaseorder = await _context.PurchaseOrders
+            .Include(p => p.Supplier)
+            .Include(p => p.PurchaseOrderItems).ThenInclude(i => i.Part)
+            .FirstOrDefaultAsync(p => p.PurchaseOrderId == id);
+
+        if (purchaseorder == null) return NotFound();
+
+        return View(purchaseorder);
+    }
+
+    // POST: PURCHASEORDERS/Receive/5
+    [HttpPost, ActionName("Receive")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReceiveConfirmed(int id)
+    {
+        var result = await _receiving.ReceiveAsync(id);
+
+        if (!result.Success)
+        {
+            TempData["Error"] = result.Error;
+            return RedirectToAction(nameof(Receive), new { id });
+        }
+
+        try
+        {
+            var po = await _context.PurchaseOrders.FindAsync(id);
+            var inv = _context.Roles.FirstOrDefault(r => r.RoleName == "Inventory Manager");
+            var admin = _context.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+            var owner = _context.Roles.FirstOrDefault(r => r.RoleName == "Owner");
+            var msg = $"Purchase Order #{id} has been received and stock updated.";
+            if (inv != null) await _notifications.CreateForRoleAsync(inv.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+            if (admin != null) await _notifications.CreateForRoleAsync(admin.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+            if (owner != null) await _notifications.CreateForRoleAsync(owner.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
+        }
+        catch { }
+
+        TempData["Toast"] = $"Purchase Order #{id} received — stock levels updated.";
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // GET: PURCHASEORDERS
@@ -107,27 +154,6 @@ public class PurchaseOrdersController : Controller
                 if (inv != null) await _notifications.CreateForRoleAsync(inv.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
                 if (admin != null) await _notifications.CreateForRoleAsync(admin.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
                 if (owner != null) await _notifications.CreateForRoleAsync(owner.RoleId, "PurchaseOrderCreated", "New Purchase Order", msg, HttpContext.Session.GetInt32("UserID"));
-            }
-            catch { }
-
-            // Audit: Purchase Order Created (best-effort)
-            try
-            {
-                var supplier = await _context.Suppliers.FindAsync(purchaseorder.SupplierId);
-                var supplierName = supplier != null ? supplier.CompanyName : "";
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "PurchaseOrders",
-                    RecordId = purchaseorder.PurchaseOrderId,
-                    ActionType = "Purchase Order Created",
-                    OldValues = null,
-                    NewValues = $"PONumber={purchaseorder.PurchaseOrderId};Supplier={supplierName};Status={purchaseorder.Status};TotalAmount={purchaseorder.TotalAmount}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
             }
             catch { }
 
@@ -301,10 +327,10 @@ public class PurchaseOrdersController : Controller
                         _context.StockTransactions.Add(stockTransaction);
                         part.CurrentStock = newStock;
                         _context.Update(part);
-                        // sync low stock alerts after PO receive (pass user/ip for audit enrichment)
-                        LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
-                        // synchronize low stock alerts for this part (duplicate call retained for compatibility)
-                        LowStockAlertManager.SyncPart(_context, part.PartId, HttpContext.Session.GetInt32("UserID"), HttpContext.Connection.RemoteIpAddress?.ToString());
+                        // sync low stock alerts after PO receive
+                        LowStockAlertManager.SyncPart(_context, part.PartId);
+                        // synchronize low stock alerts for this part
+                        LowStockAlertManager.SyncPart(_context, part.PartId);
                     }
                 }
 
@@ -320,31 +346,6 @@ public class PurchaseOrdersController : Controller
                     if (inv != null) await _notifications.CreateForRoleAsync(inv.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
                     if (admin != null) await _notifications.CreateForRoleAsync(admin.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
                     if (owner != null) await _notifications.CreateForRoleAsync(owner.RoleId, "PurchaseOrderReceived", "Purchase Order received", msg, HttpContext.Session.GetInt32("UserID"));
-                }
-                catch { }
-                // Audit: Purchase Order Received / Updated (best-effort)
-                try
-                {
-                    var supplier = await _context.Suppliers.FindAsync(purchaseorder.SupplierId);
-                    var supplierName = supplier != null ? supplier.CompanyName : "";
-                    var oldStatus = existingPO.Status;
-                    var newStatus = purchaseorder.Status;
-                    var actionType = "Purchase Order Updated";
-                    if (oldStatus != newStatus && newStatus == "Received") actionType = "Purchase Order Received";
-
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "PurchaseOrders",
-                        RecordId = purchaseorder.PurchaseOrderId,
-                        ActionType = actionType,
-                        OldValues = $"Status={oldStatus}",
-                        NewValues = $"Status={newStatus};Supplier={supplierName};TotalAmount={purchaseorder.TotalAmount}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
                 }
                 catch { }
             }
@@ -418,26 +419,6 @@ public class PurchaseOrdersController : Controller
         try
         {
             await _context.SaveChangesAsync();
-            // Audit: Purchase Order Deleted (best-effort)
-            try
-            {
-                var supplier = await _context.Suppliers.FindAsync(purchaseorder.SupplierId);
-                var supplierName = supplier != null ? supplier.CompanyName : "";
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "PurchaseOrders",
-                    RecordId = purchaseorder.PurchaseOrderId,
-                    ActionType = "Purchase Order Deleted",
-                    OldValues = $"PONumber={purchaseorder.PurchaseOrderId};Supplier={supplierName};Status={purchaseorder.Status};TotalAmount={purchaseorder.TotalAmount}",
-                    NewValues = null,
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch { }
         }
         catch (DbUpdateException ex)
         {

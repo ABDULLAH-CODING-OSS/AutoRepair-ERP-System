@@ -5,20 +5,20 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Delete Purchase Order</h4>
 
         @* Priority warnings: Received first, then has items. Only one warning shown. *@
         @if (Model?.Status == "Received")
         {
-            <div class="alert alert-warning">This purchase order has already been received and cannot be deleted.</div>
+            <div style="background:var(--orange-dim);border:1px solid rgba(245,181,56,0.3);border-radius:8px;padding:12px;color:var(--orange);font-size:13px;margin-bottom:12px">This purchase order has already been received and cannot be deleted.</div>
         }
         else if (Model?.PurchaseOrderItems != null && Model.PurchaseOrderItems.Any())
         {
-            <div class="alert alert-warning">This purchase order contains items. Please remove all items before deleting the order.</div>
+            <div style="background:var(--orange-dim);border:1px solid rgba(245,181,56,0.3);border-radius:8px;padding:12px;color:var(--orange);font-size:13px;margin-bottom:12px">This purchase order contains items. Please remove all items before deleting the order.</div>
         }
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
             <h5>Purchase Order Summary</h5>
             <dl class="row">
                 <dt class="col-sm-3">Supplier</dt>
@@ -45,15 +45,15 @@
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="PurchaseOrderId" />
 
-            <div class="d-flex">
+            <div style="display:flex">
                 @* Only allow delete when not received and has no items *@
                 @if (Model?.Status != "Received" && (Model?.PurchaseOrderItems == null || !Model.PurchaseOrderItems.Any()))
                 {
-                    <button type="submit" class="btn btn-danger">Delete Purchase Order</button>
+                    <button type="submit" class="btn-danger btn-sm">Delete Purchase Order</button>
                 }
                 else
                 {
-                    <button type="button" class="btn btn-danger" disabled>Delete Purchase Order</button>
+                    <button type="button" class="btn-danger btn-sm" disabled>Delete Purchase Order</button>
                 }
 
                 <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>

@@ -9,16 +9,24 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 public class ServicesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public ServicesController(ApplicationDbContext context)
+    public ServicesController(ApplicationDbContext context, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
+        _auditService = auditService;
     }
 
     // GET: SERVICES
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index(string q)
     {
-        return View(await _context.Services.ToListAsync());
+        var query = _context.Services.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(s => (s.ServiceName ?? "").Contains(q) || (s.Description ?? "").Contains(q));
+            ViewBag.SearchQuery = q;
+        }
+        return View(await query.ToListAsync());
     }
 
     // GET: SERVICES/Details/5
@@ -56,24 +64,10 @@ public class ServicesController : Controller
         {
             _context.Add(service);
             await _context.SaveChangesAsync();
-            // Audit: Service Created (best-effort)
-            try
-            {
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Services",
-                    RecordId = service.ServiceId,
-                    ActionType = "Service Created",
-                    OldValues = null,
-                    NewValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch { }
+
+            // Audit log
+            await _auditService.LogCreateAsync("Services", service.ServiceId, service.ServiceName);
+
             return RedirectToAction(nameof(Index));
         }
         return View(service);
@@ -111,27 +105,11 @@ public class ServicesController : Controller
         {
             try
             {
-                var existing = await _context.Services.AsNoTracking().FirstOrDefaultAsync(s => s.ServiceId == service.ServiceId);
                 _context.Update(service);
                 await _context.SaveChangesAsync();
-                // Audit: Service Updated (best-effort)
-                try
-                {
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Services",
-                        RecordId = service.ServiceId,
-                        ActionType = "Service Updated",
-                        OldValues = existing != null ? $"ServiceName={existing.ServiceName};FixedPrice={existing.FixedPrice}" : null,
-                        NewValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Services", service.ServiceId, null, service.ServiceName);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -175,28 +153,17 @@ public class ServicesController : Controller
         var service = await _context.Services.FindAsync(id);
         if (service != null)
         {
+            var serviceName = service.ServiceName;
             _context.Services.Remove(service);
-        }
+            await _context.SaveChangesAsync();
 
-        await _context.SaveChangesAsync();
-        // Audit: Service Deleted (best-effort)
-        try
+            // Audit log
+            await _auditService.LogDeleteAsync("Services", (int)id, serviceName);
+        }
+        else
         {
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Services",
-                RecordId = service.ServiceId,
-                ActionType = "Service Deleted",
-                OldValues = $"ServiceName={service.ServiceName};FixedPrice={service.FixedPrice}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
             await _context.SaveChangesAsync();
         }
-        catch { }
 
         return RedirectToAction(nameof(Index));
     }

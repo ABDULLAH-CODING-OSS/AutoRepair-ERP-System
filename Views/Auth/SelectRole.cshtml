@@ -1,31 +1,46 @@
 @model AutoRepairERD.ViewModels.RoleSelectionViewModel
-
-@{
-    ViewData["Title"] = "Select Role";
+@{ Layout = null; ViewData["Title"] = "Select Role"; }
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AutoRepair ERP — Select Role</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css"/>
+<style>
+body { background: #050a14 !important; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.role-card {
+  width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.55);
 }
+.role-option {
+  display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border);
+  border-radius: var(--radius-sm); margin-bottom:10px; cursor:pointer; transition:0.15s;
+}
+.role-option:hover { border-color: var(--gold); background: var(--gold-glow); }
+.role-option input { accent-color: var(--gold); }
+</style>
+</head><body>
+<div class="role-card">
+    <div style="width:46px;height:46px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" stroke="#0d1526" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"></path></svg></div>
+    <h1 style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px;">Welcome, @Model.Username</h1>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:22px;">This account has more than one role. Choose which one to use for this session.</p>
 
-<div class="card">
-    <div class="card-body">
-        <h4 class="card-title">Welcome @Model.Username</h4>
-        <p>Please select the role you want to use for this session.</p>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div style="background:var(--red-dim);border:1px solid rgba(240,79,79,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--red)">
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
 
-        <form asp-action="SelectRole" method="post">
-            <input type="hidden" name="UserId" value="@Model.UserId" />
-            <div class="mb-3">
-                <label class="form-label">Select Role</label>
-                <select name="SelectedRoleId" class="form-select">
-                    <option value="">-- Select role --</option>
-                    @foreach (var r in Model.Roles)
-                    {
-                        <option value="@r.Item1">@r.Item2</option>
-                    }
-                </select>
-                <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
-            </div>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Continue</button>
-                <a asp-action="Login" class="btn btn-secondary">Back</a>
-            </div>
-        </form>
-    </div>
+    <form asp-action="SelectRole" asp-controller="Auth" method="post">
+        <input type="hidden" name="UserId" value="@Model.UserId" />
+        @foreach (var r in Model.Roles)
+        {
+            <label class="role-option">
+                <input type="radio" name="SelectedRoleId" value="@r.Item1" required />
+                <span style="font-size:14px;font-weight:600;color:var(--text);">@r.Item2</span>
+            </label>
+        }
+        <button type="submit" class="btn-gold btn-full" style="padding:12px;font-size:14px;margin-top:10px;justify-content:center;">Continue →</button>
+        <a asp-action="Login" asp-controller="Auth" class="btn-outline btn-full" style="padding:12px;font-size:14px;margin-top:10px;justify-content:center;display:flex;text-decoration:none;">Back to Login</a>
+    </form>
 </div>
+</body></html>

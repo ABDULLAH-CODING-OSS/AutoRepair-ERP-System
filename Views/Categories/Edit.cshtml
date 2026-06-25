@@ -4,34 +4,34 @@
     ViewData["Title"] = "Edit Category";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Edit Category</h2>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       <form asp-action="Edit" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <input type="hidden" asp-for="CategoryId" />
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="CategoryName" class="form-label"></label>
           <input asp-for="CategoryName" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="CategoryName"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="CategoryName"></span></div>
         </div>
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="Description" class="form-label"></label>
           <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-          <div class="text-danger"><span asp-validation-for="Description"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="Description"></span></div>
         </div>
 
         <!-- Navigation/collection fields removed: Parts is a navigation property (ICollection<Part>) and should not be edited here. -->
 
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit" class="btn-gold btn-sm">Save</button>
+          <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
         </div>
       </form>
     </div>

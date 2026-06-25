@@ -8,43 +8,43 @@
     <div class="card-header">
         <h5 class="mb-0">Edit Payment</h5>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="PaymentId" />
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Invoice</label>
                 <div class="form-control-plaintext">@((Model?.Invoice != null) ? Model.Invoice.InvoiceNumber : Model?.InvoiceId.ToString())</div>
                 <input type="hidden" asp-for="InvoiceId" />
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="AmountPaid" class="form-label">Amount</label>
                 <input asp-for="AmountPaid" class="form-control" />
-                <span asp-validation-for="AmountPaid" class="text-danger"></span>
+                <span asp-validation-for="AmountPaid" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="PaymentMethod" class="form-label">Payment Method</label>
                 <input asp-for="PaymentMethod" class="form-control" />
-                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                <span asp-validation-for="PaymentMethod" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="TransactionReference" class="form-label">Transaction Reference</label>
                 <input asp-for="TransactionReference" class="form-control" />
-                <span asp-validation-for="TransactionReference" class="text-danger"></span>
+                <span asp-validation-for="TransactionReference" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Notes" class="form-label">Notes</label>
                 <input asp-for="Notes" class="form-control" />
-                <span asp-validation-for="Notes" class="text-danger"></span>
+                <span asp-validation-for="Notes" style="color:var(--red)"></span>
             </div>
 
             <div>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class="btn-gold btn-sm">Save</button>
                 <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
             </div>
         </form>

@@ -1,34 +1,44 @@
 @model AutoRepairERD.Models.SalaryAdjustment
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Salary Adjustment Details";
 }
 
-<h1>Details</h1>
+@section TopbarActions {
+  @if (Model.PayrollId != 0)
+  {
+    <a asp-controller="Payrolls" asp-action="Details" asp-route-payrollid="@Model.PayrollId" class="btn-outline btn-sm">← Back to Payroll</a>
+  }
+  else
+  {
+    <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
+  }
+  <a asp-action="Edit" asp-route-adjustmentid="@Model.AdjustmentId" class="btn-gold btn-sm">Edit</a>
+  <a asp-action="Delete" asp-route-adjustmentid="@Model.AdjustmentId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
+}
 
-<div>
-    <div class="card mb-3">
-        <div class="card-header">Employee Information</div>
-        <div class="card-body">
-            <p><strong>Employee Code:</strong> @(Model?.Payroll?.Employee?.EmployeeCode ?? "-")</p>
-            <p><strong>Employee Name:</strong> @((Model?.Payroll?.Employee != null) ? ((Model?.Payroll?.Employee?.FirstName ?? "") + " " + (Model?.Payroll?.Employee?.LastName ?? "")).Trim() : "Unknown")</p>
-            <p><strong>Payroll Number:</strong> @(Model?.Payroll?.PayrollNumber ?? "-")</p>
-            <p><strong>Payroll Period:</strong> @(Model?.Payroll?.PayrollMonth != null ? System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Payroll.PayrollMonth ?? 0) + " " + (Model?.Payroll?.PayrollYear?.ToString() ?? "") : "-")</p>
+<div class="card">
+  <div class="card-header"><span class="card-title">Salary Adjustment Details</span></div>
+  <div style="padding:16px">
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Payroll</label>
+        <div class="td-muted">@(Model.Payroll != null ? Model.Payroll.PayrollNumber : Model.PayrollId.ToString())</div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Type</label>
+        <div class="td-gold">
+          <span style="background:var(--gold-dim);padding:4px 8px;border-radius:4px">@Model.AdjustmentType</span>
         </div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Amount</label>
+        <div>PKR @((Model.Amount ?? 0m).ToString("N2"))</div>
+      </div>
+      <div style="flex-basis:100%">
+        <label class="form-label">Reason</label>
+        <div class="td-muted">@Model.Reason</div>
+      </div>
     </div>
-
-    <div class="card mb-3">
-        <div class="card-header">Adjustment Information</div>
-        <div class="card-body">
-            <p><strong>Adjustment Type:</strong> @(Model?.AdjustmentType ?? "-")</p>
-            <p><strong>Amount:</strong> @String.Format("{0:C}", Model?.Amount ?? 0m)</p>
-            <p><strong>Reason:</strong> @(Model?.Reason ?? "-")</p>
-            <p><strong>Status:</strong> @(Model.IsActive == false || Model.AdjustmentStatus == "Cancelled" ? "Cancelled" : (Model.AdjustmentStatus ?? "Active"))</p>
-            <p><strong>Created At:</strong> @(Model.CreatedAt?.ToString("g") ?? "-")</p>
-        </div>
-    </div>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AdjustmentId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+  </div>
 </div>

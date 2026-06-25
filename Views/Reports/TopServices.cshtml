@@ -1,0 +1,68 @@
+@model AutoRepairERD.Models.ViewModels.TopServicesReportViewModel
+@{
+    ViewData["Title"] = "Top Services Report";
+    ViewData["ActiveNav"] = "rep-top";
+    var maxJobs = Model.Rows.Any() ? Model.Rows.Max(r => r.JobCount) : 0;
+}
+
+<div class="stats-grid stats-3" style="margin-bottom:20px">
+  <div class="stat-card sc-gold">
+    <div class="stat-icon">🔧</div>
+    <div class="stat-val" data-count="@Model.Rows.Count">0</div>
+    <div class="stat-lbl">Active Services</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon">📋</div>
+    <div class="stat-val" data-count="@Model.Rows.Sum(r => r.JobCount)">0</div>
+    <div class="stat-lbl">Total Service Uses</div>
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-icon">💰</div>
+    <div class="stat-val" data-count="@((double)Model.Rows.Sum(r => r.TotalRevenue))" data-prefix="PKR ">PKR 0</div>
+    <div class="stat-lbl">Labour Revenue</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Services Ranked by Usage</span><span class="td-muted" style="font-size:12px">All time</span></div>
+  @if (!Model.Rows.Any())
+  {
+      <p class="td-muted" style="padding:24px;text-align:center;">No services have been used in job orders yet.</p>
+  }
+  else
+  {
+      <div class="table-wrap"><table class="erp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Service Name</th>
+            <th>Category</th>
+            <th>Jobs</th>
+            <th>Usage Bar</th>
+            <th>Total Hours</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          @{ int rank = 1; }
+          @foreach (var r in Model.Rows.OrderByDescending(x => x.JobCount))
+          {
+              var pct = maxJobs > 0 ? (int)Math.Round((double)r.JobCount / maxJobs * 100) : 0;
+              <tr>
+                <td class="td-muted">@(rank++)</td>
+                <td class="td-gold">@r.ServiceName</td>
+                <td class="td-muted">@r.Category</td>
+                <td><strong>@r.JobCount</strong></td>
+                <td style="min-width:120px">
+                  <div class="progress-bar">
+                    <div class="progress-fill" data-width="@(pct)%" style="background:var(--gold);width:0%"></div>
+                  </div>
+                </td>
+                <td>@r.TotalHours.ToString("0.##")h</td>
+                <td>PKR @r.TotalRevenue.ToString("N0")</td>
+              </tr>
+          }
+        </tbody>
+      </table></div>
+  }
+</div>

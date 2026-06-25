@@ -4,52 +4,52 @@
     ViewData["Title"] = "Create Supplier";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Create Supplier</h2>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       <form asp-action="Create" method="post">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="CompanyName" class="form-label"></label>
           <input asp-for="CompanyName" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="CompanyName"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="CompanyName"></span></div>
         </div>
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="ContactPerson" class="form-label"></label>
           <input asp-for="ContactPerson" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="ContactPerson"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="ContactPerson"></span></div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
             <label asp-for="Phone" class="form-label"></label>
             <input asp-for="Phone" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Phone"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="Phone"></span></div>
           </div>
-          <div class="col-md-6 mb-3">
+          <div style="flex:1;min-width:240px">
             <label asp-for="Email" class="form-label"></label>
             <input asp-for="Email" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Email"></span></div>
+            <div style="color:var(--red)"><span asp-validation-for="Email"></span></div>
           </div>
         </div>
 
-        <div class="mb-3">
+        <div style="margin-bottom:12px">
           <label asp-for="Address" class="form-label"></label>
           <textarea asp-for="Address" class="form-control" rows="3"></textarea>
-          <div class="text-danger"><span asp-validation-for="Address"></span></div>
+          <div style="color:var(--red)"><span asp-validation-for="Address"></span></div>
         </div>
 
         <!-- Navigation/collection fields removed from the form: Parts and PurchaseOrders are navigation properties (ICollection)
              and should not be edited directly via this form. They remain on the model and in the database. -->
 
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Create</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit" class="btn-gold btn-sm">Create</button>
+          <a asp-action="Index" class="btn-outline btn-sm">Back to List</a>
         </div>
       </form>
     </div>

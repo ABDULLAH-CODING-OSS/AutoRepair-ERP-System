@@ -1,68 +1,36 @@
 @model IEnumerable<AutoRepairERD.Models.Invoice>
+@{ ViewData["Title"] = "Invoices"; ViewData["ActiveNav"] = "invoices"; }
 
-@{
-    ViewData["Title"] = "Invoices";
-}
+@section TopbarActions { <a asp-action="Create" class="btn-gold btn-sm">+ New Invoice</a> }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3">Invoices</h1>
-    <a class="btn btn-success" asp-action="Create">Create Invoice</a>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>Job #</th>
-                <th>Invoice #</th>
-                <th>Invoice Date</th>
-                <th class="text-end">Subtotal</th>
-                <th class="text-end">Tax</th>
-                <th class="text-end">Discount</th>
-                <th class="text-end">Grand Total</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@(item.JobOrder?.JobNumber ?? "-")</td>
-                <td>@item.InvoiceNumber</td>
-                <td>@(item.InvoiceDate != null ? (item.InvoiceDate is System.DateTime dt ? dt.ToString("d") : item.InvoiceDate.ToString()) : "-")</td>
-                <td class="text-end">@((item.SubTotal != null) ? string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", item.SubTotal) : "-")</td>
-                <td class="text-end">@((item.TaxAmount != null) ? string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", item.TaxAmount) : "-")</td>
-                <td class="text-end">@((item.DiscountAmount != null) ? string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", item.DiscountAmount) : "-")</td>
-                <td class="text-end">@((item.GrandTotal != null) ? string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C}", item.GrandTotal) : "-")</td>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.InvoiceStatus))
-                    {
-                        <span class="badge bg-info text-dark">@item.InvoiceStatus</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                </td>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.PaymentStatus))
-                    {
-                        <span class="badge bg-secondary">@item.PaymentStatus</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                </td>
-                <td>
-                    <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.InvoiceId">Edit</a>
-                    <a class="btn btn-sm btn-info text-white ms-1" asp-action="Details" asp-route-id="@item.InvoiceId">Details</a>
-                    <a class="btn btn-sm btn-danger ms-1" asp-action="Delete" asp-route-id="@item.InvoiceId">Delete</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+<div class="card">
+  <div class="card-header"><span class="card-title">All Invoices (@Model.Count())</span>
+    <form method="get" style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <input type="search" name="q" value="@(ViewBag.SearchQuery ?? "")" placeholder="Search invoice, job #, customer, status" class="form-control" style="width:360px;padding:8px 10px">
+      <button type="submit" class="btn-outline btn-sm">Search</button>
+    </form>
+  </div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Invoice #</th><th>Job #</th><th>Customer</th><th>Date</th><th>Total</th><th>Paid</th><th>Remaining</th><th>Payment</th><th></th></tr></thead>
+    <tbody>
+      @if (!Model.Any()) { <tr><td colspan="9" class="td-muted" style="text-align:center;padding:24px">No invoices yet.</td></tr> }
+      @foreach (var inv in Model)
+      {
+          <tr onclick="carTransition('/Invoices/Details/@inv.InvoiceId','INVOICE DETAIL')">
+            <td class="td-gold">@inv.InvoiceNumber</td>
+            <td>@inv.JobOrder?.JobNumber</td>
+            <td>@inv.JobOrder?.Customer?.FirstName @inv.JobOrder?.Customer?.LastName</td>
+            <td class="td-muted">@(inv.InvoiceDate?.ToString("MMM d, yyyy"))</td>
+            <td><strong>PKR @inv.GrandTotal.ToString("N0")</strong></td>
+            <td>PKR @inv.AmountPaid.ToString("N2")</td>
+            <td>PKR @inv.RemainingBalance.ToString("N2")</td>
+            <td><span class="badge @BadgeHelper.Css(inv.PaymentStatus)">@(inv.PaymentStatus ?? "Unpaid")</span></td>
+            <td style="white-space:nowrap">
+              <a asp-action="Details" asp-route-id="@inv.InvoiceId" class="btn-outline btn-sm">View</a>
+              <a asp-action="Edit" asp-route-id="@inv.InvoiceId" class="btn-outline btn-sm">Edit</a>
+            </td>
+          </tr>
+      }
+    </tbody>
+  </table></div>
 </div>

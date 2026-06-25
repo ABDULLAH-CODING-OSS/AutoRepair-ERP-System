@@ -5,30 +5,30 @@
 }
 
 <div class="card">
-    <div class="card-body">
+    <div style="padding:4px 0">
         <h4 class="card-title">Assign Role</h4>
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">User</label>
-                <select asp-for="UserId" class="form-select" asp-items="ViewBag.Users">
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.Users">
                     <option value="">-- Select user --</option>
                 </select>
-                <span asp-validation-for="UserId" class="text-danger"></span>
+                <span asp-validation-for="UserId" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label class="form-label">Role</label>
-                <select asp-for="RoleId" class="form-select" asp-items="ViewBag.Roles">
+                <select asp-for="RoleId" class="form-control" asp-items="ViewBag.Roles">
                     <option value="">-- Select role --</option>
                 </select>
-                <span asp-validation-for="RoleId" class="text-danger"></span>
+                <span asp-validation-for="RoleId" style="color:var(--red)"></span>
             </div>
 
-            <div class="d-flex">
-                <button type="submit" class="btn btn-primary">Assign Role</button>
+            <div style="display:flex">
+                <button type="submit" class="btn-gold btn-sm">Assign Role</button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
             </div>
         </form>

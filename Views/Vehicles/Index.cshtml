@@ -1,45 +1,35 @@
 @model IEnumerable<AutoRepairERD.Models.Vehicle>
+@{ ViewData["Title"] = "Vehicles"; ViewData["ActiveNav"] = "vehicles"; }
 
-@{
-    ViewData["Title"] = "Vehicles";
-}
+@section TopbarActions { <a asp-action="Create" class="btn-gold btn-sm">+ Add Vehicle</a> }
 
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Vehicles</h1>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
+<div class="card">
+  <div class="card-header"><span class="card-title">All Vehicles (@Model.Count())</span>
+    <form method="get" style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <input type="search" name="q" value="@(ViewBag.SearchQuery ?? "")" placeholder="Search plate, VIN, make, model, customer" class="form-control" style="width:320px;padding:8px 10px">
+      <button type="submit" class="btn-outline btn-sm">Search</button>
+    </form>
   </div>
-
-  <div class="card">
-    <div class="card-body p-0">
-      <table class="table mb-0 table-striped">
-        <thead class="table-light">
-          <tr>
-            <th>Registration Number</th>
-            <th>@Html.DisplayNameFor(m => m.Make)</th>
-            <th>@Html.DisplayNameFor(m => m.Model)</th>
-            <th>@Html.DisplayNameFor(m => m.ManufacturingYear)</th>
-            <th>Customer</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model) {
-          <tr>
-            <td>@Html.DisplayFor(_ => item.LicensePlate)</td>
-            <td>@Html.DisplayFor(_ => item.Make)</td>
-            <td>@Html.DisplayFor(_ => item.Model)</td>
-            <td>@Html.DisplayFor(_ => item.ManufacturingYear)</td>
-            <td>@((item.Customer != null) ? (item.Customer.FirstName + " " + (item.Customer.LastName ?? "")).Trim() : item.CustomerId.ToString())</td>
-            <td class="text-end">
-              <a asp-action="Edit" asp-route-id="@item.VehicleId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-              <a asp-action="Details" asp-route-id="@item.VehicleId" class="btn btn-sm btn-outline-secondary me-1">Details</a>
-              <a asp-action="Delete" asp-route-id="@item.VehicleId" class="btn btn-sm btn-outline-danger">Delete</a>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Plate</th><th>Customer</th><th>Make / Model</th><th>Year</th><th>Color</th><th>Mileage</th><th></th></tr></thead>
+    <tbody>
+      @if (!Model.Any()) { <tr><td colspan="7" class="td-muted" style="text-align:center;padding:24px">No vehicles registered yet.</td></tr> }
+      @foreach (var v in Model)
+      {
+          <tr onclick="carTransition('/Vehicles/Details/@v.VehicleId','VEHICLE DETAIL')">
+            <td class="td-gold">@v.LicensePlate</td>
+            <td>@v.Customer?.FirstName @v.Customer?.LastName</td>
+            <td>@v.Make @v.Model</td>
+            <td>@v.ManufacturingYear</td>
+            <td>@v.Color</td>
+            <td class="td-muted">@(v.Mileage.HasValue ? $"{v.Mileage:N0} km" : "—")</td>
+            <td style="white-space:nowrap">
+              <a asp-action="Details" asp-route-id="@v.VehicleId" class="btn-outline btn-sm">View</a>
+              <a asp-action="Edit" asp-route-id="@v.VehicleId" class="btn-outline btn-sm">Edit</a>
+              <a asp-action="Delete" asp-route-id="@v.VehicleId" class="btn-outline btn-sm" style="color:var(--red)">Delete</a>
             </td>
           </tr>
-        }
-        </tbody>
-      </table>
-    </div>
-  </div>
+      }
+    </tbody>
+  </table></div>
 </div>

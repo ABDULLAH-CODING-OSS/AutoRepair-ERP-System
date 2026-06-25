@@ -1,60 +1,109 @@
 @model AutoRepairERD.Models.JobOrder
-
 @{
-    ViewData["Title"] = "Job Order Details";
-    var job = Model;
-    var jobNumber = job?.JobNumber ?? "-";
-    var customer = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "-";
-    var vehicle = job?.Vehicle != null ? job.Vehicle.Make + " " + job.Vehicle.Model + " (" + job.Vehicle.LicensePlate + ")" : "-";
-    var createdAt = (job != null && job.CreatedAt.HasValue) ? job.CreatedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-";
-    var advisor = job?.Advisor != null ? job.Advisor.FirstName + " " + job.Advisor.LastName : "-";
-    var mechanic = job?.Mechanic != null ? job.Mechanic.FirstName + " " + job.Mechanic.LastName : "-";
-    var status = job?.Status ?? "-";
-    var statusClass = status == "Completed" ? "bg-success" : status == "In Progress" ? "bg-primary" : status == "Cancelled" ? "bg-danger" : "bg-secondary";
-    var startDate = (job != null && job.StartDate.HasValue) ? job.StartDate.Value.ToString("yyyy-MM-dd") : "-";
-    var estComplete = (job != null && job.EstimatedCompletionDate.HasValue) ? job.EstimatedCompletionDate.Value.ToString("yyyy-MM-dd") : "-";
-    var completionDate = (job != null && job.CompletionDate.HasValue) ? job.CompletionDate.Value.ToString("yyyy-MM-dd") : "-";
-    var estCost = (job != null && job.EstimatedCost.HasValue) ? job.EstimatedCost.Value.ToString("C") : "-";
-    var finalCost = (job != null && job.FinalCost.HasValue) ? job.FinalCost.Value.ToString("C") : "-";
+    ViewData["Title"] = "Job Order — " + Model.JobNumber;
+    ViewData["ActiveNav"] = "joborders";
+    var userRole = ViewData["UserRole"]?.ToString() ?? "";
+    var isMechanic = userRole == "Mechanic";
 }
 
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">Job Order: @jobNumber</h5>
+@section TopbarActions {
+  @if (!isMechanic) { <a asp-action="Edit" asp-route-id="@Model.JobOrderId" class="btn-gold btn-sm">Edit</a> }
+  <a asp-action="Index" class="btn-outline btn-sm">← Back</a>
+}
+
+<!-- Header hero -->
+<div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%)">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <p style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Job Order</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--gold)">@Model.JobNumber</h2>
+      <p style="font-size:13px;color:var(--text2)">Created @(Model.CreatedAt?.ToString("MMM d, yyyy h:mm tt"))</p>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Customer & Vehicle</h6>
-                <p class="mb-1"><strong>Customer:</strong> @customer</p>
-                <p class="mb-1"><strong>Vehicle:</strong> @vehicle</p>
-                <p class="mb-1"><strong>Created At:</strong> @createdAt</p>
-            </div>
-            <div class="col-md-6">
-                <h6>Assignment & Status</h6>
-                <p class="mb-1"><strong>Advisor:</strong> @advisor</p>
-                <p class="mb-1"><strong>Mechanic:</strong> @mechanic</p>
-                <p class="mb-1"><strong>Status:</strong> <span class="badge @statusClass">@status</span></p>
-            </div>
+    <div style="text-align:right">
+      <span class="badge @BadgeHelper.Css(Model.Status)" style="font-size:14px;padding:8px 16px">@Model.Status</span>
+      <p style="font-size:13px;color:var(--text2);margin-top:6px">Est. Cost: <strong style="color:var(--text)">PKR @((Model.FinalCost ?? Model.EstimatedCost ?? 0).ToString("N0"))</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <!-- Left col -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Customer &amp; Vehicle</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px">
+        <div><label class="form-label">Customer</label><p style="font-weight:700">@Model.Customer?.FirstName @Model.Customer?.LastName</p><p class="td-muted" style="font-size:12px">@Model.Customer?.Phone &nbsp;·&nbsp; @Model.Customer?.Email</p></div>
+        <div><label class="form-label">Vehicle</label><p style="font-weight:600">@Model.Vehicle?.Make @Model.Vehicle?.Model @Model.Vehicle?.ManufacturingYear</p><p class="td-muted" style="font-size:13px">Plate: <strong>@Model.Vehicle?.LicensePlate</strong></p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Assigned Staff</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px">
+        <div><label class="form-label">Service Advisor</label><p>@(Model.Advisor != null ? $"{Model.Advisor.FirstName} {Model.Advisor.LastName}" : "—")</p></div>
+        <div><label class="form-label">Mechanic</label><p>@(Model.Mechanic != null ? $"{Model.Mechanic.FirstName} {Model.Mechanic.LastName}" : "—")</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Timeline</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px">
+        <div><label class="form-label">Start Date</label><p>@(Model.StartDate?.ToString("MMM d, yyyy") ?? "—")</p></div>
+        <div><label class="form-label">Est. Completion</label><p>@(Model.EstimatedCompletionDate?.ToString("MMM d, yyyy") ?? "—")</p></div>
+        <div><label class="form-label">Completed On</label><p>@(Model.CompletionDate?.ToString("MMM d, yyyy") ?? "—")</p></div>
+      </div>
+    </div>
+  </div>
+  <!-- Right col -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Complaint &amp; Diagnosis</span></div>
+      <div style="padding-top:6px">
+        <label class="form-label">Complaint</label>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">@Model.ComplaintDescription</p>
+        @if (!string.IsNullOrWhiteSpace(Model.DiagnosisNotes))
+        {
+            <label class="form-label">Diagnosis / Notes</label>
+            <p style="font-size:13px;color:var(--text2);line-height:1.6">@Model.DiagnosisNotes</p>
+        }
+      </div>
+    </div>
+    @if (Model.Invoices.Any())
+    {
+        <div class="card">
+          <div class="card-header"><span class="card-title">Invoices</span></div>
+          <div class="table-wrap"><table class="erp-table">
+            <thead><tr><th>Invoice #</th><th>Total</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              @foreach (var inv in Model.Invoices)
+              {
+                  <tr><td class="td-gold">@inv.InvoiceNumber</td><td>PKR @inv.GrandTotal.ToString("N0")</td><td><span class="badge @BadgeHelper.Css(inv.PaymentStatus)">@(inv.PaymentStatus ?? "Unpaid")</span></td><td><a asp-controller="Invoices" asp-action="Details" asp-route-id="@inv.InvoiceId" class="btn-outline btn-sm">View</a></td></tr>
+              }
+            </tbody>
+          </table></div>
         </div>
+    }
+  </div>
+</div>
 
-        <hr />
+<!-- Parts used -->
+<div class="card" style="margin-bottom:16px">
+  <div class="card-header"><span class="card-title">Parts Used</span>@if(!isMechanic){<a asp-controller="JobPartItems" asp-action="Create" asp-route-jobOrderId="@Model.JobOrderId" class="btn-gold btn-sm">+ Add Part</a>}</div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Part</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>
+      @if (!Model.JobPartItems.Any()) { <tr><td colspan="4" class="td-muted" style="text-align:center;padding:16px">No parts added yet.</td></tr> }
+      @foreach (var p in Model.JobPartItems) { <tr><td>@p.Part?.PartName</td><td>@p.Quantity</td><td>PKR @(p.UnitPrice?.ToString("N2")??"—")</td><td>PKR @(p.TotalPrice?.ToString("N0")??"—")</td></tr> }
+    </tbody>
+  </table></div>
+</div>
 
-        <h6>Schedule & Costs</h6>
-        <p class="mb-1"><strong>Start Date:</strong> @startDate</p>
-        <p class="mb-1"><strong>Estimated Completion:</strong> @estComplete</p>
-        <p class="mb-1"><strong>Completion Date:</strong> @completionDate</p>
-        <p class="mb-1"><strong>Estimated Cost:</strong> @estCost</p>
-        <p class="mb-1"><strong>Final Cost:</strong> @finalCost</p>
-
-        <hr />
-
-        <h6>Notes</h6>
-        <p><strong>Complaint:</strong> @job?.ComplaintDescription</p>
-        <p><strong>Diagnosis:</strong> @job?.DiagnosisNotes</p>
-    </div>
-    <div class="card-footer">
-        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@job?.JobOrderId">Edit</a>
-        <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
-    </div>
+<!-- Services -->
+<div class="card">
+  <div class="card-header"><span class="card-title">Labour / Services</span>@if(!isMechanic){<a asp-controller="JobServiceItems" asp-action="Create" asp-route-jobOrderId="@Model.JobOrderId" class="btn-gold btn-sm">+ Add Service</a>}</div>
+  <div class="table-wrap"><table class="erp-table">
+    <thead><tr><th>Service</th><th>Hours</th><th>Rate/hr</th><th>Price</th><th>Notes</th></tr></thead>
+    <tbody>
+      @if (!Model.JobServiceItems.Any()) { <tr><td colspan="5" class="td-muted" style="text-align:center;padding:16px">No services added yet.</td></tr> }
+      @foreach (var s in Model.JobServiceItems) { <tr><td>@s.Service?.ServiceName</td><td>@s.HoursWorked</td><td>@(s.HourlyRate.HasValue ? $"PKR {s.HourlyRate:N0}" : "—")</td><td>PKR @(s.ServicePrice?.ToString("N0")??"—")</td><td class="td-muted" style="font-size:12px">@s.Notes</td></tr> }
+    </tbody>
+  </table></div>
 </div>

@@ -1,0 +1,89 @@
+@model AutoRepairERD.Models.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["ActiveNav"] = "admin-dash";
+}
+
+@section TopbarActions {
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn-gold btn-sm" onclick="carTransition('/Users/Create','NEW USER')">+ New User</button>
+  </div>
+}
+
+<div style="margin-bottom:10px"><p style="font-size:13px;color:var(--text2)">@DateTime.Now.ToString("dddd, dd MMM yyyy") — Welcome back, @(ViewData["UserName"] ?? "")</p></div>
+
+<div class="stats-grid stats-4" style="margin-bottom:20px">
+  <div class="stat-card sc-gold">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.TotalUsers">0</div>
+    <div class="stat-lbl">Total Users</div>
+    <div class="stat-change up">@Model.ActiveUsers active</div>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span></div>
+    <div class="stat-val" data-count="@Model.TotalEmployees">0</div>
+    <div class="stat-lbl">Total Employees</div>
+    <div class="stat-change up">@Model.ActiveEmployees active</div>
+  </div>
+  <div class="stat-card sc-orange">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.RolesCount">0</div>
+    <div class="stat-lbl">Configured Roles</div>
+  </div>
+  <div class="stat-card sc-red" style="cursor:pointer" onclick="carTransition('/AuditLogs','AUDIT LOG')">
+    <div class="stat-icon"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></span></div>
+    <div class="stat-val" data-count="@Model.RecentAuditLogCount">0</div>
+    <div class="stat-lbl">Audit Events (7 days)</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Recent Audit Activity</span><button class="btn-outline btn-sm" onclick="carTransition('/AuditLogs','AUDIT LOG')">View All</button></div>
+    <div class="table-wrap"><table class="erp-table">
+      <thead><tr><th>User</th><th>Table</th><th>Action</th><th>Date</th></tr></thead>
+      <tbody>
+        @if (!Model.RecentAuditLogs.Any())
+        {
+            <tr><td colspan="4" class="td-muted" style="text-align:center;padding:20px;">No audit activity yet.</td></tr>
+        }
+        @foreach (var a in Model.RecentAuditLogs)
+        {
+            <tr onclick="carTransition('/AuditLogs/Details/@a.AuditLogId','AUDIT DETAIL')">
+                <td>@(a.User?.Username ?? "System")</td>
+                <td class="td-gold">@a.TableName</td>
+                <td>@a.ActionType</td>
+                <td class="td-muted">@(a.ActionDate?.ToString("MMM d, h:mm tt"))</td>
+            </tr>
+        }
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Recent System Notifications</span><button class="btn-outline btn-sm" onclick="carTransition('/Notifications','NOTIFICATIONS')">View All</button></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      @if (!Model.RecentNotifications.Any())
+      {
+          <p class="td-muted" style="font-size:13px;text-align:center;padding:20px 0;">No notifications yet.</p>
+      }
+      @foreach (var n in Model.RecentNotifications)
+      {
+          <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+              <p style="font-size:13px;font-weight:600;">@n.Title</p>
+              <p style="font-size:12px;color:var(--text2);margin-top:3px;">@n.Message</p>
+              <p style="font-size:10px;color:var(--text3);margin-top:5px;">@(n.CreatedAt?.ToString("MMM d, h:mm tt"))</p>
+          </div>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Users','USER MANAGEMENT')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span></span><span style="font-size:12px">User Management</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Roles','ROLES')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg></span></span><span style="font-size:12px">Roles</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Employees','EMPLOYEES')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span></span><span style="font-size:12px">Employees</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Admin/Settings','SETTINGS')"><span style="font-size:20px"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle></svg></span></span><span style="font-size:12px">Settings</span></button>
+    </div>
+</div>

@@ -8,11 +8,11 @@
 
 <form asp-action="Generate" method="post">
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="text-danger"></div>
+    <div asp-validation-summary="All" style="color:var(--red)"></div>
 
-    <div class="mb-3">
+    <div style="margin-bottom:12px">
         <label class="form-label">Employee</label>
-        <select name="EmployeeId" class="form-select">
+        <select name="EmployeeId" class="form-control">
             <option value="">-- Select --</option>
             @foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
             {
@@ -29,10 +29,10 @@
         </select>
     </div>
 
-    <div class="row">
-        <div class="col-md-4 mb-3">
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
             <label class="form-label">Month</label>
-            <select name="PayrollMonth" class="form-select">
+            <select name="PayrollMonth" class="form-control">
                 <option value="">-- Select Month --</option>
                 @for (int m = 1; m <= 12; m++)
                 {
@@ -49,14 +49,14 @@
                 }
             </select>
         </div>
-        <div class="col-md-4 mb-3">
+        <div style="flex:1;min-width:240px">
             <label class="form-label">Year</label>
             <input type="number" name="PayrollYear" class="form-control" min="2000" max="2100" value="@(ViewBag.SelectedYear ?? DateTime.Now.Year)" />
         </div>
     </div>
 
     <div>
-        <button type="submit" class="btn btn-primary">Generate</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn-gold btn-sm">Generate</button>
+        <a asp-action="Index" class="btn-outline btn-sm">Cancel</a>
     </div>
 </form>

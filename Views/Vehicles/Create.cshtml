@@ -1,94 +1,39 @@
 @model AutoRepairERD.Models.Vehicle
+@{ ViewData["Title"] = "Add Vehicle"; ViewData["ActiveNav"] = "vehicles"; }
 
+@section TopbarActions { <a asp-action="Index" class="btn-outline btn-sm">← Back</a> }
 
-@{
-    ViewData["Title"] = "Create";
-}
-
-<h1>Create</h1>
-
-<h4>Vehicle</h4>
-<hr />
-<div class="container py-4">
-  <div class="card">
-    <div class="card-header">
-      <h2>Create Vehicle</h2>
+<div class="card" style="max-width:640px">
+  <div class="card-header"><span class="card-title">Register Vehicle</span></div>
+  <form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" style="color:var(--red);font-size:13px;margin-bottom:10px"></div>
+    <div class="form-group">
+      <label class="form-label">Customer *</label>
+      <select asp-for="CustomerId" class="form-control" asp-items="ViewBag.Customers"><option value="">-- Select Customer --</option></select>
+      <span asp-validation-for="CustomerId" style="color:var(--red);font-size:12px"></span>
     </div>
-    <div class="card-body">
-      <form asp-action="Create" method="post">
-        @* <div asp-validation-summary="All" class="text-danger mb-3"></div> *@
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-        <div class="mb-3">
-          <label class="form-label">Customer</label>
-          <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.Customers">
-            <option value="">-- Select Customer --</option>
-          </select>
-          <div class="text-danger"><span asp-validation-for="CustomerId"></span></div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="LicensePlate" class="form-label"></label>
-          <input asp-for="LicensePlate" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="LicensePlate"></span></div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="Vin" class="form-label"></label>
-          <input asp-for="Vin" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="Vin"></span></div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label asp-for="Make" class="form-label"></label>
-            <input asp-for="Make" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Make"></span></div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label asp-for="Model" class="form-label"></label>
-            <input asp-for="Model" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Model"></span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4 mb-3">
-            <label asp-for="ManufacturingYear" class="form-label"></label>
-            <input asp-for="ManufacturingYear" type="number" min="1886" max="2100" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="ManufacturingYear"></span></div>
-          </div>
-          <div class="col-md-4 mb-3">
-            <label asp-for="Color" class="form-label"></label>
-            <input asp-for="Color" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Color"></span></div>
-          </div>
-          <div class="col-md-4 mb-3">
-            <label asp-for="Mileage" class="form-label"></label>
-            <input asp-for="Mileage" type="number" min="0" class="form-control" />
-            <div class="text-danger"><span asp-validation-for="Mileage"></span></div>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="EngineNumber" class="form-label"></label>
-          <input asp-for="EngineNumber" class="form-control" />
-          <div class="text-danger"><span asp-validation-for="EngineNumber"></span></div>
-        </div>
-
-        <div class="mb-3">
-          <label asp-for="Notes" class="form-label"></label>
-          <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
-          <div class="text-danger"><span asp-validation-for="Notes"></span></div>
-        </div>
-
-        <!-- Removed navigation/collection fields: CreatedByUser, CreatedByUserId, Customer (nav), JobOrders. These are relation properties and should be managed outside this form. -->
-
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Create</button>
-          <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-        </div>
-      </form>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="LicensePlate" class="form-label"></label><input asp-for="LicensePlate" class="form-control" placeholder="ABC-123" /><span asp-validation-for="LicensePlate" style="color:var(--red);font-size:12px"></span></div>
+      <div class="form-group"><label asp-for="Vin" class="form-label"></label><input asp-for="Vin" class="form-control" placeholder="17-char VIN (optional)" /></div>
     </div>
-  </div>
+    <div class="form-row-3">
+      <div class="form-group"><label asp-for="Make" class="form-label"></label><input asp-for="Make" class="form-control" placeholder="Toyota" /><span asp-validation-for="Make" style="color:var(--red);font-size:12px"></span></div>
+      <div class="form-group"><label asp-for="Model" class="form-label"></label><input asp-for="Model" class="form-control" placeholder="Corolla" /><span asp-validation-for="Model" style="color:var(--red);font-size:12px"></span></div>
+      <div class="form-group"><label asp-for="ManufacturingYear" class="form-label"></label><input asp-for="ManufacturingYear" class="form-control" type="number" min="1886" max="2100" placeholder="@DateTime.Now.Year" /></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="Color" class="form-label"></label><input asp-for="Color" class="form-control" placeholder="White" /></div>
+      <div class="form-group"><label asp-for="Mileage" class="form-label"></label><input asp-for="Mileage" class="form-control" type="number" min="0" placeholder="km" /></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label asp-for="EngineNumber" class="form-label"></label><input asp-for="EngineNumber" class="form-control" /></div>
+    </div>
+    <div class="form-group"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="2"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button type="submit" class="btn-gold">Save Vehicle</button>
+      <a asp-action="Index" class="btn-outline btn-sm">Cancel</a>
+    </div>
+  </form>
 </div>
+
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

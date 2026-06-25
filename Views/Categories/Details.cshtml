@@ -4,12 +4,12 @@
     ViewData["Title"] = "Category Details";
 }
 
-<div class="container py-4">
+<div style="max-width:960px">
   <div class="card">
     <div class="card-header">
       <h2>Category Details</h2>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
       <dl class="row">
         <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CategoryName)</dt>
         <dd class="col-sm-9">@Html.DisplayFor(m => m.CategoryName)</dd>
@@ -20,8 +20,8 @@
 
       <!-- Navigation/collection display removed: Parts is a navigation property and is not shown here. -->
 
-      <div class="mt-3">
-        <a asp-action="Edit" asp-route-id="@Model?.CategoryId" class="btn btn-primary">Edit</a>
+      <div style="margin-top:12px">
+        <a asp-action="Edit" asp-route-id="@Model?.CategoryId" class="btn-gold btn-sm">Edit</a>
         <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
       </div>
     </div>

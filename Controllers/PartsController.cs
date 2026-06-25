@@ -10,20 +10,30 @@ public class PartsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notificationService;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public PartsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService)
+    public PartsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notificationService, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notificationService = notificationService;
+        _auditService = auditService;
     }
 
     // GET: PARTS
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string q)
     {
-        return View(await _context.Parts
+        var query = _context.Parts
             .Include(p => p.Category)
             .Include(p => p.Supplier)
-            .ToListAsync());
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(p => (p.PartName ?? "").Contains(q) || (p.Sku ?? "").Contains(q) || (p.Supplier != null && (p.Supplier.SupplierName ?? "").Contains(q)) || (p.Category != null && (p.Category.CategoryName ?? "").Contains(q)));
+            ViewBag.SearchQuery = q;
+        }
+
+        return View(await query.ToListAsync());
     }
 
     // GET: PARTS/Details/5
@@ -53,8 +63,12 @@ public class PartsController : Controller
     //}
     public IActionResult Create()
     {
-        ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
-        ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName");
+        var cats = new SelectList(_context.Categories, "CategoryId", "CategoryName");
+        var sups = new SelectList(_context.Suppliers, "SupplierId", "CompanyName");
+        ViewData["CategoryId"] = cats;
+        ViewData["SupplierId"] = sups;
+        ViewBag.Categories = cats;
+        ViewBag.Suppliers = sups;
         return View();
     }
 
@@ -71,12 +85,26 @@ public class PartsController : Controller
         ModelState.Remove("LowStockAlerts");
         ModelState.Remove("PurchaseOrderItems");
         ModelState.Remove("StockTransactions");
+        // Require Category and Supplier to be selected
+        if (!part.CategoryId.HasValue)
+        {
+            ModelState.AddModelError("CategoryId", "Category is required.");
+        }
+        if (!part.SupplierId.HasValue)
+        {
+            ModelState.AddModelError("SupplierId", "Supplier is required.");
+        }
+
         if (ModelState.IsValid)
         {
             _context.Add(part);
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Audit log
+                await _auditService.LogCreateAsync("Parts", part.PartId, part.PartName);
+
                 // Batch 3: NEW PART CREATED - notify Inventory Manager and Admin
                 try
                 {
@@ -88,26 +116,6 @@ public class PartsController : Controller
                         await _notificationService.CreateForRoleAsync(invRole.RoleId, "Inventory", title, message);
                     if (adminRole != null)
                         await _notificationService.CreateForRoleAsync(adminRole.RoleId, "Inventory", title, message);
-                }
-                catch { }
-                // Audit: Part Created (best-effort)
-                try
-                {
-                    var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
-                    var category = await _context.Categories.FindAsync(part.CategoryId);
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Parts",
-                        RecordId = part.PartId,
-                        ActionType = "Part Created",
-                        OldValues = null,
-                        NewValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
                 }
                 catch { }
                 return RedirectToAction(nameof(Index));
@@ -125,8 +133,12 @@ public class PartsController : Controller
         }
 
         // repopulate selects when returning view on validation errors or DB errors
-        ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", part.CategoryId);
-        ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", part.SupplierId);
+        var cats = new SelectList(_context.Categories, "CategoryId", "CategoryName", part.CategoryId);
+        var sups = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", part.SupplierId);
+        ViewData["CategoryId"] = cats;
+        ViewData["SupplierId"] = sups;
+        ViewBag.Categories = cats;
+        ViewBag.Suppliers = sups;
         return View(part);
     }
 
@@ -143,17 +155,12 @@ public class PartsController : Controller
         {
             return NotFound();
         }
-        ViewData["CategoryId"] =
-    new SelectList(_context.Categories,
-                   "CategoryId",
-                   "CategoryName",
-                   part.CategoryId);
-
-        ViewData["SupplierId"] =
-            new SelectList(_context.Suppliers,
-                           "SupplierId",
-                           "CompanyName",
-                           part.SupplierId);
+        var cats = new SelectList(_context.Categories, "CategoryId", "CategoryName", part.CategoryId);
+        var sups = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", part.SupplierId);
+        ViewData["CategoryId"] = cats;
+        ViewData["SupplierId"] = sups;
+        ViewBag.Categories = cats;
+        ViewBag.Suppliers = sups;
         return View(part);
     }
 
@@ -169,33 +176,25 @@ public class PartsController : Controller
             return NotFound();
         }
 
+        // Require Category and Supplier to be selected
+        if (!part.CategoryId.HasValue)
+        {
+            ModelState.AddModelError("CategoryId", "Category is required.");
+        }
+        if (!part.SupplierId.HasValue)
+        {
+            ModelState.AddModelError("SupplierId", "Supplier is required.");
+        }
+
         if (ModelState.IsValid)
         {
             try
             {
-                var existing = await _context.Parts.AsNoTracking().FirstOrDefaultAsync(p => p.PartId == part.PartId);
                 _context.Update(part);
                 await _context.SaveChangesAsync();
-                // Audit: Part Updated (best-effort)
-                try
-                {
-                    var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
-                    var category = await _context.Categories.FindAsync(part.CategoryId);
-                    var audit = new AuditLog
-                    {
-                        UserId = HttpContext.Session.GetInt32("UserID"),
-                        TableName = "Parts",
-                        RecordId = part.PartId,
-                        ActionType = "Part Updated",
-                        OldValues = existing != null ? $"Part={existing.PartName};SKU={existing.Sku};Category={( (await _context.Categories.FindAsync(existing.CategoryId))?.CategoryName ?? "")};Supplier={( (await _context.Suppliers.FindAsync(existing.SupplierId))?.CompanyName ?? "")};CurrentStock={existing.CurrentStock}" : null,
-                        NewValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
-                        ActionDate = DateTime.Now,
-                        Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AuditLogs.Add(audit);
-                    await _context.SaveChangesAsync();
-                }
-                catch { }
+
+                // Audit log
+                await _auditService.LogUpdateAsync("Parts", part.PartId, null, part.PartName);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -210,17 +209,12 @@ public class PartsController : Controller
             }
             return RedirectToAction(nameof(Index));
         }
-        ViewData["CategoryId"] =
-    new SelectList(_context.Categories,
-                   "CategoryId",
-                   "CategoryName",
-                   part.CategoryId);
-
-        ViewData["SupplierId"] =
-            new SelectList(_context.Suppliers,
-                           "SupplierId",
-                           "CompanyName",
-                           part.SupplierId);
+        var cats = new SelectList(_context.Categories, "CategoryId", "CategoryName", part.CategoryId);
+        var sups = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", part.SupplierId);
+        ViewData["CategoryId"] = cats;
+        ViewData["SupplierId"] = sups;
+        ViewBag.Categories = cats;
+        ViewBag.Suppliers = sups;
         return View(part);
     }
 
@@ -249,34 +243,46 @@ public class PartsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var part = await _context.Parts.FindAsync(id);
-        if (part != null)
+        var part = await _context.Parts
+            .Include(p => p.JobPartItems)
+            .Include(p => p.PurchaseOrderItems)
+            .Include(p => p.StockTransactions)
+            .Include(p => p.LowStockAlerts)
+            .FirstOrDefaultAsync(p => p.PartId == id);
+        if (part == null)
         {
-            _context.Parts.Remove(part);
+            return NotFound();
         }
 
-        await _context.SaveChangesAsync();
-        // Audit: Part Deleted (best-effort)
+        // Prevent deletion if related records exist
+        var hasJobs = part.JobPartItems != null && part.JobPartItems.Any();
+        var hasPoItems = part.PurchaseOrderItems != null && part.PurchaseOrderItems.Any();
+        var hasStockTx = part.StockTransactions != null && part.StockTransactions.Any();
+        var hasAlerts = part.LowStockAlerts != null && part.LowStockAlerts.Any();
+
+        if (hasJobs || hasPoItems || hasStockTx || hasAlerts)
+        {
+            // Friendly error message explaining why delete failed
+            ModelState.AddModelError(string.Empty, "Cannot delete this part because it is referenced by existing records (jobs, purchase orders, stock transactions or alerts). Deactivate it instead.");
+            return View(part);
+        }
+
         try
         {
-            var supplier = await _context.Suppliers.FindAsync(part.SupplierId);
-            var category = await _context.Categories.FindAsync(part.CategoryId);
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Parts",
-                RecordId = part.PartId,
-                ActionType = "Part Deleted",
-                OldValues = $"Part={part.PartName};SKU={part.Sku};Category={(category!=null?category.CategoryName:"")};Supplier={(supplier!=null?supplier.CompanyName:"")};CurrentStock={part.CurrentStock}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
+            var partName = part.PartName;
+            _context.Parts.Remove(part);
             await _context.SaveChangesAsync();
+
+            // Audit log
+            await _auditService.LogDeleteAsync("Parts", (int)id, partName);
+
+            return RedirectToAction(nameof(Index));
         }
-        catch { }
-        return RedirectToAction(nameof(Index));
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Unable to delete part due to database constraints. Deactivate the part or remove related records first.");
+            return View(part);
+        }
     }
 
     private bool PartExists(int? id)

@@ -1,57 +1,33 @@
 @model IEnumerable<AutoRepairERD.Models.Notification>
-
-@{
-    ViewData["Title"] = "Notifications";
-}
+@{ ViewData["Title"] = "Notifications"; ViewData["ActiveNav"] = "notifications"; }
 
 <div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Notifications</h5>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Title</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Created On</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var n in Model)
-                    {
-                        <tr>
-                            <td><span class="badge bg-secondary">@n.NotificationType</span></td>
-                            <td>@n.Title</td>
-                            <td>@(n.Message?.Length > 100 ? n.Message.Substring(0, 100) + "..." : n.Message)</td>
-                            <td>
-                                @if (n.IsRead == true)
-                                {
-                                    <span class="badge bg-secondary">Read</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-primary">Unread</span>
-                                }
-                            </td>
-                            <td>@n.CreatedAt?.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@n.NotificationId">View</a>
-                                <form asp-action="MarkRead" method="post" class="d-inline me-1">
-                                    <input type="hidden" name="id" value="@n.NotificationId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-success">Mark Read</button>
-                                </form>
-                                <form asp-action="MarkUnread" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@n.NotificationId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">Mark Unread</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+  <div class="card-header"><span class="card-title">Notifications (@Model.Count())</span></div>
+  @if (!Model.Any())
+  {
+      <p class="td-muted" style="padding:24px;text-align:center">No notifications yet.</p>
+  }
+  else
+  {
+      <div style="display:flex;flex-direction:column">
+        @foreach (var n in Model)
+        {
+            <div style="display:flex;align-items:start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);@(n.IsRead == true ? "" : "background:var(--gold-glow)")" onclick="carTransition('/Notifications/Details/@n.NotificationId','NOTIFICATION DETAIL')" style="cursor:pointer">
+              <div style="width:8px;height:8px;border-radius:50%;background:@(n.IsRead == true ? "var(--border2)" : "var(--gold)");margin-top:5px;flex-shrink:0"></div>
+              <div style="flex:1">
+                <p style="font-size:13px;font-weight:@(n.IsRead == true ? "400" : "700")">@n.Title</p>
+                <p style="font-size:12px;color:var(--text2);margin-top:2px">@n.Message</p>
+                <p style="font-size:10px;color:var(--text3);margin-top:4px">@(n.CreatedAt?.ToString("MMM d, yyyy h:mm tt"))</p>
+              </div>
+              @if (n.IsRead != true)
+              {
+                  <form method="post" asp-action="MarkRead" asp-route-id="@n.NotificationId">
+                      @Html.AntiForgeryToken()
+                      <button type="submit" class="btn-outline btn-sm" onclick="event.stopPropagation()">Mark Read</button>
+                  </form>
+              }
+            </div>
+        }
+      </div>
+  }
 </div>

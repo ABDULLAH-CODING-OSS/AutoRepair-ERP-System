@@ -8,10 +8,10 @@
 
 <h4>Invoice</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" style="color:var(--red)"></div>
             <input type="hidden" asp-for="InvoiceId" />
             <input type="hidden" name="id" value="@Model.InvoiceId" />
             <div class="form-group">
@@ -22,43 +22,43 @@
                         class="form-control"
                         asp-items="ViewBag.JobOrders">
                 </select>
-                <span asp-validation-for="JobOrderId" class="text-danger"></span>
+                <span asp-validation-for="JobOrderId" style="color:var(--red)"></span>
                 
             </div>
             @* <div class="form-group">
                 <label asp-for="CreatedByUserId" class="control-label"></label>
                 <input asp-for="CreatedByUserId" class="form-control" />
-                <span asp-validation-for="CreatedByUserId" class="text-danger"></span>
+                <span asp-validation-for="CreatedByUserId" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceNumber" class="control-label"></label>
                 <input asp-for="InvoiceNumber" class="form-control" />
-                <span asp-validation-for="InvoiceNumber" class="text-danger"></span>
+                <span asp-validation-for="InvoiceNumber" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceDate" class="control-label"></label>
                 <input asp-for="InvoiceDate" class="form-control" />
-                <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+                <span asp-validation-for="InvoiceDate" style="color:var(--red)"></span>
             </div> *@
             @* <div class="form-group">
                 <label asp-for="SubTotal" class="control-label"></label>
                 <input asp-for="SubTotal" class="form-control" />
-                <span asp-validation-for="SubTotal" class="text-danger"></span>
+                <span asp-validation-for="SubTotal" style="color:var(--red)"></span>
             </div> *@
             <div class="form-group">
                 <label asp-for="TaxAmount" class="control-label"></label>
                 <input asp-for="TaxAmount" class="form-control" />
-                <span asp-validation-for="TaxAmount" class="text-danger"></span>
+                <span asp-validation-for="TaxAmount" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DiscountAmount" class="control-label"></label>
                 <input asp-for="DiscountAmount" class="form-control" />
-                <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+                <span asp-validation-for="DiscountAmount" style="color:var(--red)"></span>
             </div>
             @* <div class="form-group">
                 <label asp-for="GrandTotal" class="control-label"></label>
                 <input asp-for="GrandTotal" class="form-control" />
-                <span asp-validation-for="GrandTotal" class="text-danger"></span>
+                <span asp-validation-for="GrandTotal" style="color:var(--red)"></span>
             </div> *@
             <div class="form-group">
                 @* <label asp-for="InvoiceStatus" class="control-label"></label>
@@ -69,7 +69,7 @@
                     <option value="Paid">Paid</option>
                     <option value="Cancelled">Cancelled</option>
                 </select>
-                <span asp-validation-for="InvoiceStatus" class="text-danger"></span>
+                <span asp-validation-for="InvoiceStatus" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 @* <label asp-for="PaymentStatus" class="control-label"></label>
@@ -80,25 +80,25 @@
                     <option value="Partially Paid">Partially Paid</option>
                     <option value="Paid">Paid</option>
                 </select>
-                <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+                <span asp-validation-for="PaymentStatus" style="color:var(--red)"></span>
             </div>
             @* <div class="form-group">
                 <label asp-for="CreatedByUser" class="control-label"></label>
                 <input asp-for="CreatedByUser" class="form-control" />
-                <span asp-validation-for="CreatedByUser" class="text-danger"></span>
+                <span asp-validation-for="CreatedByUser" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="JobOrder" class="control-label"></label>
                 <input asp-for="JobOrder" class="form-control" />
-                <span asp-validation-for="JobOrder" class="text-danger"></span>
+                <span asp-validation-for="JobOrder" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Payments" class="control-label"></label>
                 <input asp-for="Payments" class="form-control" />
-                <span asp-validation-for="Payments" class="text-danger"></span>
+                <span asp-validation-for="Payments" style="color:var(--red)"></span>
             </div> *@
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn-gold btn-sm" />
             </div>
         </form>
     </div>

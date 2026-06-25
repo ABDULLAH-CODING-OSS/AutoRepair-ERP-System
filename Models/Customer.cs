@@ -29,6 +29,7 @@ public partial class Customer
 
     [StringLength(100)]
     [Unicode(false)]
+    [EmailAddress]
     public string? Email { get; set; }
 
     [StringLength(255)]

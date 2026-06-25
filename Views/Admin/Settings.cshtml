@@ -1,0 +1,73 @@
+@model AutoRepairERD.Models.ViewModels.SettingsViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
+@{
+    ViewData["Title"] = "Admin Settings";
+    ViewData["ActiveNav"] = "settings";
+}
+
+<div class="grid-2">
+  <!-- System Info -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">System Overview</span></div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding-top:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">Total Users</span>
+        <span class="badge badge-active">@Model.TotalUsers</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">Configured Roles</span>
+        <span class="badge badge-ordered">@Model.TotalRoles</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">Total Employees</span>
+        <span class="badge badge-ordered">@Model.TotalEmployees</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+        <span style="font-size:13px;color:var(--text2)">Database</span>
+        <span style="font-size:12px;color:var(--text3);max-width:200px;text-align:right;overflow:hidden;text-overflow:ellipsis">@Model.ConnectionDatabase</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payroll Config (read-only from appsettings.json) -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Payroll Configuration</span></div>
+    <div style="padding-top:6px">
+      <div class="form-group">
+        <label class="form-label">Attendance Completeness Threshold</label>
+        <input type="text" class="form-control" value="@Model.PayrollCompletenessThreshold" readonly style="background:var(--card2);cursor:not-allowed">
+        <details style="margin-top:6px">
+          <summary style="font-size:12px;color:var(--text2);cursor:pointer">Why this threshold?</summary>
+          <p style="font-size:11px;color:var(--text3);margin-top:6px;white-space:normal;word-break:break-word;max-width:100%">
+            Payrolls are generated only when an employee's attendance completeness meets or exceeds this threshold (0.9 = 90%). Edit <code style="white-space:nowrap">Payroll:CompletenessThreshold</code> in <code style="white-space:nowrap">appsettings.json</code> to change.
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px" class="card">
+    <div class="card-header"><span class="card-title">Quick Admin Links</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-top:6px">
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Users','USER MANAGEMENT')"><span>👤</span><span style="font-size:12px">Users</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Roles','ROLES')"><span>🛡</span><span style="font-size:12px">Roles</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/AuditLogs','AUDIT LOG')"><span>📋</span><span style="font-size:12px">Audit Log</span></button>
+      <button class="btn-outline" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px" onclick="carTransition('/Employees','EMPLOYEES')"><span>👥</span><span style="font-size:12px">Employees</span></button>
+    </div>
+</div>
+
+@if (Env.IsDevelopment())
+{
+  <div style="margin-top:16px;border-color:var(--orange)" class="card">
+    <div class="card-header"><span class="card-title" style="color:var(--orange)">⚠ Security Notice</span></div>
+    <div style="padding:10px">
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0 0 8px 0;word-break:break-word;">
+        This system currently stores passwords in <strong style="color:var(--red)">plain text</strong>.
+      </p>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin:0;word-break:break-word;">
+        Before deploying to production, implement proper password hashing (e.g. <code>BCrypt.Net</code> or ASP.NET Core's <code>IPasswordHasher</code>) in <code style="white-space:nowrap">AuthController.cs</code> and the <code style="white-space:nowrap">DbSeeder</code>.
+      </p>
+    </div>
+  </div>
+}

@@ -11,11 +11,13 @@ public class PaymentsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AutoRepairERD.Services.NotificationService _notifications;
+    private readonly AutoRepairERD.Services.AuditService _auditService;
 
-    public PaymentsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications)
+    public PaymentsController(ApplicationDbContext context, AutoRepairERD.Services.NotificationService notifications, AutoRepairERD.Services.AuditService auditService)
     {
         _context = context;
         _notifications = notifications;
+        _auditService = auditService;
     }
 
     // GET: PAYMENTS
@@ -23,11 +25,20 @@ public class PaymentsController : Controller
     //{
     //    return View(await _context.Payments.ToListAsync());
     //}
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string q)
     {
-        return View(await _context.Payments
+        var query = _context.Payments
             .Include(p => p.Invoice)
-            .ToListAsync());
+            .ThenInclude(i => i.JobOrder)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(p => (p.TransactionReference ?? "").Contains(q) || (p.PaymentMethod ?? "").Contains(q) || (p.Invoice != null && (p.Invoice.InvoiceNumber ?? "").Contains(q)));
+            ViewBag.SearchQuery = q;
+        }
+
+        return View(await query.ToListAsync());
     }
 
     // GET: PAYMENTS/Details/5
@@ -59,20 +70,21 @@ public class PaymentsController : Controller
     //{
     //    return View();
     //}
-    public IActionResult Create()
+    public IActionResult Create(int? invoiceId)
     {
-        //ViewBag.Invoices = new SelectList(
-        //    _context.Invoices,
-        //    "InvoiceId",
-        //    "InvoiceNumber");
-
-        //return View();
         ViewBag.Invoices = new SelectList(
-    _context.Invoices
-        .Where(i => i.PaymentStatus != "Paid"),
-    "InvoiceId",
-    "InvoiceNumber");
-        return View();
+            _context.Invoices
+                .Where(i => i.PaymentStatus != "Paid"),
+            "InvoiceId",
+            "InvoiceNumber",
+            invoiceId);
+
+        var model = new Payment();
+        if (invoiceId.HasValue)
+        {
+            model.InvoiceId = invoiceId.Value;
+        }
+        return View(model);
     }
 
     // POST: PAYMENTS/Create
@@ -90,86 +102,45 @@ public class PaymentsController : Controller
         }
         if (ModelState.IsValid)
         {
+            // Round amount to 2 dp and persist the exact value the user entered
+            payment.AmountPaid = Decimal.Round(payment.AmountPaid, 2, MidpointRounding.AwayFromZero);
             payment.PaymentDate = DateTime.Now;
+
             var invoice = await _context.Invoices
-    .Include(i => i.Payments)
-    .FirstOrDefaultAsync(i => i.InvoiceId == payment.InvoiceId);
-            if (invoice == null)
-            {
-                return NotFound();
-            }
+                .Include(i => i.Payments)
+                .FirstOrDefaultAsync(i => i.InvoiceId == payment.InvoiceId);
+            if (invoice == null) return NotFound();
+
             if (invoice.PaymentStatus == "Paid")
             {
-                ModelState.AddModelError("", "This invoice is already fully paid.");
-
-                ViewBag.Invoices = new SelectList(
-                    _context.Invoices
-                        .Where(i => i.PaymentStatus != "Paid"),
-                    "InvoiceId",
-                    "InvoiceNumber",
-                    payment.InvoiceId);
-
+                ModelState.AddModelError(string.Empty, "This invoice is already fully paid.");
+                ViewBag.Invoices = new SelectList(_context.Invoices.Where(i => i.PaymentStatus != "Paid"), "InvoiceId", "InvoiceNumber", payment.InvoiceId);
                 return View(payment);
             }
 
-            if (invoice == null)
-            {
-                return NotFound();
-            }
-
-            var totalPaid = invoice.Payments.Sum(p => p.AmountPaid);
-
-            if (totalPaid + payment.AmountPaid > invoice.GrandTotal)
-            {
-                ModelState.AddModelError("", "Payment exceeds invoice balance.");
-
-                ViewBag.Invoices = new SelectList(
-                    _context.Invoices,
-                    "InvoiceId",
-                    "InvoiceNumber",
-                    payment.InvoiceId);
-
-                return View(payment);
-            }
+            // Persist payment (rounded) first, then reload invoice totals from DB to use stored values exactly.
             _context.Add(payment);
             await _context.SaveChangesAsync();
-            totalPaid += payment.AmountPaid;
 
-            if (totalPaid <= 0)
-            {
-                invoice.PaymentStatus = "Unpaid";
-            }
-            else if (totalPaid < invoice.GrandTotal)
-            {
-                invoice.PaymentStatus = "Partially Paid";
-            }
-            else
-            {
-                invoice.PaymentStatus = "Paid";
-            }
+            // Audit log - Payment recorded
+            await _auditService.LogCreateAsync("Payments", payment.PaymentId, $"Payment {payment.AmountPaid:C} for Invoice {payment.InvoiceId}");
+
+            invoice = await _context.Invoices.Include(i => i.Payments).FirstOrDefaultAsync(i => i.InvoiceId == payment.InvoiceId);
+            if (invoice == null) return NotFound();
+
+            var totalPaidRaw = invoice.Payments.Sum(p => p.AmountPaid);
+            var totalPaid = Decimal.Round(totalPaidRaw, 2, MidpointRounding.AwayFromZero);
+            var grand = Decimal.Round(invoice.GrandTotal, 2, MidpointRounding.AwayFromZero);
+
+            if (totalPaid <= 0m) invoice.PaymentStatus = "Unpaid";
+            else if (totalPaid < grand) invoice.PaymentStatus = "Partially Paid";
+            else invoice.PaymentStatus = "Paid";
 
             _context.Update(invoice);
             await _context.SaveChangesAsync();
-        // Audit: Payment Deleted (best-effort)
-        try
-        {
-            var job = await _context.JobOrders.Include(j => j.Customer).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
-            var customerName = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "";
-            var audit = new AuditLog
-            {
-                UserId = HttpContext.Session.GetInt32("UserID"),
-                TableName = "Payments",
-                RecordId = payment.PaymentId,
-                ActionType = "Payment Deleted",
-                OldValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={payment.AmountPaid};Method={payment.PaymentMethod};Customer={customerName}",
-                NewValues = null,
-                ActionDate = DateTime.Now,
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            _context.AuditLogs.Add(audit);
-            await _context.SaveChangesAsync();
-        }
-        catch { }
+
+            // Audit log - Invoice status updated
+            await _auditService.LogCustomActionAsync("Invoices", invoice.InvoiceId, "Payment Received", $"Status: {invoice.PaymentStatus}, Amount Paid: {totalPaid:C}");
 
             // Notification: Payment Received
             try
@@ -188,29 +159,14 @@ public class PaymentsController : Controller
             }
             catch { }
 
-            // Audit: Payment Received (best-effort)
-            try
-            {
-                var job = await _context.JobOrders.Include(j => j.Customer).FirstOrDefaultAsync(j => j.JobOrderId == invoice.JobOrderId);
-                var customerName = job?.Customer != null ? job.Customer.FirstName + " " + job.Customer.LastName : "";
-                var audit = new AuditLog
-                {
-                    UserId = HttpContext.Session.GetInt32("UserID"),
-                    TableName = "Payments",
-                    RecordId = payment.PaymentId,
-                    ActionType = "Payment Received",
-                    OldValues = null,
-                    NewValues = $"InvoiceNumber={invoice.InvoiceNumber};Amount={payment.AmountPaid};Method={payment.PaymentMethod};Customer={customerName}",
-                    ActionDate = DateTime.Now,
-                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                };
-                _context.AuditLogs.Add(audit);
-                await _context.SaveChangesAsync();
-            }
-            catch { }
-
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.Invoices = new SelectList(
+            _context.Invoices
+                .Where(i => i.PaymentStatus != "Paid"),
+            "InvoiceId",
+            "InvoiceNumber",
+            payment.InvoiceId);
         return View(payment);
     }
 
@@ -320,9 +276,13 @@ public class PaymentsController : Controller
         }
 
         int invoiceId = payment.InvoiceId;
+        var paymentAmount = payment.AmountPaid;
 
         _context.Payments.Remove(payment);
         await _context.SaveChangesAsync();
+
+        // Audit log - Payment deleted
+        await _auditService.LogDeleteAsync("Payments", (int)id, $"Payment {paymentAmount:C} for Invoice {invoiceId}");
 
         var invoice = await _context.Invoices
             .Include(i => i.Payments)
@@ -330,13 +290,15 @@ public class PaymentsController : Controller
 
         if (invoice != null)
         {
-            decimal totalPaid = invoice.Payments.Sum(p => p.AmountPaid);
+            var totalPaidRaw = invoice.Payments.Sum(p => p.AmountPaid);
+            var totalPaid = Decimal.Round(totalPaidRaw, 2, MidpointRounding.AwayFromZero);
+            var grand = Decimal.Round(invoice.GrandTotal, 2, MidpointRounding.AwayFromZero);
 
-            if (totalPaid <= 0)
+            if (totalPaid <= 0m)
             {
                 invoice.PaymentStatus = "Unpaid";
             }
-            else if (totalPaid < invoice.GrandTotal)
+            else if (totalPaid < grand)
             {
                 invoice.PaymentStatus = "Partially Paid";
             }

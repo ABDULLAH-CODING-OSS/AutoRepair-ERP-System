@@ -8,10 +8,10 @@
 
 <h4>Payroll</h4>
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+        <form asp-action="Edit" asp-route-payrollid="@Model?.PayrollId">
+            <div asp-validation-summary="ModelOnly" style="color:var(--red)"></div>
             <input type="hidden" asp-for="PayrollId" />
             <div class="form-group">
                 <label class="control-label">Payroll Number</label>
@@ -28,37 +28,37 @@
             <div class="form-group">
                 <label asp-for="TotalWorkingDays" class="control-label"></label>
                 <input asp-for="TotalWorkingDays" class="form-control" readonly />
-                <span asp-validation-for="TotalWorkingDays" class="text-danger"></span>
+                <span asp-validation-for="TotalWorkingDays" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">Present Days</label>
                 <input name="manualPresentDays" type="number" min="0" max="@(Model.TotalWorkingDays ?? 0)" value="@(Model.TotalPresentDays ?? 0)" class="form-control" />
-                <span class="form-text">Adjust present days if attendance needs correction, then click Recalculate.</span>
+                <span style="font-size:11px;color:var(--text3)">Adjust present days if attendance needs correction, then click Recalculate.</span>
             </div>
             <div class="form-group">
                 <label asp-for="OvertimeHours" class="control-label"></label>
                 <input asp-for="OvertimeHours" class="form-control" readonly />
-                <span asp-validation-for="OvertimeHours" class="text-danger"></span>
+                <span asp-validation-for="OvertimeHours" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="BonusAmount" class="control-label"></label>
                 <input asp-for="BonusAmount" class="form-control" readonly />
-                <span asp-validation-for="BonusAmount" class="text-danger"></span>
+                <span asp-validation-for="BonusAmount" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DeductionAmount" class="control-label"></label>
                 <input asp-for="DeductionAmount" class="form-control" readonly />
-                <span asp-validation-for="DeductionAmount" class="text-danger"></span>
+                <span asp-validation-for="DeductionAmount" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="GrossSalary" class="control-label"></label>
                 <input asp-for="GrossSalary" class="form-control" readonly />
-                <span asp-validation-for="GrossSalary" class="text-danger"></span>
+                <span asp-validation-for="GrossSalary" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label asp-for="NetSalary" class="control-label"></label>
                 <input asp-for="NetSalary" class="form-control" readonly />
-                <span asp-validation-for="NetSalary" class="text-danger"></span>
+                <span asp-validation-for="NetSalary" style="color:var(--red)"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">Payment Date</label>
@@ -66,17 +66,17 @@
             </div>
             <div class="form-group">
                 <label asp-for="PayrollStatus" class="control-label"></label>
-                <select name="payrollStatus" class="form-select">
+                <select name="payrollStatus" class="form-control">
                     <option value="Generated" selected="@(Model.PayrollStatus=="Generated")">Generated</option>
                     <option value="Pending" selected="@(Model.PayrollStatus=="Pending")">Pending</option>
                     <option value="Paid" selected="@(Model.PayrollStatus=="Paid")">Paid</option>
                     <option value="Cancelled" selected="@(Model.PayrollStatus=="Cancelled")">Cancelled</option>
                 </select>
-                <span asp-validation-for="PayrollStatus" class="text-danger"></span>
+                <span asp-validation-for="PayrollStatus" style="color:var(--red)"></span>
             </div>
             <!-- Removed editable navigation properties and collections from edit form -->
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn-gold btn-sm" />
                 @if (Model.PayrollStatus != "Paid")
                 {
                     <button type="submit" formaction="@Url.Action("Recalculate", "Payrolls", new { payrollid = Model.PayrollId })" formmethod="post" class="btn btn-secondary ms-2">Recalculate</button>

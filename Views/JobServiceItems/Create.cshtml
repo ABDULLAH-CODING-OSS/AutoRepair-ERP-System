@@ -8,23 +8,23 @@
     <div class="card-header">
         <h5 class="mb-0">Add Service</h5>
     </div>
-    <div class="card-body">
+    <div style="padding:4px 0">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="mb-3">
-                <label class="form-label">Job Order <span class="text-danger">*</span></label>
-        <select asp-for="JobOrderId" id="jobOrderSelect" class="form-select" asp-items="ViewBag.JobOrders"></select>
-                <span asp-validation-for="JobOrderId" class="text-danger"></span>
+            <div style="margin-bottom:12px">
+                <label class="form-label">Job Order <span style="color:var(--red)">*</span></label>
+        <select asp-for="JobOrderId" id="jobOrderSelect" class="form-control" asp-items="ViewBag.JobOrders"></select>
+                <span asp-validation-for="JobOrderId" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Service <span class="text-danger">*</span></label>
-                <select asp-for="ServiceId" class="form-select" asp-items="ViewBag.Services"></select>
-                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            <div style="margin-bottom:12px">
+                <label class="form-label">Service <span style="color:var(--red)">*</span></label>
+                <select asp-for="ServiceId" class="form-control" asp-items="ViewBag.Services"></select>
+                <span asp-validation-for="ServiceId" style="color:var(--red)"></span>
             </div>
 
-            @* <div class="mb-3">
+            @* <div style="margin-bottom:12px">
                 <label class="form-label">Mechanic</label>
                 @if (ViewBag.ReadonlyMechanic == true)
                 {
@@ -33,25 +33,25 @@
                 }
                 else
                 {
-                    <select asp-for="MechanicId" class="form-select" asp-items="ViewBag.Mechanics" id="mechanicSelect"></select>
+                    <select asp-for="MechanicId" class="form-control" asp-items="ViewBag.Mechanics" id="mechanicSelect"></select>
                 }
-                <span asp-validation-for="MechanicId" class="text-danger"></span>
+                <span asp-validation-for="MechanicId" style="color:var(--red)"></span>
             </div> *@
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="HoursWorked" class="form-label">Hours Worked</label>
                 <input asp-for="HoursWorked" class="form-control" placeholder="e.g. 1.5" />
-                <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                <span asp-validation-for="HoursWorked" style="color:var(--red)"></span>
             </div>
 
-            <div class="mb-3">
+            <div style="margin-bottom:12px">
                 <label asp-for="Notes" class="form-label">Notes</label>
                 <input asp-for="Notes" class="form-control" placeholder="Optional notes" />
-                <span asp-validation-for="Notes" class="text-danger"></span>
+                <span asp-validation-for="Notes" style="color:var(--red)"></span>
             </div>
 
             <div>
-                <button type="submit" class="btn btn-primary">Add Service</button>
+                <button type="submit" class="btn-gold btn-sm">Add Service</button>
                 <a class="btn btn-secondary ms-2" asp-action="Index">Back to List</a>
             </div>
         </form>
